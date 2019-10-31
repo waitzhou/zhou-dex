@@ -1,0 +1,14 @@
+android.arch.core:common:1.0.0 11156
+android.arch.lifecycle:common:1.0.0 12366
+android.arch.lifecycle:runtime:1.0.0 192
+com.android.support:animated-vector-drawable:26.1.0 192
+com.android.support:appcompat-v7:26.1.0 224
+com.android.support:support-annotations:26.1.0 24712
+com.android.support:support-compat:26.1.0 256
+com.android.support:support-core-ui:26.1.0 192
+com.android.support:support-core-utils:26.1.0 160
+com.android.support:support-fragment:26.1.0 160
+com.android.support:support-media-compat:26.1.0 288
+com.android.support:support-v4:26.1.0 160
+com.android.support:support-vector-drawable:26.1.0 160
+com.didi.virtualapk:core:0.9.8 224

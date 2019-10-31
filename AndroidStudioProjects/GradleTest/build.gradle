@@ -1,0 +1,86 @@
+// Top-level build file where you can add configuration options common to all sub-projects/modules.
+println("project   start")
+
+buildscript {
+    println("project   buildscript")
+    repositories {
+        google()
+        jcenter()
+        maven{
+            url uri('/Users/laozhou/Desktop/plugin')
+        }
+    }
+    dependencies {
+        println("project   dependencies")
+        classpath 'com.android.tools.build:gradle:3.4.1'
+        //classpath 'com.zsx.plugin:firstplugin:1.0.1'
+
+        // NOTE: Do not place your application dependencies here; they belong
+        // in the individual module build.gradle files
+    }
+}
+
+allprojects {
+    println("project   allprojects")
+    repositories {
+        google()
+        jcenter()
+        maven{
+            url uri('/Users/laozhou/Desktop/plugin')
+        }
+    }
+}
+
+task clean(type: Delete) {
+    println("project   clean")
+    delete rootProject.buildDir
+
+
+    //havefun()
+}
+
+task(gradleTestzsx).doLast{
+    println("project   gradleTestzsx")
+    println "start gradle test"
+    havefun()
+}
+
+def havefun(){
+    println("have fun!")
+    System.out.println("have fun222!")
+    fileTest()
+    xmlTest()
+    classTest()
+}
+
+/**
+ * 操作文件
+ * */
+def fileTest(){
+    def file = new File("test")
+    file.eachLine{line,lineNo->
+        println "${lineNo}  ${line}"
+    }
+}
+
+/**
+ * xml文件
+ * */
+def xmlTest() {
+    def xml = new XmlParser().parse(new File("app/src/main/res/values/vae.xml"))
+    println xml['declare-styleable'].@name[0]
+    println xml['declare-styleable'].attr[2].text()
+}
+
+def classTest(){
+
+    def list = []
+    list << "0"
+    list << "999"
+    println list.size()
+    println "book id = ${list[0]}  name = ${list[1]}"
+    list.each {}
+}
+
+println("project   end")
+

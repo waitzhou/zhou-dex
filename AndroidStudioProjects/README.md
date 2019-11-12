@@ -1,6 +1,6 @@
-####工程说明：
+### 工程说明：
 
-**AIDLTest2**、AIDLTestMain : 进程间通信
+**AIDLTest2、AIDLTestMain** : 进程间通信
 
 **ComponentDemo** : 组件化demo
 

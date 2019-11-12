@@ -121,7 +121,7 @@ public class FlowLayout extends ViewGroup {
         for (int i = 0; i < texts.size(); i++) {
             TextView textView = new TextView(getContext());
             textView.setHeight(60);
-            textView.setPadding(30,0,30,0);
+            textView.setPadding(80,0,80,0);
             textView.setText(texts.get(i));
             textView.setBackgroundResource(R.drawable.bg_flow);
             MarginLayoutParams lp = new MarginLayoutParams(MarginLayoutParams.WRAP_CONTENT,MarginLayoutParams.WRAP_CONTENT);

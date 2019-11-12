@@ -1,8 +1,7 @@
-<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <declare-styleable name="TestView">
-        <attr name="color" format="color">#cba000</attr>
-        <attr name="size" format="integer">18</attr>
-        <attr name="title" format="string">laozhou</attr>
+    <declare-styleable name="laozhouView">
+        <attr name="title" format="string">老周</attr>
+        <attr name="age" format="integer">18</attr>
+        <attr name="length" format="string">188cm</attr>
     </declare-styleable>
 </resources>

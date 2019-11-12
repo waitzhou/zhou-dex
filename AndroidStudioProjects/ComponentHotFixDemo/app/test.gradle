@@ -1,0 +1,55 @@
+task fileC{
+    group 'test'
+    doLast{
+        println '666666666666'
+        filetest()
+    }
+}
+
+
+task youyouyou {
+    group 'test'
+    description '这是描述'
+
+    doLast {
+        println("${group}")
+        println("${description}")
+        def people = new People()
+        people.name = 'daianna'
+        people.addAge(5)
+        println('people  age ='+people.age)
+        println('people  name = '+people.name)
+        def x = ''
+        for(i in ['香茗',' 晴雯',' 麝月']){
+            x += i
+        }
+        println x
+    }
+}
+
+def test(){
+    def number = [1,2,3,4]
+    println 'num2 ='+number[2]
+    println 'num-1 ='+number[-1]
+    def name = [one:'laoz',two:'laow',three:'laow']
+    println name['one']
+    println name.two
+}
+
+def filetest(){
+    def filePath = '/Users/laozhou/Desktop/Android/AndroidStudioProjects/ComponentHotFixDemo/app/test.txt'
+    def file = new File(filePath)
+    println file.text
+    file.withPrintWriter {
+        it.println('银木花道')
+        it.println('漩涡鸣人')
+    }
+}
+
+class People{
+    String name
+    int age
+    def addAge(int age){
+        this.age += age
+    }
+}

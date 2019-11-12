@@ -1,0 +1,5 @@
+include ':app', ':commonbase', ':base'
+include ':login'
+if (channel.toInteger() == 1)
+    include ':share'
+System.println('setting  gradle')

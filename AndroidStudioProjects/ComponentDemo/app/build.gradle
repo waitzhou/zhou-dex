@@ -1,0 +1,57 @@
+apply plugin: 'com.android.application'
+System.println('main  gradle  start')
+android {
+    System.println('main  android')
+    compileSdkVersion 29
+    buildToolsVersion "29.0.2"
+    defaultConfig {
+        applicationId "com.example.componentdemo"
+        minSdkVersion 15
+        targetSdkVersion 29
+        versionCode 1
+        versionName "1.0"
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        javaCompileOptions {
+            annotationProcessorOptions {
+                arguments = [AROUTER_MODULE_NAME: project.getName()]
+            }
+        }
+    }
+
+    signingConfigs{
+        release{
+            storeFile file('component.keystore')
+            storePassword store_Password
+            keyAlias key_Alias
+            keyPassword key_Password
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            signingConfig signingConfigs.release
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+}
+
+dependencies {
+    System.println('main  dependencies')
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+    implementation 'androidx.appcompat:appcompat:1.1.0'
+    implementation 'androidx.constraintlayout:constraintlayout:1.1.3'
+    testImplementation 'junit:junit:4.12'
+    androidTestImplementation 'androidx.test:runner:1.2.0'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
+
+    annotationProcessor 'com.alibaba:arouter-compiler:1.2.2'
+
+
+    api project(':base')
+    runtimeOnly project(":login")
+    if (channel.toInteger() == 1)
+        runtimeOnly project(":share")
+}
+
+System.println('main  gradle  end')

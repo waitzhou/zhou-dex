@@ -32,6 +32,6 @@ public class Test2Service extends Service {
     };
 
     private void requestResult(String s,ITest2CallBack callBack){
-        //Toast.makeText(this,"6666666",Toast.LENGTH_SHORT).show();
+        //Toast.makeText(this,s,Toast.LENGTH_SHORT).show();
     }
 }

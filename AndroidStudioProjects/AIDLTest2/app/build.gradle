@@ -1,5 +1,4 @@
 apply plugin: 'com.android.application'
-apply plugin: 'com.didi.virtualapk.plugin'
 
 android {
     compileSdkVersion 26
@@ -28,8 +27,3 @@ dependencies {
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
 }
 
-virtualApk {
-    packageId = 0x6f             // The package id of Resources.
-    targetHost='/Users/laozhou/AndroidStudioProjects/AIDLTestMain/app' // The path of application module in host project.
-    applyHostMapping = true      // [Optional] Default value is true.
-}

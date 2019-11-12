@@ -27,14 +27,11 @@
             </intent-filter>
         </activity>
 
-       <!-- <service android:name=".Test2Service"
-            android:process=":remote"
-            android:exported="true"
-            android:permission="com.example.aidltestmain">
+       <service android:name=".Test2Service">
             <intent-filter>
                 <action android:name="com.main.mainapplication.intent.action.FORURL" />
             </intent-filter>
-        </service>-->
+        </service>
     </application>
 
 </manifest>

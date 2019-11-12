@@ -15,6 +15,7 @@ import android.view.View;
 import android.widget.TextView;
 
 import com.example.aidltestmain.IRemotService;
+import com.example.aidltestmain.ITest2CallBack;
 
 import java.io.File;
 
@@ -47,8 +48,30 @@ public class MainActivity extends AppCompatActivity {
         public void onServiceConnected(ComponentName componentName, IBinder iBinder) {
             Log.d(TAG, "onServiceConnected: ");
             remotService = IRemotService.Stub.asInterface(iBinder);
+            Log.e(TAG, "onServiceConnected: " + remotService);
             try {
-                String s = remotService.getTestResult("123456",null);
+                String s = remotService.getTestResult("123456", new ITest2CallBack() {
+                    @Override
+                    public void basicTypes(int anInt, long aLong, boolean aBoolean, float aFloat, double aDouble, String aString) throws RemoteException {
+
+                    }
+
+                    @Override
+                    public void getResultSuccess(String s) throws RemoteException {
+
+                    }
+
+                    @Override
+                    public void getResultFail(String msg) throws RemoteException {
+
+                    }
+
+                    @Override
+                    public IBinder asBinder() {
+                        return null;
+                    }
+                });
+                Log.d(TAG, "onServiceConnected: s = "+s);
                 textView.setText(s);
             } catch (RemoteException e) {
                 e.printStackTrace();

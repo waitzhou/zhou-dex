@@ -1,0 +1,122 @@
+package com.zhexinit.yixiaotong.utils;
+
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentTransaction;
+import android.widget.RadioGroup;
+
+import java.util.List;
+
+/**
+ * Created by zhousx
+ * date : 2017/3/29.
+ * function : fragment 与 radioGroup 切换工具类，可保存fragment状态
+ */
+
+public class FragmentTabUtil implements RadioGroup.OnCheckedChangeListener {
+
+    private FragmentManager fm;
+    private List<Fragment> fragmentList;
+    private int contentId;
+    private RadioGroup radioGroup;
+
+    /**
+     * 正在被展示的fragment的位置
+     */
+    public int currentTab = -1;
+
+    /**
+     * 是否是第一次展示fragment
+     * */
+    private boolean isFristDisplay = true;
+
+    public FragmentTabUtil(FragmentManager fm, List<Fragment> fragmentList,
+                           int contentId, RadioGroup radioGroup) {
+        this.fm = fm;
+        this.fragmentList = fragmentList;
+        this.contentId = contentId;
+        this.radioGroup = radioGroup;
+
+        init();
+    }
+
+    private void init() {
+
+        radioGroup.setOnCheckedChangeListener(this);
+        radioGroup.getChildAt(0).performClick();
+    }
+
+    /**
+     * 将要展示的fragment
+     */
+    private void displayFragment(int i) {
+        FragmentTransaction transaction = obtainFragmentTransaction();
+        Fragment showFragment = fragmentList.get(i);
+        /*if(isFristDisplay){
+            getCurrentFragment().onStop();
+            isFristDisplay = false;
+        }
+        if (showFragment.isAdded()) {
+            showFragment.onStart();
+        } else {
+            transaction.add(contentId, showFragment);
+            transaction.commit();
+        }*/
+        if(!showFragment.isAdded()){
+            transaction.add(contentId,showFragment);
+        }else {
+            showFragment.onStart();
+            showFragment.onResume();
+        }
+        if(currentTab != -1){
+            transaction.hide(fragmentList.get(currentTab));
+        }
+        transaction.show(showFragment);
+        transaction.commit();
+        currentTab = i;
+        //showTab(i);
+    }
+
+    private void showTab(int index) {
+        for (int i = 0; i < fragmentList.size(); i++) {
+            FragmentTransaction transaction = obtainFragmentTransaction();
+            Fragment fragment = fragmentList.get(i);
+            if(i == index){
+                transaction.show(fragment);
+            }else{
+                transaction.hide(fragment);
+            }
+            transaction.commit();
+        }
+        currentTab = index;
+    }
+
+    public Fragment getCurrentFragment() {
+        return fragmentList.get(currentTab);
+    }
+
+    /**
+     * 获取一个带动画的FragmentTransaction
+     *
+     * @return
+     */
+    private FragmentTransaction obtainFragmentTransaction() {
+        FragmentTransaction ft = fm.beginTransaction();
+        // 设置切换动画
+//        if (index > currentTab) {
+//            ft.setCustomAnimations(R.anim.slide_left_in, R.anim.slide_left_out);
+//        } else {
+//            ft.setCustomAnimations(R.anim.slide_right_in, R.anim.slide_right_out);
+//        }
+        return ft;
+    }
+
+    @Override
+    public void onCheckedChanged(RadioGroup radioGroup, int id) {
+        for (int j = 0; j < radioGroup.getChildCount(); j++) {
+            if(radioGroup.getChildAt(j).getId() == id){
+                displayFragment(j);
+            }
+        }
+    }
+}

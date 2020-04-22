@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<animation-list android:oneshot="false"
+    xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:duration="83" android:drawable="@drawable/armature_1_00" />
+    <item android:duration="83" android:drawable="@drawable/armature_1_01" />
+    <item android:duration="83" android:drawable="@drawable/armature_1_02" />
+    <item android:duration="83" android:drawable="@drawable/armature_1_03" />
+    <item android:duration="83" android:drawable="@drawable/armature_1_04" />
+    <item android:duration="83" android:drawable="@drawable/armature_1_05" />
+    <item android:duration="83" android:drawable="@drawable/armature_1_06" />
+    <item android:duration="83" android:drawable="@drawable/armature_1_07" />
+    <item android:duration="83" android:drawable="@drawable/armature_1_08" />
+    <item android:duration="83" android:drawable="@drawable/armature_1_09" />
+    <item android:duration="83" android:drawable="@drawable/armature_1_10" />
+    <item android:duration="83" android:drawable="@drawable/armature_1_11" />
+    <item android:duration="83" android:drawable="@drawable/armature_1_10" />
+    <item android:duration="83" android:drawable="@drawable/armature_1_11" />
+    <item android:duration="83" android:drawable="@drawable/armature_1_12" />
+    <item android:duration="83" android:drawable="@drawable/armature_1_13" />
+    <item android:duration="83" android:drawable="@drawable/armature_1_14" />
+    <item android:duration="83" android:drawable="@drawable/armature_1_15" />
+    <item android:duration="83" android:drawable="@drawable/armature_1_16" />
+    <item android:duration="83" android:drawable="@drawable/armature_1_17" />
+    <item android:duration="83" android:drawable="@drawable/armature_1_18" />
+    <item android:duration="83" android:drawable="@drawable/armature_1_19" />
+    <item android:duration="83" android:drawable="@drawable/armature_1_20" />
+    <item android:duration="83" android:drawable="@drawable/armature_1_21" />
+    <item android:duration="83" android:drawable="@drawable/armature_1_22" />
+    <item android:duration="83" android:drawable="@drawable/armature_1_23" />
+    <item android:duration="83" android:drawable="@drawable/armature_1_24" />
+    <item android:duration="83" android:drawable="@drawable/armature_1_25" />
+    <item android:duration="83" android:drawable="@drawable/armature_1_26" />
+    <item android:duration="83" android:drawable="@drawable/armature_1_27" />
+    <item android:duration="83" android:drawable="@drawable/armature_1_28" />
+    <item android:duration="83" android:drawable="@drawable/armature_1_29" />
+    <item android:duration="83" android:drawable="@drawable/armature_1_30" />
+    <item android:duration="83" android:drawable="@drawable/armature_1_31" />
+    <item android:duration="83" android:drawable="@drawable/armature_1_32" />
+</animation-list>

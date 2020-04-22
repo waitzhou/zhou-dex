@@ -1,0 +1,368 @@
+package com.zhexinit.yixiaotong.function.mine.activity;
+
+import android.annotation.SuppressLint;
+import android.content.Intent;
+import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.net.Uri;
+import android.provider.MediaStore;
+import android.util.Log;
+import android.view.View;
+import android.widget.EditText;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.TextView;
+
+import com.bigkoo.pickerview.builder.OptionsPickerBuilder;
+import com.bigkoo.pickerview.listener.OnOptionsSelectListener;
+import com.bigkoo.pickerview.view.OptionsPickerView;
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.engine.DiskCacheStrategy;
+import com.bumptech.glide.signature.StringSignature;
+import com.google.gson.Gson;
+import com.tencent.cos.xml.exception.CosXmlClientException;
+import com.tencent.cos.xml.exception.CosXmlServiceException;
+import com.tencent.cos.xml.listener.CosXmlResultListener;
+import com.tencent.cos.xml.model.CosXmlRequest;
+import com.tencent.cos.xml.model.CosXmlResult;
+import com.tencent.cos.xml.model.object.PutObjectRequest;
+import com.zhexinit.yixiaotong.R;
+import com.zhexinit.yixiaotong.base.BaseActivity;
+import com.zhexinit.yixiaotong.base.Constant;
+import com.zhexinit.yixiaotong.base.SmartCampusApp;
+import com.zhexinit.yixiaotong.function.BaseResp;
+import com.zhexinit.yixiaotong.function.UserWarehouse;
+import com.zhexinit.yixiaotong.function.mine.entity.UserInfoResp;
+import com.zhexinit.yixiaotong.rxjavamanager.interfaces.ResultCallBack;
+import com.zhexinit.yixiaotong.utils.GlideCricleTransform;
+import com.zhexinit.yixiaotong.utils.SharePerfUtils;
+import com.zhexinit.yixiaotong.utils.StringUtils;
+import com.zhexinit.yixiaotong.widget.CommonPopupWindow;
+import com.zhexinit.yixiaotong.widget.ToolBar;
+
+import java.io.File;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+
+import butterknife.BindView;
+
+/**
+ * Created by:xukun
+ * date:2018/11/9
+ * description:个人信息页面
+ */
+public class PersonInfoActivity extends BaseActivity {
+    @BindView(R.id.tool_bar)
+    ToolBar toolBar;
+    @BindView(R.id.line_head)
+    LinearLayout line_head;
+    @BindView(R.id.line_sex)
+    LinearLayout line_sex;
+    @BindView(R.id.img_head)
+    ImageView img_head;
+    @BindView(R.id.edit_name)
+    EditText editName;
+    @BindView(R.id.text_sex)
+    TextView textSex;
+
+    UserInfoResp infoResp;
+    private int sexId = 3;//1男，2女，3未知
+
+    @Override
+    protected int getLayoutId() {
+        return R.layout.activity_person_info;
+    }
+
+    @Override
+    protected void init() {
+        initToolBar();
+
+        line_head.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                showSelectImagePopup();
+            }
+        });
+        line_sex.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                //showSexPopup();
+            }
+        });
+        infoResp = new Gson().fromJson(SharePerfUtils.getString(Constant.KEY.USER_INFO), UserInfoResp.class);
+        if (infoResp != null) {
+            Glide.with(this)
+                    .load(infoResp.userIcon)
+                    .diskCacheStrategy(DiskCacheStrategy.ALL)
+                    .error(getResources().getDrawable(R.mipmap.ic_main_parent_default))
+                    .transform(new GlideCricleTransform(this))
+                    .into(img_head);
+            editName.setText(infoResp.userName);
+            editName.setSelection(editName.length());
+
+            TextView textView =findViewById(R.id.text_name);
+            textView.setText(infoResp.userName);
+
+            sexId = infoResp.sex;
+            textSex.setText(infoResp.sex == 1 ? "男" : infoResp.sex == 2 ? "女" : "未知");
+        }
+    }
+
+    private void initToolBar() {
+        toolBar.setTitle("个人信息");
+        toolBar.setBackImage();
+        toolBar.back(this);
+        toolBar.setRightTv("保存");
+        toolBar.setRightTvClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                showProgressDialog();
+                if (StringUtils.isEmpty(imagePath)) {
+                    upDtaeUserInfo(infoResp.userIcon);
+                } else {
+                    uploadCos();
+                }
+            }
+        });
+    }
+
+    private final int RESULT_IMAGE = 0X100;
+    private final int RESULT_PHOTO = 0X101;
+    private final int RESULT_CONTER_CORP = 0X102;
+    private String imagePath;
+    private Uri uritempFile;
+    private Bitmap mBitmap;
+
+    /**
+     * 展示照片选择弹框
+     */
+    private void showSelectImagePopup() {
+        if (softInputIsActive()) {
+            hideSoftInput(img_head);
+        }
+        final CommonPopupWindow popupWindow = new CommonPopupWindow(this, img_head, "相机", "手机相册");
+        popupWindow.setOnText1ClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                takePhoto();
+                popupWindow.dismiss();
+            }
+        });
+        popupWindow.setOnText2ClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                choicePic();
+                popupWindow.dismiss();
+            }
+        });
+        popupWindow.setOnText3ClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                popupWindow.dismiss();
+            }
+        });
+        popupWindow.show();
+    }
+
+    /***
+     * 弹出性别选择框
+     * */
+    private void showSexPopup() {
+        final List<String> list = new ArrayList<>();
+        list.add("男");
+        list.add("女");
+        OptionsPickerView pickerView = new OptionsPickerBuilder(this, new OnOptionsSelectListener() {
+            @Override
+            public void onOptionsSelect(int options1, int options2, int options3, View v) {
+                sexId = options1 + 1;
+                textSex.setText(list.get(options1));
+            }
+        }).build();
+        pickerView.setPicker(list);
+        pickerView.show();
+    }
+
+    /**
+     * 拍照
+     */
+    private void takePhoto() {
+        Intent imageCaptureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        String strImgPath = StringUtils.getImagePath(this);// 存放照片的文件夹
+        Log.e("testurl", "takePhoto: " + strImgPath);
+        @SuppressLint("SimpleDateFormat")
+        String fileName = new SimpleDateFormat("yyyyMMddHHmmss").format(new Date()) + ".jpg";// 照片命名
+        File out = new File(strImgPath);
+        if (!out.exists()) {
+            out.mkdirs();
+        }
+        out = new File(strImgPath, fileName);
+        imagePath = strImgPath + fileName;// 该照片的绝对路径
+        Uri uri = Uri.fromFile(out);
+        imageCaptureIntent.putExtra(MediaStore.EXTRA_OUTPUT, uri);
+        startActivityForResult(imageCaptureIntent, RESULT_PHOTO);
+    }
+
+    /**
+     * 选择照片
+     */
+    private void choicePic() {
+        Intent intent = new Intent(Intent.ACTION_PICK, null);
+        intent.setDataAndType(
+                MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+                "image/*");
+        startActivityForResult(intent, RESULT_IMAGE);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (resultCode == RESULT_OK) {
+            switch (requestCode) {
+                case RESULT_IMAGE://选择照片
+                    if (data != null) {
+                        Uri uri = data.getData();
+                        Cursor cursor = getContentResolver().query(uri, null, null, null, null);
+                        if (cursor != null) {
+                            cursor.moveToFirst();
+                            for (int i = 0; i < cursor.getColumnCount(); i++) {
+                                imagePath = cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA));
+                            }
+                        } else {
+                            imagePath = uri.getPath();
+                        }
+                        if (cursor != null)
+                            cursor.close();
+                        startPhotoZoom(imagePath);
+                    }
+                    break;
+                case RESULT_PHOTO://拍照
+                    try {
+                        if (imagePath == null) {
+                            showToast("图片地址为空");
+                        } else
+                            startPhotoZoom(imagePath);
+                    } catch (Exception e) {
+
+                    }
+                    break;
+                case RESULT_CONTER_CORP://裁剪
+                    try {
+                        //mBitmap = (Bitmap) data.getExtras().get("data");
+                        mBitmap = BitmapFactory.decodeStream(getContentResolver().openInputStream(uritempFile));
+                        Glide.with(this)
+                                .load(uritempFile.getPath())
+                                .signature(new StringSignature(UUID.randomUUID().toString())) // 重点在这行,去除相同路径不同图片缓存问题
+                                .transform(new GlideCricleTransform(this))
+                                .into(img_head);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                    break;
+            }
+        }
+    }
+
+    /**
+     * 图片裁剪
+     */
+    private void startPhotoZoom(String imagePath) {
+        Uri uri = Uri.fromFile(new File(imagePath));
+        Intent intent = new Intent("com.android.camera.action.CROP");
+        intent.setDataAndType(uri, "image/*");
+
+        // crop为true是设置在开启的intent中设置显示的view可以剪裁
+        intent.putExtra("crop", "true");
+
+        // aspectX aspectY 是宽高的比例
+        intent.putExtra("aspectX", 1);
+        intent.putExtra("aspectY", 1);
+
+        // outputX,outputY 是剪裁图片的宽高
+        intent.putExtra("outputX", 200);
+        intent.putExtra("outputY", 200);
+        //intent.putExtra("return-data", true);
+
+        //裁剪后的图片Uri路径，uritempFile为Uri类变量
+        uritempFile = Uri.parse("file://" + "/" + StringUtils.getImagePath(this) + "/" + "user_icon.jpg");
+        intent.putExtra(MediaStore.EXTRA_OUTPUT, uritempFile);
+        intent.putExtra("outputFormat", Bitmap.CompressFormat.JPEG.toString());
+
+        startActivityForResult(intent, RESULT_CONTER_CORP);
+    }
+
+    /**
+     * 上传图片到腾讯云
+     */
+    private void uploadCos() {
+        String date = StringUtils.longToDate(System.currentTimeMillis(), "yyyy-MM-dd");
+        PutObjectRequest request = new PutObjectRequest(Constant.KEY.TECENT_COSXMLSERVICE_BUCKET, Constant.KEY.TECENT_COSXMLSERVICE_COSPATH +
+                date + "/a" + System.currentTimeMillis() + ".".concat(StringUtils.getExtensionName(uritempFile.getPath())), uritempFile.getPath());
+        SmartCampusApp.cosXmlService.putObjectAsync(request, new CosXmlResultListener() {
+            @Override
+            public void onSuccess(CosXmlRequest cosXmlRequest, CosXmlResult cosXmlResult) {
+                String imageUrl = "http://" + cosXmlResult.accessUrl.replaceAll("cos", "cos-website");
+                upDtaeUserInfo(imageUrl);
+            }
+
+            @Override
+            public void onFail(CosXmlRequest cosXmlRequest, CosXmlClientException clientException, CosXmlServiceException
+                    serviceException) {
+                hideProgressDialog();
+                String errorMsg = clientException != null ? clientException.toString() : serviceException.toString();
+                showToast(errorMsg);
+            }
+        });
+    }
+
+    //更改用户信息
+    private void upDtaeUserInfo(String imageUrl) {
+        if (infoResp == null) return;
+        Map<String, Object> map = new HashMap<>();
+        map.put("id", infoResp.userId);
+//        map.put("userName", editName.getText().toString() + "");
+//        map.put("sex", sexId);
+        if (!StringUtils.isEmpty(imageUrl)) map.put("userIcon", imageUrl);
+        UserWarehouse.getInstance(this).upDateUserInfo(map, new ResultCallBack<BaseResp>() {
+            @Override
+            public void onSuccess(BaseResp BaseResp) {
+                if (BaseResp.code == 0) {
+
+                    getUserInfo();
+                }
+            }
+
+            @Override
+            public void onFail(String response) {
+                hideProgressDialog();
+            }
+        });
+    }
+
+    /**
+     * 更新用户信息
+     */
+    private void getUserInfo() {
+        UserWarehouse.getInstance(this).getUserInfo(new HashMap(), new ResultCallBack<BaseResp<UserInfoResp>>() {
+            @Override
+            public void onSuccess(BaseResp<UserInfoResp> userInfoResp) {
+                if (userInfoResp.code == 0) {
+                    SharePerfUtils.putString(Constant.KEY.USER_INFO, new Gson().toJson(userInfoResp.result));
+                    finish();
+                } else showToast(userInfoResp.message);
+                hideProgressDialog();
+            }
+
+            @Override
+            public void onFail(String response) {
+                showToast(response);
+                hideProgressDialog();
+            }
+        });
+    }
+}

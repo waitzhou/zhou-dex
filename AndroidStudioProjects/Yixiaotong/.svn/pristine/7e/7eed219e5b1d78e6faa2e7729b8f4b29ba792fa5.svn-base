@@ -1,0 +1,517 @@
+package com.zhexinit.yixiaotong.function.home.activity;
+
+import android.annotation.SuppressLint;
+import android.content.Intent;
+import android.database.Cursor;
+import android.graphics.Typeface;
+import android.net.Uri;
+import android.os.SystemClock;
+import android.provider.MediaStore;
+import android.support.annotation.NonNull;
+import android.text.TextUtils;
+import android.util.Log;
+import android.view.View;
+import android.widget.EditText;
+import android.widget.ImageView;
+import android.widget.TextView;
+
+import com.bigkoo.pickerview.builder.OptionsPickerBuilder;
+import com.bigkoo.pickerview.builder.TimePickerBuilder;
+import com.bigkoo.pickerview.listener.OnOptionsSelectListener;
+import com.bigkoo.pickerview.listener.OnTimeSelectListener;
+import com.bigkoo.pickerview.view.OptionsPickerView;
+import com.bigkoo.pickerview.view.TimePickerView;
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.engine.DiskCacheStrategy;
+import com.google.gson.Gson;
+import com.tencent.cos.xml.exception.CosXmlClientException;
+import com.tencent.cos.xml.exception.CosXmlServiceException;
+import com.tencent.cos.xml.listener.CosXmlProgressListener;
+import com.tencent.cos.xml.listener.CosXmlResultListener;
+import com.tencent.cos.xml.model.CosXmlRequest;
+import com.tencent.cos.xml.model.CosXmlResult;
+import com.tencent.cos.xml.model.object.PutObjectRequest;
+import com.tencent.cos.xml.transfer.COSXMLUploadTask;
+import com.tencent.cos.xml.transfer.TransferConfig;
+import com.tencent.cos.xml.transfer.TransferManager;
+import com.zhexinit.yixiaotong.R;
+import com.zhexinit.yixiaotong.base.BaseActivity;
+import com.zhexinit.yixiaotong.base.Constant;
+import com.zhexinit.yixiaotong.base.SmartCampusApp;
+import com.zhexinit.yixiaotong.event.VacateEvent;
+import com.zhexinit.yixiaotong.function.BaseResp;
+import com.zhexinit.yixiaotong.function.ChildrenWarehouse;
+import com.zhexinit.yixiaotong.function.UserWarehouse;
+import com.zhexinit.yixiaotong.function.home.entity.req.VacateSubmitReq;
+import com.zhexinit.yixiaotong.function.home.entity.resp.SuNingTimeResp;
+import com.zhexinit.yixiaotong.function.mine.entity.UserInfoResp;
+import com.zhexinit.yixiaotong.rxjavamanager.event.RxBus;
+import com.zhexinit.yixiaotong.rxjavamanager.http.HttpManager;
+import com.zhexinit.yixiaotong.rxjavamanager.interfaces.ResultCallBack;
+import com.zhexinit.yixiaotong.utils.GsonUtil;
+import com.zhexinit.yixiaotong.utils.LogUtils;
+import com.zhexinit.yixiaotong.utils.SharePerfUtils;
+import com.zhexinit.yixiaotong.utils.StringUtils;
+import com.zhexinit.yixiaotong.widget.CommonPopupWindow;
+import com.zhexinit.yixiaotong.widget.ToolBar;
+
+import java.io.File;
+import java.net.URL;
+import java.net.URLConnection;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.List;
+import java.util.Observable;
+
+import butterknife.BindView;
+import butterknife.OnClick;
+import io.reactivex.Flowable;
+import io.reactivex.Scheduler;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.functions.Consumer;
+import io.reactivex.functions.Function;
+import io.reactivex.schedulers.Schedulers;
+import top.zibin.luban.CompressionPredicate;
+import top.zibin.luban.Luban;
+import top.zibin.luban.OnCompressListener;
+
+/**
+ * Author:zhousx
+ * date:2018/11/7
+ * description:请假
+ */
+public class VacateActivity extends BaseActivity {
+
+    @BindView(R.id.tool_bar)
+    ToolBar toolBar;
+    @BindView(R.id.tv_apply_man)
+    TextView tvApplyMan;
+    @BindView(R.id.tv_apply_type)
+    TextView tvApplyType;
+    @BindView(R.id.tv_start_time)
+    TextView tvStartTime;
+    @BindView(R.id.tv_end_time)
+    TextView tvEndTime;
+    @BindView(R.id.tv_reason_holder)
+    TextView tvReasonHolder;
+    @BindView(R.id.edt_reason)
+    EditText edtReason;
+    @BindView(R.id.iv_image)
+    ImageView ivImage;
+    @BindView(R.id.tv_manage_man)
+    TextView tvManageMan;
+    @BindView(R.id.tv_camera)
+    TextView tvCamera;
+
+    UserInfoResp mResp;
+
+    /**
+     * 开始时间，结束时间
+     */
+    private int TYPE_START_TIME = 1, TYPE_END_TIME = 2;
+    private long mStartTime, mEndTime;
+
+    private int mLeaveType;//请假类型
+    private int mSelectChild;//选择的孩子
+
+    /**
+     * 请假人、类型
+     */
+    private int TYPE_APPLY_MAN = 3, TYPE_APPLY_TYPE = 4;
+
+    private List<String> mTypeList = new ArrayList<>();
+    private List<String> mPeopleList = new ArrayList<>();
+
+    @Override
+    protected int getLayoutId() {
+        return R.layout.activity_vacate;
+    }
+
+    @Override
+    protected void init() {
+        initToolbar();
+        initData();
+        initDefault();
+    }
+
+    private void initDefault() {
+        tvApplyType.setText(mTypeList.get(0));
+        mLeaveType = 1;
+        if (mPeopleList.size() != 0) {
+            tvApplyMan.setText(mPeopleList.get(0));
+            mSelectChild = 0;
+            tvManageMan.setText(mResp.userChildren.get(0).masterTeacher.concat("老师-班主任"));
+        }
+    }
+
+    private void initToolbar() {
+        toolBar.setTitle("请假");
+        toolBar.setBackImage();
+        toolBar.back(this);
+        toolBar.setRightTv("提交");
+        toolBar.setRightTvClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                prepareSubmit();
+            }
+        });
+        Typeface typeface = Typeface.createFromAsset(getAssets(), getResources().getString(R.string.tv_path));
+        tvCamera.setTypeface(typeface);
+    }
+
+    /**
+     * 准备提交
+     */
+    private void prepareSubmit() {
+        if (mStartTime == 0 && mEndTime == 0) {
+            showToast("开始时间或结束时间不能为空");
+        } else if (mStartTime >= mEndTime) {
+            showToast("开始时间不能小于结束时间");
+        } else if (edtReason.getText().length() == 0) {
+            showToast("请假事由不能为空");
+        } else {
+            showProgressDialog();
+            if (imagePath == null || imagePath.equals("")) {
+                submitMessage("");
+            } else {
+                getCurrentTime();
+            }
+        }
+    }
+
+    private void initData() {
+
+        String string = SharePerfUtils.getString(Constant.KEY.USER_INFO);
+        mResp = new Gson().fromJson(string, UserInfoResp.class);
+
+        mTypeList.add("事假");
+        mTypeList.add("病假");
+
+        if (mResp != null && mResp.userChildren.size() != 0)
+            for (int i = 0; i < mResp.userChildren.size(); i++) {
+                mPeopleList.add(mResp.userChildren.get(i).childName);
+            }
+    }
+
+    @OnClick({R.id.ll_apply_man, R.id.ll_apply_type, R.id.ll_start_time, R.id.ll_end_time, R.id.ll_add_image})
+    public void onViewClicked(View view) {
+        hideSoftInput(tvApplyMan);
+        switch (view.getId()) {
+            case R.id.ll_apply_man:
+                if (mPeopleList != null && mPeopleList.size() > 1)
+                    showOptionsPickerView(mPeopleList, TYPE_APPLY_MAN);
+                break;
+            case R.id.ll_apply_type:
+                showOptionsPickerView(mTypeList, TYPE_APPLY_TYPE);
+                break;
+            case R.id.ll_start_time:
+                showTimePickerView(TYPE_START_TIME);
+                break;
+            case R.id.ll_end_time:
+                showTimePickerView(TYPE_END_TIME);
+                break;
+            case R.id.ll_add_image:
+                showSelectImagePopup();
+                break;
+        }
+    }
+
+    /**
+     * 展示条件选择器
+     */
+    private void showOptionsPickerView(final List<String> strings, final int type) {
+        OptionsPickerView pickerView = new OptionsPickerBuilder(this, new OnOptionsSelectListener() {
+            @Override
+            public void onOptionsSelect(int options1, int options2, int options3, View v) {
+                if (type == TYPE_APPLY_MAN) {
+                    mSelectChild = options1;
+                    tvApplyMan.setText(strings.get(options1));
+                    tvManageMan.setText(mResp.userChildren.get(options1).masterTeacher.concat("老师-班主任"));
+                } else {
+                    tvApplyType.setText(strings.get(options1));
+                    mLeaveType = options1 + 1;
+                }
+            }
+        }).build();
+        pickerView.setPicker(strings);
+        pickerView.show();
+    }
+
+    /**
+     * 展示时间选择器
+     */
+    private void showTimePickerView(final int type) {
+        Calendar end = Calendar.getInstance();
+        end.set(2020, 0, 1);
+        TimePickerView pickerView = new TimePickerBuilder(this, new OnTimeSelectListener() {
+            @Override
+            public void onTimeSelect(Date date, View v) {
+                if (type == TYPE_START_TIME) {
+                    if (mEndTime != 0 && date.getTime() > mEndTime) {
+                        showToast("开始时间不能大于结束时间");
+                    } else {
+                        mStartTime = date.getTime();
+                        tvStartTime.setText(StringUtils.longToDate(date.getTime(), "yyyy-MM-dd HH:mm"));
+                    }
+                } else {
+                    if (date.getTime() < mStartTime) {
+                        showToast("开始时间不能大于结束时间");
+                    } else {
+                        mEndTime = date.getTime();
+                        tvEndTime.setText(StringUtils.longToDate(date.getTime(), "yyyy-MM-dd HH:mm"));
+                    }
+                }
+            }
+        })
+                .setType(new boolean[]{true, true, true, true, true, false})
+                .setRangDate(Calendar.getInstance(), end)
+                .setLabel("年", "月", "日", "时", "分", "秒")
+                .build();
+        pickerView.show();
+    }
+
+    private final int RESULT_IMAGE = 0X100;
+    private final int RESULT_PHOTO = 0X101;
+    private String imagePath;
+
+    /**
+     * 展示照片选择弹框
+     */
+    private void showSelectImagePopup() {
+        if (softInputIsActive()) {
+            hideSoftInput(tvApplyMan);
+        }
+        final CommonPopupWindow popupWindow = new CommonPopupWindow(this, tvApplyMan, "相机", "手机相册");
+        popupWindow.setOnText1ClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                takePhoto();
+                popupWindow.dismiss();
+            }
+        });
+        popupWindow.setOnText2ClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                choicePic();
+                popupWindow.dismiss();
+            }
+        });
+        popupWindow.setOnText3ClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                popupWindow.dismiss();
+            }
+        });
+        popupWindow.show();
+    }
+
+    /**
+     * 拍照
+     */
+    private void takePhoto() {
+        Intent imageCaptureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        String strImgPath = StringUtils.getImagePath(this);// 存放照片的文件夹
+        Log.e("testurl", "takePhoto: " + strImgPath);
+        @SuppressLint("SimpleDateFormat")
+        String fileName = new SimpleDateFormat("yyyyMMddHHmmss").format(new Date()) + ".jpg";// 照片命名
+        File out = new File(strImgPath);
+        if (!out.exists()) {
+            out.mkdirs();
+        }
+        out = new File(strImgPath, fileName);
+        imagePath = strImgPath + fileName;// 该照片的绝对路径
+        Uri uri = Uri.fromFile(out);
+        imageCaptureIntent.putExtra(MediaStore.EXTRA_OUTPUT, uri);
+        startActivityForResult(imageCaptureIntent, RESULT_PHOTO);
+    }
+
+    /**
+     * 选择照片
+     */
+    private void choicePic() {
+        Intent intent = new Intent(Intent.ACTION_PICK, null);
+        intent.setDataAndType(
+                MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+                "image/*");
+        startActivityForResult(intent, RESULT_IMAGE);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (resultCode == RESULT_OK) {
+            switch (requestCode) {
+                case RESULT_IMAGE://选择照片
+                    if (data != null) {
+                        Uri uri = data.getData();
+                        Cursor cursor = getContentResolver().query(uri, null, null, null, null);
+                        if (cursor != null) {
+                            cursor.moveToFirst();
+                            for (int i = 0; i < cursor.getColumnCount(); i++) {
+                                imagePath = cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA));
+                            }
+                        } else {
+                            imagePath = uri.getPath();
+                        }
+                        if (cursor != null)
+                            cursor.close();
+                        //loadImage(imagePath);
+                        compression(new File(imagePath));
+                    }
+                    break;
+                case RESULT_PHOTO://拍照
+                    try {
+                        if (imagePath == null) {
+                            showToast("图片地址为空");
+                        } else {
+                            compression(new File(imagePath));
+                            //loadImage(imagePath);
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                    break;
+            }
+        }
+    }
+
+    private void loadImage(String imagePath) {
+        ivImage.setVisibility(View.VISIBLE);
+        Glide.with(this)
+                .load(imagePath)
+                .centerCrop()
+                .diskCacheStrategy(DiskCacheStrategy.ALL)
+                .into(ivImage);
+    }
+
+    private long TIME_THRESHOLD = 1000* 60 * 10;
+    /**
+     * 上传图片到腾讯云
+     */
+    private void uploadCos(long currentTime) {
+        Log.e("aaa", "uploadCos: "+currentTime);
+        if (currentTime != 0){
+          if(Math.abs(System.currentTimeMillis() - currentTime) > TIME_THRESHOLD){
+              showToast("系统时间有误");
+              return;
+          }
+        } else
+            currentTime = System.currentTimeMillis();
+        String date = StringUtils.longToDate(currentTime, "yyyy-MM-dd");
+        PutObjectRequest request = new PutObjectRequest(Constant.KEY.TECENT_COSXMLSERVICE_BUCKET, Constant.KEY.TECENT_COSXMLSERVICE_COSPATH +
+                date + "/a" + currentTime + ".".concat(StringUtils.getExtensionName(imagePath)), imagePath);
+
+        TransferConfig transferConfig = new TransferConfig.Builder().build();
+        TransferManager transferManager = new TransferManager(SmartCampusApp.cosXmlService, transferConfig);
+        COSXMLUploadTask cosxmlUploadTask = transferManager.upload(request, null);
+        /*cosxmlUploadTask.setCosXmlProgressListener(new CosXmlProgressListener() {
+            @Override
+            public void onProgress(long complete, long target) {
+            }
+        });*/
+        cosxmlUploadTask.setCosXmlResultListener(new CosXmlResultListener() {
+            @Override
+            public void onSuccess(CosXmlRequest cosXmlRequest, CosXmlResult cosXmlResult) {
+                LogUtils.e(cosXmlResult.accessUrl);
+                String imageUrl = cosXmlResult.accessUrl.replaceAll("cos", "cos-website");
+                submitMessage(imageUrl);
+            }
+
+            @Override
+            public void onFail(CosXmlRequest cosXmlRequest, CosXmlClientException clientException, CosXmlServiceException
+                    serviceException) {
+                final String errorMsg = clientException != null ? clientException.toString() : serviceException.toString();
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Log.e("", "onFail:uploadImageError =  " + errorMsg);
+                        hideProgressDialog();
+                    }
+                });
+            }
+        });
+    }
+
+    private void getCurrentTime() {
+        UserWarehouse.getInstance(this).getServiceTime(new ResultCallBack<Long>() {
+            @Override
+            public void onSuccess(Long aLong) {
+                if(aLong != 0){
+                    uploadCos(aLong);
+                } else {
+                    hideProgressDialog();
+                    showToast("获取时间失败");
+                }
+            }
+
+            @Override
+            public void onFail(String response) {
+                hideProgressDialog();
+                showToast(response);
+            }
+        });
+    }
+
+    /**
+     * 提交信息
+     */
+    private void submitMessage(String imageUrl) {
+        VacateSubmitReq req = new VacateSubmitReq();
+        req.leaveContent = edtReason.getText().toString();
+        req.leaveImage = imageUrl;
+        req.longStartTime = mStartTime;
+        req.longEndTime = mEndTime;
+        req.leaveType = mLeaveType;
+        req.childId = mResp.userChildren.get(mSelectChild).childId;
+        req.teacherId = mResp.userChildren.get(mSelectChild).teacherId;
+        req.userId = mResp.userId;
+        ChildrenWarehouse.getInstance(this).vacateSubmit(req, new ResultCallBack<BaseResp>() {
+            @Override
+            public void onSuccess(BaseResp baseResp) {
+                if (baseResp.code == 0) {
+                    setResult(RESULT_OK);
+                    finish();
+                    RxBus.getInstance().sendEvent(new VacateEvent());
+                } else
+                    showToast(baseResp.message);
+                hideProgressDialog();
+            }
+
+            @Override
+            public void onFail(String response) {
+               showToast("请求服务器失败");
+                hideProgressDialog();
+            }
+        });
+    }
+
+    //压缩图片
+    @SuppressLint("CheckResult")
+    private void compression(File file) {
+        Luban.with(this)
+                .load(file)
+                .setCompressListener(new OnCompressListener() {
+                    @Override
+                    public void onStart() {
+                    }
+
+                    @Override
+                    public void onSuccess(File file) {
+                        Log.i("path", file.getAbsolutePath());
+                        ivImage.setVisibility(View.VISIBLE);
+                        Glide.with(VacateActivity.this)
+                                .load(file)
+                                .centerCrop()
+                                .diskCacheStrategy(DiskCacheStrategy.ALL)
+                                .into(ivImage);
+                        imagePath=file.getPath();
+                    }
+                    @Override
+                    public void onError(Throwable e) {
+                    }
+                }).launch();
+
+    }
+}

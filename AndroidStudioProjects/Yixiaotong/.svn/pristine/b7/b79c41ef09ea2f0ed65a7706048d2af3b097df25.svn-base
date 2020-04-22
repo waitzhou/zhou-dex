@@ -1,0 +1,22 @@
+package com.zhexinit.yixiaotong.function.home.activity;
+
+import com.zhexinit.yixiaotong.R;
+import com.zhexinit.yixiaotong.base.BaseActivity;
+
+/**
+ * Author:zhousx
+ * date:2018/11/22
+ * description:没有绑定孩子界面
+ */
+public class NoBindChildActivity extends BaseActivity {
+
+    @Override
+    protected int getLayoutId() {
+        return R.layout.activity_no_bind_child;
+    }
+
+    @Override
+    protected void init() {
+
+    }
+}

@@ -20,6 +20,8 @@
 
         <activity android:name=".TestActivity" />
 
+        <activity android:name=".LayoutActivity"/>
+
     </application>
 
 </manifest>

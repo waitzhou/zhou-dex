@@ -1,0 +1,403 @@
+package com.zhexinit.yixiaotong.function.home.activity;
+
+import android.annotation.SuppressLint;
+import android.graphics.drawable.Drawable;
+import android.support.v4.content.ContextCompat;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
+import android.text.Spannable;
+import android.text.SpannableString;
+import android.text.Spanned;
+import android.text.style.AbsoluteSizeSpan;
+import android.text.style.ForegroundColorSpan;
+import android.util.Log;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.ImageView;
+import android.widget.RadioButton;
+import android.widget.RadioGroup;
+import android.widget.TextView;
+
+import com.zhexinit.yixiaotong.R;
+import com.zhexinit.yixiaotong.base.BaseActivity;
+import com.zhexinit.yixiaotong.base.Constant;
+import com.zhexinit.yixiaotong.function.BaseResp;
+import com.zhexinit.yixiaotong.function.ChildrenWarehouse;
+import com.zhexinit.yixiaotong.function.home.entity.resp.AttendanceStatisticResp;
+import com.zhexinit.yixiaotong.function.mine.entity.UserInfoResp;
+import com.zhexinit.yixiaotong.rxjavamanager.interfaces.ResultCallBack;
+import com.zhexinit.yixiaotong.utils.DipUtils;
+import com.zhexinit.yixiaotong.utils.GsonUtil;
+import com.zhexinit.yixiaotong.utils.SharePerfUtils;
+import com.zhexinit.yixiaotong.utils.StringUtils;
+import com.zhexinit.yixiaotong.utils.commonAdapter.CommonRecyclerAdapter;
+import com.zhexinit.yixiaotong.utils.commonAdapter.CommonRecyclerHolder;
+import com.zhexinit.yixiaotong.widget.ShowChildListPopupWindow;
+import com.zhexinit.yixiaotong.widget.ToolBar;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import butterknife.BindView;
+import butterknife.OnClick;
+
+/**
+ * Author:zhousx
+ * date:2018/11/6
+ * description:考勤统计
+ */
+public class AttendanceStatisticalActivity extends BaseActivity implements RadioGroup.OnCheckedChangeListener, ShowChildListPopupWindow.PopupItemSelectListener {
+
+    @BindView(R.id.tool_bar)
+    ToolBar toolBar;
+    @BindView(R.id.tv_date)
+    TextView tvDate;
+    @BindView(R.id.tv_common_day)
+    TextView tvCommonDay;
+    @BindView(R.id.tv_1)
+    TextView mTv1;
+    @BindView(R.id.tv_2)
+    TextView mTv2;
+    @BindView(R.id.tv_3)
+    TextView mTv3;
+    @BindView(R.id.tv_4)
+    TextView mTv4;
+    @BindView(R.id.iv_1)
+    ImageView iv1;
+    @BindView(R.id.iv_2)
+    ImageView iv2;
+    @BindView(R.id.iv_3)
+    ImageView iv3;
+    @BindView(R.id.iv_4)
+    ImageView iv4;
+
+    @BindView(R.id.tv_exception_day)
+    TextView tvExceptionDay;
+
+    @BindView(R.id.radio_group)
+    RadioGroup radioGroup;
+    @BindView(R.id.recycler_view)
+    RecyclerView recyclerView;
+
+    private int mQueryYear, mQueryMonth;//查询 年 月
+    private String mSelectChildId;//查询的孩子的id
+    private int mSelectPosition = 0;//展示的孩子的位置
+    private AttendanceStatisticResp mStatisticResp;
+
+    UserInfoResp userInfoResp;
+    //展示的类型
+    private final int TYPE_LATE = 1, TYPE_LEAVE_EARLY = 2, TYPE_ABSENCE = 3, TYPE_LEAVE = 4;
+    private int mType = 1;
+
+    private List<AttendanceStatisticResp.Statistic> mStatistics = new ArrayList<>();
+
+    private List<String> mChildNames = new ArrayList<>();
+    private List<String> mStrings = new ArrayList<>();
+
+    @Override
+    protected int getLayoutId() {
+        return R.layout.activity_attendance_statistical;
+    }
+
+    @Override
+    protected void init() {
+
+        initData();
+        initToolbar();
+        getStatisticalData(mQueryYear, mQueryMonth);
+    }
+
+    private void initContent() {
+        initTextDay();
+        initRecyclerView();
+        initRadioGroup();
+    }
+
+    /**
+     * 设hi在正常、异常天数
+     */
+    @SuppressLint("SetTextI18n")
+    private void initTextDay() {
+        tvCommonDay.setText(getRadioButtonText(0, mStatisticResp.normalDays));
+        tvExceptionDay.setText(getRadioButtonText(1, mStatisticResp.abnormalDays));
+
+        Drawable drawable = getResources().getDrawable(R.drawable.progress_purple);
+        drawable.setBounds(0, 0, DipUtils.dp2px(this, 40), DipUtils.dp2px(this, 55));
+        int totalSize = mStatisticResp.absenceList.size() + mStatisticResp.beLateList.size() +
+                mStatisticResp.leaveEarlyList.size() + mStatisticResp.leaveList.size();
+        mTv1.setText(mStatisticResp.beLateList.size() + "天");
+        mTv2.setText(mStatisticResp.leaveEarlyList.size() + "天");
+        mTv3.setText(mStatisticResp.absenceList.size() + "天");
+        mTv4.setText(mStatisticResp.leaveList.size() + "天");
+        setHeight(iv1, mStatisticResp.beLateList.size(), totalSize);
+        setHeight(iv2, mStatisticResp.leaveEarlyList.size(), totalSize);
+        setHeight(iv3, mStatisticResp.absenceList.size(), totalSize);
+        setHeight(iv4, mStatisticResp.leaveList.size(), totalSize);
+    }
+
+    private void setHeight(ImageView imageView, int days, int totalDay) {
+        ViewGroup.LayoutParams params = imageView.getLayoutParams();
+        params.height = days * DipUtils.dp2px(this, 60) / totalDay;
+        imageView.setLayoutParams(params);
+    }
+
+    private void initData() {
+        mQueryYear = Integer.parseInt(StringUtils.longToDate(System.currentTimeMillis(), "yyyy"));
+        mQueryMonth = Integer.parseInt(StringUtils.longToDate(System.currentTimeMillis(), "MM"));
+        setTextDate(mQueryYear, mQueryMonth);
+        for (int i = 0; i < 5; i++) {
+            mStrings.add(String.valueOf(i));
+        }
+        userInfoResp = GsonUtil.getInstance().getGson().fromJson(SharePerfUtils.getString(Constant.KEY.USER_INFO), UserInfoResp.class);
+        if (userInfoResp.userChildren != null && userInfoResp.userChildren.size() != 0) {
+            for (int i = 0; i < userInfoResp.userChildren.size(); i++) {
+                mChildNames.add(userInfoResp.userChildren.get(i).childName);
+            }
+            mSelectChildId = userInfoResp.userChildren.get(mSelectPosition).childId;
+        }
+    }
+
+    private void initToolbar() {
+        if (mChildNames.size() > mSelectPosition)
+            toolBar.setTitle(mChildNames.get(mSelectPosition).concat("的考勤统计"));
+        if (mChildNames.size() > 1) {
+            toolBar.setTitleRightDrawable(R.string.tv_down);
+            toolBar.setTitleClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    showSelectPopupWindow();
+                }
+            });
+        }
+        toolBar.setBackImage();
+        toolBar.back(this);
+    }
+
+    /**
+     * 展示孩子选择框
+     */
+    private void showSelectPopupWindow() {
+        ShowChildListPopupWindow popupWindow = new ShowChildListPopupWindow(this, toolBar, mSelectPosition, this);
+        popupWindow.show();
+    }
+
+    private void initRecyclerView() {
+        recyclerView.setLayoutManager(new LinearLayoutManager(this));
+        if (recyclerView.getAdapter() == null)
+            recyclerView.setAdapter(new CommonRecyclerAdapter<AttendanceStatisticResp.Statistic>(this, mStatistics,
+                    R.layout.item_attendance_statistical) {
+                @Override
+                public void convert(CommonRecyclerHolder holder, AttendanceStatisticResp.Statistic item, int position) {
+                    TextView title = holder.getView(R.id.item_tv_title);
+                    TextView time = holder.getView(R.id.item_tv_time);
+                    TextView tag = holder.getView(R.id.item_tv_tag);
+                    time.setText(item.time);
+                    switch (mType) {
+                        case TYPE_LATE:
+                            title.setText("迟到");
+                            tag.setText("迟到");
+                            tag.setBackground(getResources().getDrawable(R.drawable.bg_radius8_purple));
+                            break;
+                        case TYPE_LEAVE_EARLY:
+                            title.setText("早退");
+                            tag.setText("早退");
+                            tag.setBackground(getResources().getDrawable(R.drawable.bg_radius8_shallow_blue));
+                            break;
+                        case TYPE_ABSENCE:
+                            title.setText("缺勤");
+                            tag.setText("缺勤");
+                            tag.setBackground(getResources().getDrawable(R.drawable.bg_radius8_red));
+                            break;
+                        case TYPE_LEAVE:
+                            title.setText("请假");
+                            tag.setText("请假");
+                            tag.setBackground(getResources().getDrawable(R.drawable.bg_radius8_blue));
+                            break;
+                    }
+                }
+            });
+        else {
+            mStatistics.addAll(mStatisticResp.beLateList);
+            recyclerView.getAdapter().notifyDataSetChanged();
+        }
+    }
+
+    @OnClick({R.id.iv_previous, R.id.iv_next})
+    public void onViewClicked(View view) {
+        switch (view.getId()) {
+            case R.id.iv_previous:
+                int year = mQueryYear, month = mQueryMonth;
+                if (mQueryMonth > 1) {
+                    month--;
+                } else {
+                    year--;
+                    month = 12;
+                }
+                getStatisticalData(year, month);
+                break;
+            case R.id.iv_next:
+                int yearNext = mQueryYear, monthNext = mQueryMonth;
+                if (mQueryMonth >= 12) {
+                    yearNext++;
+                    monthNext = 1;
+                } else {
+                    monthNext++;
+                }
+                getStatisticalData(yearNext, monthNext);
+                break;
+        }
+    }
+
+    /**
+     * 获取统计数据
+     */
+    private void getStatisticalData(final int queryYear, final int queryMonth) {
+        mStatistics.clear();
+        showProgressDialog();
+        Map<String, String> map = new HashMap<>();
+        map.put("childId", mSelectChildId);
+        map.put("queryMonth", String.valueOf(queryYear).concat(String.valueOf(queryMonth)));
+        ChildrenWarehouse.getInstance(this).getAttendanceStatistical(map, new ResultCallBack<BaseResp<AttendanceStatisticResp>>() {
+            @Override
+            public void onSuccess(BaseResp<AttendanceStatisticResp> attendanceStatisticRespBaseResp) {
+                hideProgressDialog();
+                if (attendanceStatisticRespBaseResp.code == 0) {
+                    mQueryYear = queryYear;
+                    mQueryMonth = queryMonth;
+                    setTextDate(queryYear, queryMonth);
+                    mStatisticResp = attendanceStatisticRespBaseResp.result;
+                    initContent();
+                }else {
+                    resetContent();
+                }
+            }
+
+            @Override
+            public void onFail(String response) {
+                hideProgressDialog();
+            }
+        });
+    }
+
+    /**
+     * 重置数据
+     * */
+    private void resetContent() {
+
+    }
+
+    @Override
+    public void onCheckedChanged(RadioGroup group, int checkedId) {
+        for (int i = 0; i < radioGroup.getChildCount(); i++) {
+            RadioButton button = (RadioButton) radioGroup.getChildAt(i);
+            if (button.getId() == checkedId) {
+                setTextColor(i);
+                button.setCompoundDrawablesRelativeWithIntrinsicBounds(0, 0, 0, R.drawable.gradient_purple);
+                mStatistics.clear();
+                switch (i) {
+                    case 0:
+                        mType = TYPE_LATE;
+                        mStatistics.addAll(mStatisticResp.beLateList);
+                        break;
+                    case 1:
+                        mType = TYPE_LEAVE_EARLY;
+                        mStatistics.addAll(mStatisticResp.leaveEarlyList);
+                        break;
+                    case 2:
+                        mType = TYPE_ABSENCE;
+                        mStatistics.addAll(mStatisticResp.absenceList);
+                        break;
+                    case 3:
+                        mType = TYPE_LEAVE;
+                        mStatistics.addAll(mStatisticResp.leaveList);
+                        break;
+                }
+                recyclerView.getAdapter().notifyDataSetChanged();
+            } else {
+                button.setCompoundDrawablesRelativeWithIntrinsicBounds(0, 0, 0, 0);
+            }
+
+        }
+    }
+
+    /**
+     * 设置text字体
+     *
+     * @param textPosition 字体位置
+     */
+    private void setTextColor(int textPosition) {
+        mTv1.setTextColor(ContextCompat.getColor(this, R.color.text_color9));
+        mTv2.setTextColor(ContextCompat.getColor(this, R.color.text_color9));
+        mTv3.setTextColor(ContextCompat.getColor(this, R.color.text_color9));
+        mTv4.setTextColor(ContextCompat.getColor(this, R.color.text_color9));
+        switch (textPosition) {
+            case 0:
+                mTv1.setTextColor(ContextCompat.getColor(this, R.color.end_purple));
+                break;
+            case 1:
+                mTv2.setTextColor(ContextCompat.getColor(this, R.color.end_shallow__blue));
+                break;
+            case 2:
+                mTv3.setTextColor(ContextCompat.getColor(this, R.color.end_red));
+                break;
+            case 3:
+                mTv4.setTextColor(ContextCompat.getColor(this, R.color.end_blue));
+                break;
+        }
+    }
+
+    /**
+     * 设置radio button字体
+     *
+     * @param position 位置
+     * @param day      天数
+     */
+    private Spannable getRadioButtonText(int position, int day) {
+        String s = "";
+        switch (position) {
+            case 0:
+                s = "正常";
+                break;
+            case 1:
+                s = "异常";
+                break;
+            default:
+                break;
+        }
+        s = String.valueOf(s).concat(":").concat(String.valueOf(day)).concat("天");
+        Spannable sb = new SpannableString(s);
+        int textChangeLength = String.valueOf(day).length() + 1;
+        if (position == 1)
+            sb.setSpan(new ForegroundColorSpan(ContextCompat.getColor(this, R.color.text_red)),
+                    s.length() - textChangeLength, s.length(), Spanned.SPAN_INCLUSIVE_INCLUSIVE);
+        else
+            sb.setSpan(new ForegroundColorSpan(ContextCompat.getColor(this, R.color.text_green)),
+                    s.length() - textChangeLength, s.length(), Spanned.SPAN_INCLUSIVE_INCLUSIVE);
+        sb.setSpan(new AbsoluteSizeSpan(20, true),
+                s.length() - textChangeLength, s.length(), Spanned.SPAN_INCLUSIVE_INCLUSIVE);
+        return sb;
+    }
+
+    /**
+     * 设置查询日期显示
+     */
+    private void setTextDate(int queryYear, int queryMonth) {
+        Log.e("tetata", "setTextDate: year = " + queryYear + " \t\t queryMonth = " + queryMonth);
+        tvDate.setText(String.valueOf(queryYear).concat("年").concat(String.valueOf(queryMonth)).concat("月"));
+    }
+
+    private void initRadioGroup() {
+        radioGroup.setOnCheckedChangeListener(this);
+        radioGroup.getChildAt(0).performClick();
+    }
+
+    @Override
+    public void popupItemSelectListener(int position, String deviceId) {
+        mSelectPosition = position;
+        toolBar.setTitle(mChildNames.get(mSelectPosition).concat("的考勤统计"));
+        mSelectChildId = userInfoResp.userChildren.get(mSelectPosition).childId;
+        getStatisticalData(mQueryYear,mQueryMonth);
+    }
+}

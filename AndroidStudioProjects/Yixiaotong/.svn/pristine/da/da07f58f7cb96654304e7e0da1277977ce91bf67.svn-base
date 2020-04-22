@@ -1,0 +1,102 @@
+package com.zhexinit.yixiaotong.function.mine.activity;
+
+import android.content.Intent;
+import android.view.View;
+import android.widget.TextView;
+
+import com.zhexinit.yixiaotong.R;
+import com.zhexinit.yixiaotong.base.BaseActivity;
+import com.zhexinit.yixiaotong.base.Constant;
+import com.zhexinit.yixiaotong.function.BaseWarehouse;
+import com.zhexinit.yixiaotong.function.mine.entity.UserInfoResp;
+import com.zhexinit.yixiaotong.utils.ActivityManagerUtil;
+import com.zhexinit.yixiaotong.utils.GlideCacheUtils;
+import com.zhexinit.yixiaotong.utils.GsonUtil;
+import com.zhexinit.yixiaotong.utils.SharePerfUtils;
+import com.zhexinit.yixiaotong.widget.CommonDialog;
+import com.zhexinit.yixiaotong.widget.ToolBar;
+
+import butterknife.BindView;
+import butterknife.OnClick;
+
+/**
+ * Created by:xukun
+ * date:2018/11/10
+ * description:我的设置页面
+ */
+public class SettingActivity extends BaseActivity {
+    @BindView(R.id.tool_bar)
+    ToolBar toolBar;
+    @BindView(R.id.text_catch)
+    TextView text_catch;
+    @BindView(R.id.text_phone)
+    TextView textPhone;
+    @BindView(R.id.text_set_pas)
+    TextView textSetPas;
+
+    @Override
+    protected int getLayoutId() {
+        return R.layout.activity_setting;
+    }
+
+    @Override
+    protected void init() {
+        toolBar.setTitle("设置");
+        toolBar.setBackImage();
+        toolBar.back(this);
+        try {
+            text_catch.setText(GlideCacheUtils.getCacheSize(getCacheDir()));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        UserInfoResp infoResp= GsonUtil.getInstance().getGson().fromJson(SharePerfUtils.getString(Constant.KEY.USER_INFO),UserInfoResp.class);
+        if (infoResp!=null){
+            textPhone.setText(SharePerfUtils.getString(Constant.KEY.USER_PHONE_NUM));
+            textSetPas.setText(infoResp.existPassword?"已设置":"未设置");
+        }
+    }
+
+    @OnClick({R.id.line_pas, R.id.line_catch, R.id.text_out_login})
+    public void onClick(View v) {
+        switch (v.getId()) {
+            case R.id.line_pas:
+                startActivity(new Intent(this, UpdatePassWActivity.class));
+                break;
+            case R.id.line_catch:
+                final CommonDialog d = new CommonDialog(this, "", "确认清除缓存么");
+                d.setSumbitClick(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        d.dismiss();
+                        GlideCacheUtils.cleanInternalCache(SettingActivity.this);
+                        try {
+                            text_catch.setText(GlideCacheUtils.getCacheSize(getCacheDir()));
+                            showToast("清理成功");
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    }
+                });
+                d.noTitle();
+                d.show();
+                break;
+            case R.id.text_out_login:
+                final CommonDialog dialog = new CommonDialog(this, "", "是否退出当前账号");
+                dialog.setSumbitClick(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        dialog.dismiss();
+                        SharePerfUtils.clearPref();
+                        BaseWarehouse.header=null;
+                        ActivityManagerUtil.getAppManager().finishAllActivity();
+                        startActivity(new Intent(SettingActivity.this, LoginWithSMSActivity.class));
+                    }
+                });
+                dialog.noTitle();
+                dialog.show();
+                break;
+        }
+    }
+
+}

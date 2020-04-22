@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/bg_color">
+
+    <include layout="@layout/layout_toolbar"/>
+
+
+    <LinearLayout
+        android:layout_marginTop="10dp"
+        android:padding="20dp"
+        android:gravity="center_vertical"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/white">
+        <TextView
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:text="手机号码"
+            android:textColor="#ff999999"
+            android:textSize="14sp"
+            />
+        <TextView
+            android:id="@+id/text_phone"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="#ff555555"
+            android:textSize="14sp"
+            android:drawablePadding="20dp" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_marginTop="1dp"
+        android:id="@+id/line_pas"
+        android:padding="20dp"
+        android:gravity="center_vertical"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/white">
+        <TextView
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:text="修改密码"
+            android:textColor="#ff999999"
+            android:textSize="14sp"
+            />
+        <TextView
+            android:id="@+id/text_set_pas"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="已设置"
+            android:textColor="#ff555555"
+            android:textSize="14sp"
+            android:drawableRight="@mipmap/ic_next"
+            android:drawablePadding="20dp" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/line_catch"
+        android:layout_marginTop="10dp"
+        android:padding="20dp"
+        android:gravity="center_vertical"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/white">
+        <TextView
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:text="清空缓存"
+            android:textColor="#ff999999"
+            android:textSize="14sp"
+            />
+        <TextView
+            android:id="@+id/text_catch"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="4.0Mb"
+            android:textColor="#ff555555"
+            android:textSize="14sp"
+            android:drawableRight="@mipmap/ic_next"
+            android:drawablePadding="20dp" />
+    </LinearLayout>
+
+    <TextView
+        android:background="@color/white"
+        android:layout_marginTop="10dp"
+        android:id="@+id/text_out_login"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:text="退出登陆"
+        android:textColor="#ff0e7ef5"
+        android:gravity="center"
+        android:textSize="14sp" />
+</LinearLayout>

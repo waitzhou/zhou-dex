@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/rl_place_holder"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:visibility="gone">
+
+    <TextView
+        android:id="@+id/tv_place_holder"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="150dp"
+        android:drawableTop="@mipmap/ic_not_link_net"
+        android:drawablePadding="18dp"
+        android:textColor="@color/text_colorb"
+        android:text="抱歉，网络不给力"/>
+
+    <Button
+        android:id="@+id/btn_place_holder"
+        android:layout_width="120dp"
+        android:layout_height="30dp"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="20dp"
+        android:background="@drawable/bg_radius15_stroke_theme"
+        android:textColor="@color/theme_center_color"
+        android:text="刷新"
+        android:layout_below="@id/tv_place_holder"/>
+
+</RelativeLayout>

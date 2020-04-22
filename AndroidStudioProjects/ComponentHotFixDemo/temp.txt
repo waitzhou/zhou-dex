@@ -1,0 +1,84 @@
+
+/**
+* ActivityManager
+*/
+@SystemService(Context.ACTIVITY_SERVICE)//没有继承关系
+public class ActivityManager {
+
+    @UnsupportedAppUsage
+    public static IActivityManager getService() {
+        return IActivityManagerSingleton.get();
+    }
+
+    private static final Singleton<IActivityManager> IActivityManagerSingleton =
+            new Singleton<IActivityManager>() {
+                @Override
+                protected IActivityManager create() {
+                    final IBinder b = ServiceManager.getService(Context.ACTIVITY_SERVICE);
+                    final IActivityManager am = IActivityManager.Stub.asInterface(b);
+                    return am;
+                }
+    };
+}
+
+
+/**
+* ActivityManagerService
+*/
+public final class ActivityManagerService extends ActivityManagerNative
+        implements Watchdog.Monitor, BatteryStatsImpl.BatteryCallback {
+
+     public final void attachApplication(IApplicationThread thread) {
+        synchronized (this) {
+            int callingPid = Binder.getCallingPid();
+            final long origId = Binder.clearCallingIdentity();
+            attachApplicationLocked(thread, callingPid);
+            Binder.restoreCallingIdentity(origId);
+        }
+     }
+
+     private final boolean attachApplicationLocked(IApplicationThread thread,int pid) {
+                 ...
+                 thread.bindApplication(...);
+                 ...
+                 thread.scheduleCreateBackupAgent(mBackupTarget.appInfo,compatibilityInfoForPackageLocked(mBackupTarget.appInfo),
+mBackupTarget.backupMode);
+                 ...
+     }
+}
+
+
+/**
+*   ActivityThread
+*/
+public final class ActivityThread extends ClientTransactionHandler {
+
+    public static void main(String[] args) {
+            ...
+            Looper.prepareMainLooper();
+            ...
+            ActivityThread thread = new ActivityThread();
+            thread.attach(false, startSeq);
+            if (sMainThreadHandler == null) {
+                sMainThreadHandler = thread.getHandler();
+            }
+            ...
+            Looper.loop();
+
+    }
+
+    private void attach(boolean system, long startSeq) {
+        ...
+        final IActivityManager mgr = ActivityManager.getService();//返回AMS代理
+        mgr.attachApplication(mAppThread, startSeq);
+        ...
+    }
+
+    private class ApplicationThread extends IApplicationThread.Stub {
+        public final void bindApplication(...){
+            ...
+            sendMessage(H.BIND_APPLICATION, data);
+            ...
+        }
+    }
+ }

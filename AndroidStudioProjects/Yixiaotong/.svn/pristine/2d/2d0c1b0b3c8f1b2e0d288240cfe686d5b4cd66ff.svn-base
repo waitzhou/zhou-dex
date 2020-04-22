@@ -1,0 +1,64 @@
+package com.zhexinit.yixiaotong.function.home.entity.resp;
+
+/**
+ * Author:zhousx
+ * date:2018/11/17
+ * description:
+ */
+public class HomeFunctionResp {
+
+    public Notice notice;
+    public OtherFunction attendanceNotice;
+    public OtherFunction courseNotice;
+    public OtherFunction homeWorkNotice;
+    public OtherFunction performanceNotice;
+    public OtherFunction leaveNotice;
+
+    /**
+     *"id": 1,
+     "teacherId": 1,
+     "classId": null,
+     "schoolId": 1,
+     "noticeTitle": "测试通知",
+     "noticeContent": "哈哈哈哈哈哈哈哈哈哈哈",
+     "noticeTime": "明天",
+     "noticeType": true,
+     "createTime": 1542340618000,
+     "modifyTime": 1542340623000
+     * */
+    public class Notice{
+
+        public int id;
+        public int teacherId;
+        public String classId;
+        public int schoolId;
+        public String noticeTitle;
+        public String noticeContent;
+        public String noticeTime;
+        public boolean noticeType;
+        public long createTime;
+        public long modifyTime;
+
+    }
+
+    /**
+     * "id": 3,
+     "schoolId": 1,
+     "classId": 1,
+     "childId": "1",
+     "pushType": true,
+     "message": "王小熊 9:00 正常到校",
+     "messageType": true,
+     "createTime": 1542175506000
+     * */
+    public class OtherFunction{
+        public int id;
+        public String classId;
+        public int schoolId;
+        public String childId;
+        public boolean pushType;
+        public String message;
+        public boolean messageType;
+        public long createTime;
+    }
+}

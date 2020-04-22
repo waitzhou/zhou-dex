@@ -1,0 +1,283 @@
+package com.zhexinit.yixiaotong.function.mine.activity;
+
+import android.annotation.SuppressLint;
+import android.content.Intent;
+import android.graphics.Typeface;
+import android.view.View;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.TextView;
+
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.engine.DiskCacheStrategy;
+import com.google.gson.Gson;
+import com.zhexinit.yixiaotong.R;
+import com.zhexinit.yixiaotong.base.BaseActivity;
+import com.zhexinit.yixiaotong.base.Constant;
+import com.zhexinit.yixiaotong.function.BaseResp;
+import com.zhexinit.yixiaotong.function.ChildrenWarehouse;
+import com.zhexinit.yixiaotong.function.UserWarehouse;
+import com.zhexinit.yixiaotong.function.home.fragment.UserFragment;
+import com.zhexinit.yixiaotong.function.map.activity.SafeAreaListActivity;
+import com.zhexinit.yixiaotong.function.mine.entity.DetailChildResp;
+import com.zhexinit.yixiaotong.function.mine.entity.UserInfoResp;
+import com.zhexinit.yixiaotong.rxjavamanager.interfaces.ResultCallBack;
+import com.zhexinit.yixiaotong.utils.GlideCricleTransform;
+import com.zhexinit.yixiaotong.utils.GsonUtil;
+import com.zhexinit.yixiaotong.utils.SharePerfUtils;
+import com.zhexinit.yixiaotong.utils.StringUtils;
+import com.zhexinit.yixiaotong.widget.CommonDialog;
+import com.zhexinit.yixiaotong.widget.Power;
+
+import java.util.HashMap;
+import java.util.Map;
+
+import butterknife.BindView;
+import butterknife.OnClick;
+
+/**
+ * Created by:xukun
+ * date:2018/11/10
+ * description: 孩子信息详情页面
+ */
+public class ChildDetailActivity extends BaseActivity {
+    @BindView(R.id.text_safe)
+    TextView text_safe;
+    @BindView(R.id.text_parents)
+    TextView text_parents;
+    @BindView(R.id.text_power_saving)
+    TextView text_power_saving;
+    @BindView(R.id.line_save_power)
+    LinearLayout line_save_power;
+    @BindView(R.id.line_safe)
+    LinearLayout line_safe;
+    @BindView(R.id.line_device)
+    LinearLayout line_device;
+    @BindView(R.id.text_no_bound)
+    TextView text_no_bound;
+    @BindView(R.id.text_power_description)
+    TextView text_power_description;
+    @BindView(R.id.text_power)
+    TextView text_power;
+    @BindView(R.id.line_unBundle)
+    LinearLayout line_unBundle;
+
+    private String child_id; //intent 传过来的childId
+    private boolean primaryAccount;//是否是主账号
+    private DetailChildResp resp;
+
+    @Override
+    protected int getLayoutId() {
+        return R.layout.activity_child_detail;
+    }
+
+    @Override
+    protected void init() {
+        child_id = getIntent().getStringExtra(UserFragment.CHILD_ID);
+        setVectogram();
+
+
+    }
+
+    private void setVectogram() {
+        Typeface icon = Typeface.createFromAsset(getAssets(), getResources().getString(R.string.tv_path));
+        TextView text_back = findViewById(R.id.tv_back);
+        TextView text_add = findViewById(R.id.text_add);
+        TextView text_unBundle=findViewById(R.id.text_unBundle);
+        text_back.setTypeface(icon);
+        text_add.setTypeface(icon);
+        text_unBundle.setTypeface(icon);
+
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        getChildInfo();
+    }
+
+    //设置孩子详情信息
+    @SuppressLint("SetTextI18n")
+    private void initChildInfo() {
+        if (resp == null) return;
+
+        findViewById(R.id.line_add_parent).setVisibility(resp.child.primaryAccount ? View.VISIBLE : View.GONE);
+        line_unBundle.setVisibility(resp.child.primaryAccount?View.GONE:View.VISIBLE);
+        if (resp.child.deviceStatus != 0) { //绑定校徽
+            line_save_power.setVisibility(resp.child.primaryAccount ? View.VISIBLE : View.GONE);
+            line_safe.setVisibility(resp.child.primaryAccount ? View.VISIBLE : View.GONE);
+            line_device.setVisibility(View.VISIBLE);
+        } else { //没绑定校徽
+            line_save_power.setVisibility(View.GONE);
+            line_safe.setVisibility(View.GONE);
+            line_device.setVisibility(View.GONE);
+            text_no_bound.setVisibility(View.VISIBLE);
+        }
+
+        ImageView img_icon = findViewById(R.id.img_icon);
+        TextView text_name = findViewById(R.id.text_name);
+        TextView text_sex = findViewById(R.id.text_sex);
+        TextView text_birthday = findViewById(R.id.text_birthday);
+        TextView text_school = findViewById(R.id.text_school);
+        TextView text_class = findViewById(R.id.text_class);
+        Power power = findViewById(R.id.power);
+        Glide.with(this)
+                .load(resp.child.icon)
+                .diskCacheStrategy(DiskCacheStrategy.ALL)
+                .error(getResources().getDrawable(R.mipmap.ic_user_placeholder))
+                .transform(new GlideCricleTransform(this))
+                .into(img_icon);
+        text_name.setText(resp.child.childName);
+        text_birthday.setText(resp.child.birthday);
+        String sex;
+        if (1 == resp.child.sex) sex = "男";
+        else if (2 == resp.child.sex) sex = "女";
+        else sex = "未知";
+        text_sex.setText(sex);
+        text_school.setText(resp.child.schoolName);
+        text_class.setText(resp.child.gradeInfo + resp.child.classInfo);
+        text_power.setText(resp.child.devicePower + "%");
+        power.setProgress(resp.child.devicePower);
+        text_power_description.setText(resp.device.availableTime);
+        text_power.setSelected(resp.child.devicePower > 20);
+        text_power_description.setSelected(resp.child.devicePower > 20);
+
+        text_power_saving.setSelected(resp.device.powerSavingType == 1); //1：开启 2：关闭
+        text_power_saving.setText(resp.device.powerSavingType == 1 ? "已开启" : "未开启 开启可节省电量");
+
+        text_safe.setText(resp.device.deviceRailCount > 0 ? resp.device.deviceRailCount + "个" : "未设置");
+        text_parents.setText(resp.child.parentCount > 0 ? resp.child.parentCount + "个" : "未添加");
+        primaryAccount = resp.child.primaryAccount;
+    }
+
+    @OnClick({R.id.tv_back, R.id.line_safe, R.id.text_power_saving, R.id.line_parent_manager,
+            R.id.line_add_parent, R.id.line_unBundle})
+    public void onClick(View v) {
+        switch (v.getId()) {
+            case R.id.tv_back:
+                finish();
+                break;
+            case R.id.text_power_saving: //开启省电按钮
+                setPowerSaving();
+                break;
+            case R.id.line_safe: //安全围栏页面
+                Intent safeIntent=new Intent(this, SafeAreaListActivity.class);
+                safeIntent.putExtra("deviceId",resp.child.deviceId);
+                safeIntent.putExtra("childName",resp.child.childName);
+                startActivity(safeIntent);
+                break;
+            case R.id.line_parent_manager:
+                Intent intent = new Intent(this, ParentManagerActivity.class);
+                intent.putExtra(UserFragment.CHILD_ID, child_id);
+                intent.putExtra("primaryAccount", primaryAccount);
+                startActivity(intent);
+                break;
+            case R.id.line_add_parent:
+                startActivity(new Intent(this, AddParentActivity.class));
+                break;
+            case R.id.line_unBundle://解除绑定
+                final CommonDialog dialog = new CommonDialog(this, "", "确认解除与该孩子的关系么");
+                dialog.setSumbitClick(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        dialog.dismiss();
+                        unBundleChild();
+                    }
+                });
+                dialog.noTitle();
+                dialog.show();
+                break;
+        }
+    }
+
+    //获取孩子详情
+    private void getChildInfo() {
+        if (StringUtils.isEmpty(child_id)) return;
+        Map<String, Object> map = new HashMap<>();
+        map.put("childId", child_id);
+        ChildrenWarehouse.getInstance(this).getChildInfo(map, new ResultCallBack<BaseResp<DetailChildResp>>() {
+            @Override
+            public void onSuccess(BaseResp<DetailChildResp> baseResp) {
+                if (baseResp.code == 0) {
+                    resp = baseResp.result;
+                    initChildInfo();
+                } else showToast(baseResp.message);
+            }
+
+            @Override
+            public void onFail(String response) {
+                showToast(response);
+            }
+        });
+    }
+
+    //省电模式接口
+    private void setPowerSaving() {
+        if (resp == null) return;
+        final Map<String, Object> map = new HashMap<>();
+        map.put("deviceId", resp.device.deviceId);
+        map.put("powerSavingType", text_power_saving.isSelected() ? 2 : 1);
+        ChildrenWarehouse.getInstance(this).setPowerSaving(map, new ResultCallBack<BaseResp>() {
+            @Override
+            public void onSuccess(BaseResp baseResp) {
+                if (baseResp.code == 0) {
+                    text_power_saving.setSelected(!text_power_saving.isSelected());
+                    text_power_saving.setText(text_power_saving.isSelected() ? "已开启" : "未开启 开启可节省电量");
+                }
+                showToast(baseResp.message);
+            }
+
+            @Override
+            public void onFail(String response) {
+                showToast(response);
+            }
+        });
+
+    }
+
+    //非主账号解除孩子绑定接口
+    private void unBundleChild() {
+        UserInfoResp infoResp = GsonUtil.getInstance().getGson().fromJson(SharePerfUtils.getString(Constant.KEY.USER_INFO), UserInfoResp.class);
+        showProgressDialog();
+        Map<String, Object> map = new HashMap<>();
+        map.put("childId", child_id);
+        map.put("userId", infoResp.userId);
+        map.put("primaryAccount", primaryAccount);
+        UserWarehouse.getInstance(this).unBundleChild(map, new ResultCallBack<BaseResp>() {
+            @Override
+            public void onSuccess(BaseResp BaseResp) {
+                if (BaseResp.code == 0) {
+                    getUserInfo();//重新获取用户信息
+                }
+            }
+
+            @Override
+            public void onFail(String response) {
+                hideProgressDialog();
+            }
+        });
+    }
+
+    /**
+     * 更新用户信息
+     */
+    private void getUserInfo() {
+        UserWarehouse.getInstance(this).getUserInfo(new HashMap(), new ResultCallBack<BaseResp<UserInfoResp>>() {
+            @Override
+            public void onSuccess(BaseResp<UserInfoResp> userInfoResp) {
+                if (userInfoResp.code == 0) {
+                    SharePerfUtils.putString(Constant.KEY.USER_INFO, new Gson().toJson(userInfoResp.result));
+                    finish();
+                } else showToast(userInfoResp.message);
+                hideProgressDialog();
+            }
+
+            @Override
+            public void onFail(String response) {
+                showToast(response);
+                hideProgressDialog();
+            }
+        });
+    }
+
+}

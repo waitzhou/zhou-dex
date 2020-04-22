@@ -1,0 +1,323 @@
+package com.zhexinit.yixiaotong.function.home.activity;
+
+import android.annotation.SuppressLint;
+import android.graphics.Typeface;
+import android.support.v4.content.ContextCompat;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
+import android.util.Log;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
+import android.widget.TextView;
+
+import com.zhexinit.yixiaotong.R;
+import com.zhexinit.yixiaotong.base.BaseActivity;
+import com.zhexinit.yixiaotong.base.Constant;
+import com.zhexinit.yixiaotong.function.BaseResp;
+import com.zhexinit.yixiaotong.function.ChildrenWarehouse;
+import com.zhexinit.yixiaotong.function.home.entity.resp.ClassScheduleResp;
+import com.zhexinit.yixiaotong.function.mine.entity.UserInfoResp;
+import com.zhexinit.yixiaotong.rxjavamanager.interfaces.ResultCallBack;
+import com.zhexinit.yixiaotong.utils.DipUtils;
+import com.zhexinit.yixiaotong.utils.GsonUtil;
+import com.zhexinit.yixiaotong.utils.RecyclerViewDivider;
+import com.zhexinit.yixiaotong.utils.SharePerfUtils;
+import com.zhexinit.yixiaotong.utils.StringUtils;
+import com.zhexinit.yixiaotong.utils.commonAdapter.CommonRecyclerAdapter;
+import com.zhexinit.yixiaotong.utils.commonAdapter.CommonRecyclerHolder;
+import com.zhexinit.yixiaotong.widget.SharePopupWindow;
+import com.zhexinit.yixiaotong.widget.ShowChildListPopupWindow;
+import com.zhexinit.yixiaotong.widget.ToolBar;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import butterknife.BindView;
+import butterknife.OnClick;
+
+/**
+ * Author:zhousx
+ * date:2018/11/12
+ * description:课程表
+ */
+public class ClassScheduleActivity extends BaseActivity implements ShowChildListPopupWindow.PopupItemSelectListener {
+
+    @BindView(R.id.tool_bar)
+    ToolBar toolBar;
+    @BindView(R.id.recycler_view)
+    RecyclerView recyclerView;
+    @BindView(R.id.tv_content)
+    TextView tvContent;
+    @BindView(R.id.tv_down)
+    TextView tvDown;
+    @BindView(R.id.tv_place_holder)
+    TextView tvPlaceHolder;
+    @BindView(R.id.rl_place_holder)
+    RelativeLayout rlPlaceHolder;
+    @BindView(R.id.btn_place_holder)
+    Button btnPlaceHolder;
+
+    private List<String> mStrings = new ArrayList<>();
+
+    private ClassScheduleResp mScheduleResp;
+    private int mSelectPosition;
+    UserInfoResp mInfoResp;
+
+    @Override
+    protected int getLayoutId() {
+        return R.layout.activity_class_schedule;
+    }
+
+    @Override
+    protected void init() {
+
+        initToolbar();
+        initContent();
+        initData();
+    }
+
+    private void initContent() {
+        mInfoResp = GsonUtil.getInstance().getGson().fromJson(SharePerfUtils.getString(Constant.KEY.USER_INFO), UserInfoResp.class);
+        tvContent.setText(mInfoResp.userChildren.get(mSelectPosition).childName.concat("的课程表"));
+        tvDown.setTypeface(Typeface.createFromAsset(getAssets(), getString(R.string.tv_path)));
+    }
+
+    private void initData() {
+        getScheduleData();
+    }
+
+    private void getScheduleData() {
+        showProgressDialog();
+        UserInfoResp infoResp = GsonUtil.getInstance().getGson().fromJson(SharePerfUtils.
+                getString(Constant.KEY.USER_INFO), UserInfoResp.class);
+        if (infoResp.userChildren == null)
+            return;
+        Map<String, String> map = new HashMap<>();
+        map.put("childId", infoResp.userChildren.get(mSelectPosition).childId);
+        ChildrenWarehouse.getInstance(this).getClassSchueduleData(map, new ResultCallBack<BaseResp<ClassScheduleResp>>() {
+            @Override
+            public void onSuccess(BaseResp<ClassScheduleResp> homeworkRespBaseResp) {
+                if (homeworkRespBaseResp.code == 0) {
+                    if (homeworkRespBaseResp.result.schoolCourseTimes != null
+                            && homeworkRespBaseResp.result.schoolCourseTimes.size() != 0
+                            && homeworkRespBaseResp.result.classCourses != null
+                            && homeworkRespBaseResp.result.classCourses.size() != 0) {
+                        mScheduleResp = homeworkRespBaseResp.result;
+                        initClassPosition();
+                        doCompareData();
+                    } else
+                        loadFail(1);
+                } else {
+                    loadFail(2);
+                    showToast(homeworkRespBaseResp.message);
+                }
+                hideProgressDialog();
+            }
+
+            @Override
+            public void onFail(String response) {
+                hideProgressDialog();
+                loadFail(2);
+            }
+        });
+    }
+
+    private void doCompareData() {
+        for (int i = 0; i < mScheduleResp.classCourses.size() + 1; i++) {
+            switch (i) {
+                case 0:
+                    mStrings.add("时间");
+                    break;
+                case 1:
+                    mStrings.add("星期一");
+                    break;
+                case 2:
+                    mStrings.add("星期二");
+                    break;
+                case 3:
+                    mStrings.add("星期三");
+                    break;
+                case 4:
+                    mStrings.add("星期四");
+                    break;
+                case 5:
+                    mStrings.add("星期五");
+                    break;
+                case 6:
+                    mStrings.add("星期六");
+                    break;
+                case 7:
+                    mStrings.add("星期日");
+                    break;
+            }
+        }
+        initRecyclerView();
+    }
+
+    private void initRecyclerView() {
+        final LinearLayoutManager layoutManager = new LinearLayoutManager(this);
+        layoutManager.setOrientation(LinearLayoutManager.HORIZONTAL);
+        final RecyclerViewDivider divider = new RecyclerViewDivider(this);
+        divider.setOrientation(RecyclerViewDivider.HORIZONTAL_LIST);
+        divider.setLineColor(R.color.bg_color);
+        if(recyclerView.getAdapter() == null) {
+            recyclerView.addItemDecoration(divider);
+            recyclerView.setLayoutManager(layoutManager);
+            recyclerView.setAdapter(new CommonRecyclerAdapter<String>(this, mStrings, R.layout.item_class_schedule) {
+                @Override
+                public void convert(CommonRecyclerHolder holder, String item, int position) {
+                    ViewGroup.LayoutParams layoutParams = holder.mItemView.getLayoutParams();
+                    layoutParams.width = DipUtils.getScreenWidth(ClassScheduleActivity.this) / /*mStrings.size()*/6;
+                    holder.setText(R.id.item_title, item);
+                    RecyclerView recyclerView = holder.getView(R.id.item_recyclerView);
+                    int weekPosition = StringUtils.getWeekPosition(System.currentTimeMillis());
+                    setInnerAdapter(recyclerView, position, position == weekPosition);
+                }
+
+                private void setInnerAdapter(RecyclerView recyclerView, int position, final boolean isCurrentPosition) {
+                    List<String> strings = new ArrayList<>();
+                    if (position == 0) {
+                        for (int i = 0; i < mScheduleResp.schoolCourseTimes.size(); i++) {
+                            ClassScheduleResp.SchoolCourseTime schoolCourseTime = mScheduleResp.schoolCourseTimes.get(i);
+                            strings.add(schoolCourseTime.classStartTime + "\n-\n" + schoolCourseTime.classEndTime);
+                        }
+                    } else {
+                        for (int i = 0; i < mScheduleResp.schoolCourseTimes.size(); i++) {
+                            strings.add("");
+                        }
+                        List<ClassScheduleResp.ClassCourseInner> classCourseInners = mScheduleResp.classCourses.get(position - 1);
+                        for (int i = 0; i < classCourseInners.size(); i++) {
+                            strings.set(classCourseInners.get(i).classNumber - 1,
+                                    classCourseInners.get(i).courseName);
+                        }
+                    }
+                    recyclerView.setLayoutManager(new LinearLayoutManager(ClassScheduleActivity.this) {
+                        @Override
+                        public boolean canScrollVertically() {
+                            return false;
+                        }
+                    });
+                    recyclerView.setAdapter(new CommonRecyclerAdapter<String>(ClassScheduleActivity.this, strings, R.layout.item_inner_class_schedule) {
+                        @Override
+                        public void convert(CommonRecyclerHolder holder, String item, int position) {
+                            TextView className = holder.getView(R.id.item_inner_text);
+                            if (Frist_afternoon_class_position != 0 && Frist_afternoon_class_position == position) {
+                                LinearLayout.LayoutParams layoutParams = (LinearLayout.LayoutParams) className.getLayoutParams();
+                                layoutParams.setMargins(0, DipUtils.dip2px(ClassScheduleActivity.this, 20), 0, 0);
+                                className.setLayoutParams(layoutParams);
+                            }
+                            if (Frist_night_class_position != 0 && Frist_night_class_position == position) {
+                                LinearLayout.LayoutParams layoutParams = (LinearLayout.LayoutParams) className.getLayoutParams();
+                                layoutParams.setMargins(0, DipUtils.dip2px(ClassScheduleActivity.this, 20), 0, 0);
+                                className.setLayoutParams(layoutParams);
+                            }
+                            className.setText(item);
+                            if (isCurrentPosition)
+                                className.setBackgroundColor(ContextCompat.getColor(ClassScheduleActivity.this, R.color.bg_week));
+                        }
+                    });
+                }
+            });
+        }else {
+            recyclerView.getAdapter().notifyDataSetChanged();
+        }
+    }
+
+    /**
+     * 得到下午课程、晚上课程最开始的位置
+     * */
+    private int Frist_afternoon_class_position,Frist_night_class_position;
+    private void initClassPosition(){
+        for (int i = 0; i < mScheduleResp.schoolCourseTimes.size(); i++) {
+            String classStartTime = mScheduleResp.schoolCourseTimes.get(i).classStartTime;
+            String[] split = classStartTime.split(":");
+            if(Integer.parseInt(split[0]) > 12){
+                Frist_afternoon_class_position = i;
+                return;
+            }
+        }
+        for (int i = 0; i < mScheduleResp.schoolCourseTimes.size(); i++) {
+            String classStartTime = mScheduleResp.schoolCourseTimes.get(i).classStartTime;
+            String[] split = classStartTime.split(":");
+            if(Integer.parseInt(split[0]) > 18){
+                Frist_night_class_position = i;
+                return;
+            }
+        }
+    }
+
+    private void initToolbar() {
+        toolBar.setTitle("");
+        toolBar.setBackImage();
+        toolBar.back(this);
+        toolBar.setRightTypeface(getResources().getString(R.string.tv_share));
+        toolBar.setRightTvClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                showShareWindow();
+            }
+        });
+    }
+
+    /**
+     * 展示孩子列表
+     */
+    private void showChildPopup() {
+        ShowChildListPopupWindow popupWindow = new ShowChildListPopupWindow(this, toolBar, mSelectPosition, 120, this);
+        popupWindow.show();
+    }
+
+    private void showShareWindow() {
+        SharePopupWindow popupWindow = new SharePopupWindow(this, toolBar);
+        popupWindow.show();
+    }
+
+    @Override
+    public void popupItemSelectListener(int position, String deviceId) {
+        mSelectPosition = position;
+        mStrings.clear();
+        tvContent.setText(mInfoResp.userChildren.get(position).childName.concat("的课程表"));
+        rlPlaceHolder.setVisibility(View.GONE);
+        getScheduleData();
+    }
+
+    @OnClick({R.id.tv_content, R.id.tv_down})
+    public void onViewClicked(View view) {
+        switch (view.getId()) {
+            case R.id.tv_content:
+            case R.id.tv_down:
+                showChildPopup();
+                break;
+        }
+    }
+
+    /**
+     * 加载失败
+     *
+     * @param type 1 : 无数据   2: 无网络
+     */
+    private void loadFail(int type) {
+        rlPlaceHolder.setVisibility(View.VISIBLE);
+        if (type == 1) {
+            tvPlaceHolder.setText("抱歉，暂无数据");
+            tvPlaceHolder.setCompoundDrawablesRelativeWithIntrinsicBounds(0, R.mipmap.ic_empty, 0, 0);
+            btnPlaceHolder.setVisibility(View.GONE);
+        } else {
+            tvPlaceHolder.setText("抱歉，网络不给力");
+            tvPlaceHolder.setCompoundDrawablesRelativeWithIntrinsicBounds(0, R.mipmap.ic_not_link_net, 0, 0);
+            btnPlaceHolder.setVisibility(View.VISIBLE);
+            btnPlaceHolder.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    getScheduleData();
+                    rlPlaceHolder.setVisibility(View.GONE);
+                }
+            });
+        }
+    }
+}

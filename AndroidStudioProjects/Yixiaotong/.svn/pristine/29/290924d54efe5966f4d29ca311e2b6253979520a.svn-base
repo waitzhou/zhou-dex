@@ -1,0 +1,169 @@
+package com.zhexinit.yixiaotong.function.home.activity;
+
+import android.os.Bundle;
+import android.support.annotation.NonNull;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
+import android.view.View;
+import android.widget.Button;
+import android.widget.RelativeLayout;
+import android.widget.TextView;
+
+import com.scwang.smartrefresh.layout.SmartRefreshLayout;
+import com.scwang.smartrefresh.layout.api.RefreshLayout;
+import com.scwang.smartrefresh.layout.listener.OnLoadMoreListener;
+import com.scwang.smartrefresh.layout.listener.OnRefreshListener;
+import com.zhexinit.yixiaotong.R;
+import com.zhexinit.yixiaotong.base.BaseActivity;
+import com.zhexinit.yixiaotong.function.BaseResp;
+import com.zhexinit.yixiaotong.function.ChildrenWarehouse;
+import com.zhexinit.yixiaotong.function.home.adapter.NoticeAdapter;
+import com.zhexinit.yixiaotong.function.home.entity.resp.NoticeResp;
+import com.zhexinit.yixiaotong.rxjavamanager.interfaces.ResultCallBack;
+import com.zhexinit.yixiaotong.widget.ToolBar;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import butterknife.BindView;
+import butterknife.ButterKnife;
+
+/**
+ * Author:zhousx
+ * date:2018/11/6
+ * description:通知界面
+ */
+public class NoticeActivity extends BaseActivity implements OnRefreshListener, OnLoadMoreListener {
+
+    @BindView(R.id.tool_bar)
+    ToolBar toolBar;
+    @BindView(R.id.recycler_view)
+    RecyclerView recyclerView;
+    @BindView(R.id.smart_refresh_layout)
+    SmartRefreshLayout smartRefreshLayout;
+
+    @BindView(R.id.tv_place_holder)
+    TextView tvPlaceHolder;
+    @BindView(R.id.rl_place_holder)
+    RelativeLayout rlPlaceHolder;
+    @BindView(R.id.btn_place_holder)
+    Button btnPlaceHolder;
+
+    private int mCurrentPage = 1;
+    private int PAGE_COUNT = 10;
+    private List<NoticeResp> mRespList = new ArrayList<>();
+
+    @Override
+    protected int getLayoutId() {
+        return R.layout.activity_notice;
+    }
+
+    @Override
+    protected void init() {
+
+        initToolbar();
+        initContent();
+        showProgressDialog();
+        getNoticeData();
+    }
+
+    /**
+     * 获取通知数据
+     */
+    private void getNoticeData() {
+        Map<String, Integer> map = new HashMap<>();
+        map.put("page", mCurrentPage);
+        map.put("rows", PAGE_COUNT);
+        ChildrenWarehouse.getInstance(this).getNoticeData(map, new ResultCallBack<BaseResp<List<NoticeResp>>>() {
+            @Override
+            public void onSuccess(BaseResp<List<NoticeResp>> listBaseResp) {
+                hideProgressDialog();
+                if (listBaseResp.code == 0) {
+                    if(listBaseResp.result != null && listBaseResp.result.size() != 0) {
+                        mRespList.addAll(listBaseResp.result);
+                        recyclerView.getAdapter().notifyDataSetChanged();
+                    }else {
+                        loadFail(1);
+                    }
+                } else {
+                    loadFail(2);
+                    showToast(listBaseResp.message);
+                }
+                stopRefreshAndLoadMore();
+            }
+
+            @Override
+            public void onFail(String response) {
+                hideProgressDialog();
+                stopRefreshAndLoadMore();
+                loadFail(2);
+            }
+        });
+    }
+
+    /**
+     * 加载失败
+     * @param type  1 : 无数据   2: 无网络
+     * */
+    private void loadFail(int type){
+        if(mRespList.size() != 0)
+            return;
+        rlPlaceHolder.setVisibility(View.VISIBLE);
+        if(type == 1){
+            tvPlaceHolder.setText("抱歉，暂无数据");
+            tvPlaceHolder.setCompoundDrawablesRelativeWithIntrinsicBounds(0,R.mipmap.ic_empty,0,0);
+            btnPlaceHolder.setVisibility(View.GONE);
+        }else {
+            tvPlaceHolder.setText("抱歉，网络不给力");
+            tvPlaceHolder.setCompoundDrawablesRelativeWithIntrinsicBounds(0,R.mipmap.ic_not_link_net,0,0);
+            btnPlaceHolder.setVisibility(View.VISIBLE);
+            btnPlaceHolder.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    rlPlaceHolder.setVisibility(View.GONE);
+                    getNoticeData();
+                }
+            });
+        }
+    }
+
+    private void initToolbar() {
+        toolBar.setTitle("通知");
+        toolBar.setBackImage();
+        toolBar.back(this);
+    }
+
+    private void initContent() {
+        smartRefreshLayout.setOnRefreshListener(this);
+        smartRefreshLayout.setOnLoadMoreListener(this);
+        recyclerView.setLayoutManager(new LinearLayoutManager(this));
+        recyclerView.setAdapter(new NoticeAdapter(mRespList));
+    }
+
+    @Override
+    public void onRefresh(@NonNull RefreshLayout refreshLayout) {
+        mCurrentPage = 1;
+        mRespList.clear();
+        getNoticeData();
+    }
+
+    @Override
+    public void onLoadMore(@NonNull RefreshLayout refreshLayout) {
+        mCurrentPage++;
+        getNoticeData();
+    }
+
+    private void stopRefreshAndLoadMore() {
+        smartRefreshLayout.finishRefresh();
+        smartRefreshLayout.finishLoadMore();
+    }
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        // TODO: add setContentView(...) invocation
+        ButterKnife.bind(this);
+    }
+}

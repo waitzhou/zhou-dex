@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    package="com.example.jingweiclassicdemo">
+
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
+    <uses-permission android:name="android.permission.INTERNET"/>
+
+    <uses-permission android:name="android.permission.READ_SMS"/>
+
+    <application
+        android:allowBackup="true"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:name=".HostApp"
+        android:theme="@style/AppTheme"
+        tools:ignore="GoogleAppIndexingWarning">
+        <activity android:name=".activity.MainActivity"/>
+        <activity android:name=".activity.SplashActivity" android:theme="@style/FullScreen" >
+
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+        <activity android:name=".activity.PermissionPlaceHolderActivity" />
+        <activity android:name=".activity.SurfaceViewTestActivity" />
+        <activity android:name=".activity.DenistyActivity" />
+        <activity android:name=".designpattern.ObserverTestActivity" />
+        <activity android:name=".activity.PatternActivity" />
+        <activity android:name=".activity.OtherFunctionActivity" />
+        <activity android:name=".widget.DefineComponentActivity" />
+        <activity android:name=".widget.EventListenerActivity" />
+        <activity android:name=".test.BinderTestActivity" />
+        <activity android:process="com.webview1" android:name=".test.WebViewActivity" />
+
+        <service android:process=":remote" android:name="com.example.jingweiclassicdemo.test.ServiceTest" />
+    </application>
+
+</manifest>

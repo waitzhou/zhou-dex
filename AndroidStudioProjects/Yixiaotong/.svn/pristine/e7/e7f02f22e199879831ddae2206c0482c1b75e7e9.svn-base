@@ -1,0 +1,154 @@
+package com.zhexinit.yixiaotong.function.mine.activity;
+
+import android.text.TextUtils;
+import android.view.View;
+import android.widget.EditText;
+import android.widget.LinearLayout;
+import android.widget.TextView;
+
+import com.bigkoo.pickerview.builder.OptionsPickerBuilder;
+import com.bigkoo.pickerview.listener.OnOptionsSelectListener;
+import com.bigkoo.pickerview.view.OptionsPickerView;
+import com.zhexinit.yixiaotong.R;
+import com.zhexinit.yixiaotong.base.BaseActivity;
+import com.zhexinit.yixiaotong.function.BaseResp;
+import com.zhexinit.yixiaotong.function.ChildrenWarehouse;
+import com.zhexinit.yixiaotong.function.home.fragment.UserFragment;
+import com.zhexinit.yixiaotong.function.mine.entity.RelationsResp;
+import com.zhexinit.yixiaotong.rxjavamanager.interfaces.ResultCallBack;
+import com.zhexinit.yixiaotong.utils.StringUtils;
+import com.zhexinit.yixiaotong.widget.ToolBar;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import butterknife.BindView;
+
+/**
+ * Created by:xukun
+ * date:2018/11/15
+ * description: 添加家长
+ */
+public class AddParentActivity extends BaseActivity {
+    @BindView(R.id.tool_bar)
+    ToolBar toolBar;
+    @BindView(R.id.edit_phone)
+    EditText edit_phone;
+    @BindView(R.id.text_relation)
+    TextView text_relation;
+    @BindView(R.id.line_choose)
+    LinearLayout line_choose;
+
+    private List<RelationsResp> relationList = new ArrayList<>(); //孩子家长关系列表
+    private List<String> relations = new ArrayList<>();
+    private int relationId = 1;
+    private String child_id; //intent 传过来的childId
+
+    @Override
+    protected int getLayoutId() {
+        return R.layout.activity_add_parent;
+    }
+
+    @Override
+    protected void init() {
+        child_id = getIntent().getStringExtra(UserFragment.CHILD_ID);
+        initToolbar();
+        getRelation();
+
+        line_choose.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (relations.size() <= 0) return;
+                showOptionsPickerView(relations);
+            }
+        });
+    }
+
+    private void initToolbar() {
+        toolBar.setTitle("添加家长");
+        toolBar.setBackImage();
+        toolBar.back(this);
+        toolBar.setRightTv("添加");
+        toolBar.setRightTvClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (TextUtils.isEmpty(edit_phone.getText())) {
+                    showToast("请输入手机号码");
+                } else if (!StringUtils.checkPhone(edit_phone.getText().toString())) {
+                    showToast("请输入正确格式的手机号码");
+                } else {
+                    addParent();
+                }
+            }
+        });
+    }
+
+    /**
+     * 展示条件选择器
+     */
+    private void showOptionsPickerView(final List<String> strings) {
+        if (softInputIsActive()) {
+            hideSoftInput(edit_phone);
+        }
+        OptionsPickerView pickerView = new OptionsPickerBuilder(this, new OnOptionsSelectListener() {
+            @Override
+            public void onOptionsSelect(int options1, int options2, int options3, View v) {
+                text_relation.setText(strings.get(options1));
+                relationId = relationList.get(options1).id;
+            }
+        }).build();
+        pickerView.setPicker(strings);
+        pickerView.show();
+    }
+
+    /**
+     * 获取孩子与家长关系列表
+     */
+    private void getRelation() {
+        ChildrenWarehouse.getInstance(this).getRelation(new HashMap(), new ResultCallBack<BaseResp<List<RelationsResp>>>() {
+            @Override
+            public void onSuccess(BaseResp<List<RelationsResp>> baseResp) {
+                if (baseResp.code == 0) {
+                    for (int i = 0; i < baseResp.result.size(); i++) {
+                        relations.add(baseResp.result.get(i).relation);
+                    }
+                    relationList.addAll(baseResp.result);
+                    text_relation.setText(baseResp.result.get(0).relation);
+                    relationId=baseResp.result.get(0).id;
+                }
+            }
+
+            @Override
+            public void onFail(String response) {
+
+            }
+        });
+    }
+
+    /**
+     * 添加家长
+     */
+    private void addParent() {
+        Map<String, Object> map = new HashMap<>();
+        map.put("childId", child_id);
+        map.put("newParentMobile", edit_phone.getText().toString());
+        map.put("relationId", relationId);
+        ChildrenWarehouse.getInstance(this).addParent(map, new ResultCallBack<BaseResp>() {
+            @Override
+            public void onSuccess(BaseResp baseResp) {
+                if (baseResp.code == 0) {
+                    showToast("添加成功");
+                    finish();
+                }else showToast(baseResp.message);
+            }
+
+            @Override
+            public void onFail(String response) {
+                showToast(response);
+            }
+        });
+
+    }
+}

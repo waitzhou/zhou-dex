@@ -1,0 +1,205 @@
+package com.zhexinit.yixiaotong.function.home.activity;
+
+import android.content.Intent;
+import android.support.annotation.NonNull;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
+import android.view.View;
+import android.widget.Button;
+import android.widget.RelativeLayout;
+import android.widget.TextView;
+
+import com.scwang.smartrefresh.layout.SmartRefreshLayout;
+import com.scwang.smartrefresh.layout.api.RefreshLayout;
+import com.scwang.smartrefresh.layout.listener.OnLoadMoreListener;
+import com.scwang.smartrefresh.layout.listener.OnRefreshListener;
+import com.zhexinit.yixiaotong.R;
+import com.zhexinit.yixiaotong.base.BaseActivity;
+import com.zhexinit.yixiaotong.function.BaseResp;
+import com.zhexinit.yixiaotong.function.ChildrenWarehouse;
+import com.zhexinit.yixiaotong.function.home.entity.resp.AttendanceResp;
+import com.zhexinit.yixiaotong.rxjavamanager.interfaces.ResultCallBack;
+import com.zhexinit.yixiaotong.utils.StringUtils;
+import com.zhexinit.yixiaotong.utils.commonAdapter.CommonRecyclerAdapter;
+import com.zhexinit.yixiaotong.utils.commonAdapter.CommonRecyclerHolder;
+import com.zhexinit.yixiaotong.widget.ToolBar;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import butterknife.BindView;
+
+/**
+ * Author:zhousx
+ * date:2018/11/6
+ * description:考勤首页
+ */
+public class AttendanceHomeActivity extends BaseActivity implements OnRefreshListener, OnLoadMoreListener {
+
+    @BindView(R.id.recycler_view)
+    RecyclerView recyclerView;
+    @BindView(R.id.smart_refresh_layout)
+    SmartRefreshLayout smartRefreshLayout;
+    @BindView(R.id.tool_bar)
+    ToolBar mToolBar;
+    @BindView(R.id.tv_place_holder)
+    TextView tvPlaceHolder;
+    @BindView(R.id.rl_place_holder)
+    RelativeLayout rlPlaceHolder;
+    @BindView(R.id.btn_place_holder)
+    Button btnPlaceHolder;
+
+    private int mCurrentPage = 1,PAGE_COUNT = 10;
+
+    private List<AttendanceResp> mRespList = new ArrayList<>();
+
+    @Override
+    protected int getLayoutId() {
+        return R.layout.activity_attendance_home;
+    }
+
+    @Override
+    protected void init() {
+        initToolbar();
+        initContent();
+        showProgressDialog();
+        getAttendanceData();
+    }
+
+    /**
+     * 获取考情列表界面
+     * */
+    private void getAttendanceData() {
+        Map<String,Integer> map = new HashMap<>();
+        map.put("page",mCurrentPage);
+        map.put("rows",PAGE_COUNT);
+        ChildrenWarehouse.getInstance(this).getAttendanceData(map, new ResultCallBack<BaseResp<List<AttendanceResp>>>() {
+            @Override
+            public void onSuccess(BaseResp<List<AttendanceResp>> attendanceResps) {
+                if(attendanceResps.code == 0){
+                    if(attendanceResps.result.size() != 0){
+                        mRespList.addAll(attendanceResps.result);
+                        recyclerView.getAdapter().notifyDataSetChanged();
+                    }else {
+                        loadFail(1);
+                    }
+                }else {
+                    loadFail(2);
+                }
+                stopRefreshOrLoadMore();
+                hideProgressDialog();
+            }
+
+            @Override
+            public void onFail(String response) {
+                stopRefreshOrLoadMore();
+                hideProgressDialog();
+                loadFail(2);
+            }
+        });
+    }
+
+    /**
+     * toolbar设置
+     */
+    private void initToolbar() {
+        mToolBar.setTitle("");
+        mToolBar.setBackImage();
+        mToolBar.back(this);
+        mToolBar.setRightTv("统计");
+        mToolBar.setRightTvClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startActivity(new Intent(AttendanceHomeActivity.this,AttendanceStatisticalActivity.class));
+            }
+        });
+    }
+
+    /**
+     * 内容设置
+     */
+    private void initContent() {
+        smartRefreshLayout.setOnRefreshListener(this);
+        smartRefreshLayout.setOnLoadMoreListener(this);
+        initRecyclerView();
+    }
+
+    /**
+     * 设置recyclerView
+     */
+    private void initRecyclerView() {
+        recyclerView.setLayoutManager(new LinearLayoutManager(this));
+        recyclerView.setAdapter(new CommonRecyclerAdapter<AttendanceResp>(this, mRespList, R.layout.item_attendance_home_adapter) {
+            @Override
+            public void convert(CommonRecyclerHolder holder, AttendanceResp item, int position) {
+                holder.setText(R.id.item_tv_title,item.attendanceType == 1? "到校提醒":"离校提醒");
+                TextView tvTime = holder.getView(R.id.item_tv_time);
+                holder.setText(R.id.item_tv_desc,item.childName
+                        .concat("  ")
+                        .concat(StringUtils.longToDate(item.messageTime,"HH:mm"))
+                        .concat(item.attendanceType == 1? "到校打卡成功":"离校打卡成功"));
+                tvTime.setText(StringUtils.longToDate(item.messageTime,"yyyy年MM月dd日 EEEE"));
+                if(position == 0){
+                    tvTime.setVisibility(View.VISIBLE);
+                }else {
+                    tvTime.setVisibility(isOneDay(mRespList.get(position - 1).messageTime,mRespList.get(position).messageTime) ? View.GONE : View.VISIBLE);
+                }
+            }
+        });
+    }
+
+    private boolean isOneDay(long lastTime,long currentTime){
+        String s = StringUtils.longToDate(lastTime, "dd");
+        String s2 = StringUtils.longToDate(currentTime,"dd");
+        return s.equals(s2);
+    }
+
+    @Override
+    public void onRefresh(@NonNull RefreshLayout refreshLayout) {
+        mCurrentPage = 1;
+        mRespList.clear();
+        getAttendanceData();
+    }
+
+    @Override
+    public void onLoadMore(@NonNull RefreshLayout refreshLayout) {
+        mCurrentPage++;
+        getAttendanceData();
+    }
+
+    /**
+     * 停止刷新
+     * */
+    private void stopRefreshOrLoadMore(){
+        if(smartRefreshLayout != null) {
+            smartRefreshLayout.finishRefresh();
+            smartRefreshLayout.finishLoadMore();
+        }
+    }
+
+    /**
+     * 加载失败
+     * @param type  1 : 无数据   2: 无网络
+     * */
+    private void loadFail(int type){
+        rlPlaceHolder.setVisibility(View.VISIBLE);
+        if(type == 1){
+            tvPlaceHolder.setText("抱歉，暂无数据");
+            tvPlaceHolder.setCompoundDrawablesRelativeWithIntrinsicBounds(0,R.mipmap.ic_empty,0,0);
+            btnPlaceHolder.setVisibility(View.GONE);
+        }else {
+            tvPlaceHolder.setText("抱歉，网络不给力");
+            tvPlaceHolder.setCompoundDrawablesRelativeWithIntrinsicBounds(0,R.mipmap.ic_not_link_net,0,0);
+            btnPlaceHolder.setVisibility(View.VISIBLE);
+            btnPlaceHolder.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    rlPlaceHolder.setVisibility(View.GONE);
+                    getAttendanceData();
+                }
+            });
+        }
+    }
+}

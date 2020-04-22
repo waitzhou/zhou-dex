@@ -8,16 +8,17 @@
         android:protectionLevel="signature" />
     &lt;!&ndash; 声明使用指定的权限 &ndash;&gt;
     <uses-permission android:name="com.example.aidltestmain" />-->
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
 
     <application
+        android:name=".base.TestApplication"
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
-        android:name=".base.TestApplication"
         tools:ignore="GoogleAppIndexingWarning">
         <activity android:name=".MainActivity">
             <intent-filter>
@@ -27,11 +28,17 @@
             </intent-filter>
         </activity>
 
-       <service android:name=".Test2Service">
+        <service android:name=".Test2Service">
             <intent-filter>
                 <action android:name="com.main.mainapplication.intent.action.FORURL" />
             </intent-filter>
         </service>
+
+        <activity
+            android:name=".CommonWebViewActivity"
+            android:excludeFromRecents="true"
+            android:launchMode="singleInstance"
+            android:process="com.webView_process" />
     </application>
 
 </manifest>

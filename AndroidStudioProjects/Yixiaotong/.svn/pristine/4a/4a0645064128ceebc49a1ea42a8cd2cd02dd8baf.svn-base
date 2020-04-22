@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="104dp"
+    android:background="@color/white"
+    android:layout_marginTop="1dp"
+    android:paddingLeft="20dp"
+    android:paddingRight="20dp">
+    
+    <ImageView
+        android:id="@+id/img_head"
+        android:layout_width="45dp"
+        android:layout_height="45dp"
+        android:layout_marginEnd="20dp"
+        android:layout_centerVertical="true" />
+    <TextView
+        android:id="@+id/text_name"
+        android:layout_marginTop="18dp"
+        android:gravity="center_vertical"
+        android:layout_toEndOf="@+id/img_head"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textColor="@color/black"
+        android:textSize="16sp"
+        android:text="陈安之"/>
+    <TextView
+        android:id="@+id/text_class"
+        android:layout_toEndOf="@+id/img_head"
+        android:layout_marginTop="7dp"
+        android:singleLine="true"
+        android:layout_below="@+id/text_name"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="一年级三班（大禹路实验小学）"
+        android:layout_marginEnd="40dp"
+        android:textColor="#ff999999"
+        android:textSize="14sp"/>
+    <TextView
+        android:id="@+id/text_statue"
+        android:layout_marginTop="5dp"
+        android:layout_below="@+id/text_class"
+        android:layout_toEndOf="@+id/img_head"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="校徽状态："
+        android:textColor="#ff999999"
+        android:textSize="14sp"/>
+    <TextView
+        android:id="@+id/text_device"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_toEndOf="@+id/text_statue"
+        android:layout_alignTop="@+id/text_statue"
+        android:text="未绑定校徽"
+        android:textColor="@color/mine_green_red"
+        android:textSize="14sp" />
+    <com.zhexinit.yixiaotong.widget.Power
+        android:id="@+id/power"
+        android:layout_toEndOf="@+id/text_device"
+        android:layout_alignParentBottom="true"
+        android:layout_marginBottom="18dp"
+        android:layout_marginStart="8dp"
+        android:layout_width="30dp"
+        android:layout_height="12dp" />
+    
+    <ImageView
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:src="@mipmap/ic_next"
+        android:layout_centerVertical="true"
+        android:layout_alignParentEnd="true"/>
+</RelativeLayout>

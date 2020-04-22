@@ -1,0 +1,52 @@
+package com.zhexinit.yixiaotong.function.home.activity;
+
+import android.graphics.Typeface;
+import android.widget.TextView;
+
+import com.zhexinit.yixiaotong.R;
+import com.zhexinit.yixiaotong.base.BaseActivity;
+import com.zhexinit.yixiaotong.widget.ToolBar;
+
+import butterknife.BindView;
+
+/**
+ * Author:zhousx
+ * date:2018/11/10
+ * description:通知详情
+ */
+public class NoticeDetailActivity extends BaseActivity {
+
+    @BindView(R.id.tool_bar)
+    ToolBar toolBar;
+    @BindView(R.id.tv_title)
+    TextView tvTitle;
+    @BindView(R.id.tv_class)
+    TextView tvClass;
+    @BindView(R.id.tv_desc)
+    TextView tvDesc;
+    @BindView(R.id.tv_publisher)
+    TextView tvPublisher;
+
+    @Override
+    protected int getLayoutId() {
+        return R.layout.activity_notice_detail;
+    }
+
+    @Override
+    protected void init() {
+
+        initToolbar();
+        initContent();
+    }
+
+    private void initContent() {
+
+    }
+
+    private void initToolbar() {
+        toolBar.setTitle("通知详情");
+        toolBar.setBackImage();
+        toolBar.back(this);
+    }
+
+}

@@ -1,0 +1,184 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/bg_color"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <include
+        layout="@layout/layout_toolbar" />
+    
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="89dp"
+        android:background="@drawable/gradient_theme">
+
+        <TextView
+            android:id="@+id/tv_name"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="26sp"
+            android:layout_marginTop="12dp"
+            android:textColor="@color/white"
+            tools:text="赵丽颖"
+            android:layout_marginStart="27dp" />
+
+        <TextView
+            android:id="@+id/tv_teacher_type"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            tools:text="语文老师 （一年级五班 班主任）"
+            android:textColor="@color/white"
+            android:layout_below="@id/tv_name"
+            android:layout_alignStart="@id/tv_name"
+            android:layout_marginTop="12dp"/>
+
+        <ImageView
+            android:id="@+id/iv_teacher"
+            android:layout_width="72dp"
+            android:layout_height="72dp"
+            android:layout_marginRight="27dp"
+            android:layout_centerVertical="true"
+            android:layout_alignParentEnd="true"
+            android:src="@mipmap/ic_user_placeholder"/>
+
+    </RelativeLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="54dp"
+        android:layout_marginTop="12dp"
+        android:background="@color/white"
+        android:orientation="horizontal">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:paddingStart="22dp"
+            android:text="手机号码"
+            android:textColor="@color/text_color9"
+            android:background="@color/white"
+            android:gravity="center_vertical"/>
+
+        <TextView
+            android:id="@+id/tv_phone_number"
+            android:layout_width="wrap_content"
+            android:layout_height="54dp"
+            android:paddingEnd="22dp"
+            android:gravity="center_vertical"
+            android:layout_marginStart="15dp"
+            android:textColor="@color/theme_center_color"
+            tools:text="手机号码"
+            android:background="@color/white" />
+
+    </LinearLayout>
+
+
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/line_height"
+        android:layout_marginStart="12dp"
+        android:layout_marginEnd="12dp"
+        android:background="@color/gray_line" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="54dp"
+        android:background="@color/white"
+        android:orientation="horizontal">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:paddingStart="22dp"
+            android:text="所在学校"
+            android:textColor="@color/text_color9"
+            android:background="@color/white"
+            android:gravity="center_vertical"/>
+
+        <TextView
+            android:id="@+id/tv_school"
+            android:layout_width="wrap_content"
+            android:layout_height="54dp"
+            android:paddingEnd="22dp"
+            android:layout_marginStart="15dp"
+            android:gravity="center_vertical"
+            android:textColor="@color/text_color5"
+            tools:text="手机号码"
+            android:background="@color/white" />
+
+    </LinearLayout>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/line_height"
+        android:layout_marginStart="12dp"
+        android:layout_marginEnd="12dp"
+        android:background="@color/gray_line" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="54dp"
+        android:background="@color/white"
+        android:orientation="horizontal">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:paddingStart="22dp"
+            android:text="岗位职称"
+            android:textColor="@color/text_color9"
+            android:background="@color/white"
+            android:gravity="center_vertical"/>
+
+        <TextView
+            android:id="@+id/tv_position"
+            android:layout_width="wrap_content"
+            android:layout_height="54dp"
+            android:paddingEnd="22dp"
+            android:gravity="center_vertical"
+            android:layout_marginStart="15dp"
+            android:textColor="@color/text_color5"
+            tools:text="手机号码"
+            android:background="@color/white" />
+
+    </LinearLayout>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/line_height"
+        android:layout_marginStart="12dp"
+        android:layout_marginEnd="12dp"
+        android:background="@color/gray_line" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="54dp"
+        android:background="@color/white"
+        android:orientation="horizontal">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:paddingStart="22dp"
+            android:text="邮箱地址"
+            android:textColor="@color/text_color9"
+            android:background="@color/white"
+            android:gravity="center_vertical"/>
+
+        <TextView
+            android:id="@+id/tv_email_address"
+            android:layout_width="wrap_content"
+            android:layout_height="54dp"
+            android:layout_marginStart="15dp"
+            android:paddingEnd="22dp"
+            android:gravity="center_vertical"
+            android:textColor="@color/text_color5"
+            tools:text="手机号码"
+            android:background="@color/white" />
+
+    </LinearLayout>
+
+</LinearLayout>

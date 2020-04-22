@@ -1,0 +1,4 @@
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:state_selected="true" android:drawable="@mipmap/ic_right_on"/>
+    <item android:drawable="@mipmap/ic_left_off"/>
+</selector>

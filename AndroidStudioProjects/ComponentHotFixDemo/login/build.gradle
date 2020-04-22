@@ -25,9 +25,12 @@ android {
     sourceSets{
         main{
             if(isRunAlone.toBoolean()){
-                manifest.srcFile 'src/main/AndroidManifest.xml'
-            }else {
                 manifest.srcFile 'src/main/manifest/AndroidManifest.xml'
+            }else {
+                manifest.srcFile 'src/main/AndroidManifest.xml'
+                java {
+                    excludes ['src/main/manifest/**']
+                }
             }
         }
     }

@@ -1,0 +1,205 @@
+package com.zhexinit.yixiaotong.function.home.activity;
+
+import android.content.Intent;
+import android.support.annotation.NonNull;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
+import android.view.View;
+import android.widget.Button;
+import android.widget.ImageView;
+import android.widget.RelativeLayout;
+import android.widget.TextView;
+
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.engine.DiskCacheStrategy;
+import com.scwang.smartrefresh.layout.SmartRefreshLayout;
+import com.scwang.smartrefresh.layout.api.RefreshLayout;
+import com.scwang.smartrefresh.layout.listener.OnLoadMoreListener;
+import com.scwang.smartrefresh.layout.listener.OnRefreshListener;
+import com.zhexinit.yixiaotong.R;
+import com.zhexinit.yixiaotong.base.BaseActivity;
+import com.zhexinit.yixiaotong.base.Constant;
+import com.zhexinit.yixiaotong.function.BaseResp;
+import com.zhexinit.yixiaotong.function.ChildrenWarehouse;
+import com.zhexinit.yixiaotong.function.home.entity.req.HomeworkReq;
+import com.zhexinit.yixiaotong.function.home.entity.resp.HomeworkResp;
+import com.zhexinit.yixiaotong.function.mine.entity.UserInfoResp;
+import com.zhexinit.yixiaotong.rxjavamanager.interfaces.ResultCallBack;
+import com.zhexinit.yixiaotong.utils.GlideCricleTransform;
+import com.zhexinit.yixiaotong.utils.GsonUtil;
+import com.zhexinit.yixiaotong.utils.SharePerfUtils;
+import com.zhexinit.yixiaotong.utils.StringUtils;
+import com.zhexinit.yixiaotong.utils.commonAdapter.CommonRecyclerAdapter;
+import com.zhexinit.yixiaotong.utils.commonAdapter.CommonRecyclerHolder;
+import com.zhexinit.yixiaotong.widget.ToolBar;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import butterknife.BindView;
+
+/**
+ * Author:zhousx
+ * date:2018/11/9
+ * description:作业列表界面
+ */
+public class HomeworkActivity extends BaseActivity implements OnLoadMoreListener, OnRefreshListener {
+
+    @BindView(R.id.tool_bar)
+    ToolBar toolBar;
+    @BindView(R.id.recycler_view)
+    RecyclerView recyclerView;
+    @BindView(R.id.smart_refresh_layout)
+    SmartRefreshLayout smartRefreshLayout;
+
+    @BindView(R.id.tv_place_holder)
+    TextView tvPlaceHolder;
+    @BindView(R.id.rl_place_holder)
+    RelativeLayout rlPlaceHolder;
+    @BindView(R.id.btn_place_holder)
+    Button btnPlaceHolder;
+
+    private int mCurrentPage = 1,PAGE_COUNT = 10;
+
+    private List<HomeworkResp> mRespList = new ArrayList<>();
+
+    @Override
+    protected int getLayoutId() {
+        return R.layout.activity_homework;
+    }
+
+    @Override
+    protected void init() {
+        initToolbar();
+        initContent();
+        getHomeworkData();
+    }
+
+    private void initToolbar() {
+        toolBar.setTitle("作业");
+        toolBar.setBackImage();
+        toolBar.back(this);
+    }
+
+    private void initContent() {
+        smartRefreshLayout.setOnRefreshListener(this);
+        smartRefreshLayout.setOnLoadMoreListener(this);
+        setAdapter();
+    }
+
+    private void setAdapter() {
+        recyclerView.setLayoutManager(new LinearLayoutManager(this));
+        recyclerView.setAdapter(new CommonRecyclerAdapter<HomeworkResp>(this,mRespList,R.layout.item_homework_adapter) {
+            @Override
+            public void convert(CommonRecyclerHolder holder, final HomeworkResp item, int position) {
+                ImageView iv = holder.getView(R.id.item_iv_image);
+                TextView tvDate = holder.getView(R.id.item_tv_date);
+
+                tvDate.setText(StringUtils.longToDate(item.homeworkDate,"yyyy年MM月dd日 EEEE"));
+                if(position != 0){
+                    String lastDate = StringUtils.longToDate(mRespList.get(position - 1).homeworkDate,"yyyy-MM-dd");
+                    String currentDate = StringUtils.longToDate(mRespList.get(position).homeworkDate,"yyyy-MM-dd");
+                    if(currentDate.equals(lastDate)){
+                        tvDate.setVisibility(View.GONE);
+                    }else {
+                        tvDate.setVisibility(View.VISIBLE);
+                    }
+                }
+                holder.setText(R.id.item_tv_title,item.childName.concat("的作业"));
+                holder.setText(R.id.item_tv_time, StringUtils.longToDate(item.homeworkDate,"HH:mm:ss"));
+                Glide.with(HomeworkActivity.this)
+                        .load(item.childIcon)
+                        .placeholder(R.mipmap.ic_my_child_default)
+                        .diskCacheStrategy(DiskCacheStrategy.ALL)
+                        .transform(new GlideCricleTransform(HomeworkActivity.this))
+                        .into(iv);
+                holder.mItemView.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        Intent intent = new Intent(HomeworkActivity.this,HomeworkDetailActivity.class);
+                        intent.putExtra("item",GsonUtil.getInstance().getGson().toJson(item));
+                        startActivity(intent);
+                    }
+                });
+            }
+        });
+    }
+
+    /**
+     * 获取作业数据
+     * */
+    private void getHomeworkData() {
+        String string = SharePerfUtils.getString(Constant.KEY.USER_INFO);
+        UserInfoResp infoResp = GsonUtil.getInstance().getGson().fromJson(string, UserInfoResp.class);
+        HomeworkReq req = new HomeworkReq();
+        req.userChildren = infoResp.userChildren;
+        req.page = mCurrentPage;
+        req.pageCount = PAGE_COUNT;
+        ChildrenWarehouse.getInstance(this).getHomeworkData(req, new ResultCallBack<BaseResp<List<HomeworkResp>>>() {
+            @Override
+            public void onSuccess(BaseResp<List<HomeworkResp>> listBaseResp) {
+                if(listBaseResp.code == 0){
+                    if(listBaseResp.result != null && listBaseResp.result.size() != 0) {
+                        mRespList.addAll(listBaseResp.result);
+                        recyclerView.getAdapter().notifyDataSetChanged();
+                    }else {
+                        loadFail(1);
+                    }
+                }else {
+                    loadFail(2);
+                }
+                stopRefreshAndLoadmore();
+            }
+
+            @Override
+            public void onFail(String response) {
+                loadFail(2);
+                stopRefreshAndLoadmore();
+            }
+        });
+    }
+
+    private void stopRefreshAndLoadmore(){
+        smartRefreshLayout.finishRefresh();
+        smartRefreshLayout.finishLoadMore();
+    }
+
+    /**
+     * 加载失败
+     * @param type  1 : 无数据   2: 无网络
+     * */
+    private void loadFail(int type){
+        if(mRespList.size() != 0)
+            return;
+        rlPlaceHolder.setVisibility(View.VISIBLE);
+        if(type == 1){
+            tvPlaceHolder.setText("抱歉，暂无数据");
+            tvPlaceHolder.setCompoundDrawablesRelativeWithIntrinsicBounds(0,R.mipmap.ic_empty,0,0);
+            btnPlaceHolder.setVisibility(View.GONE);
+        }else {
+            tvPlaceHolder.setText("抱歉，网络不给力");
+            tvPlaceHolder.setCompoundDrawablesRelativeWithIntrinsicBounds(0,R.mipmap.ic_not_link_net,0,0);
+            btnPlaceHolder.setVisibility(View.VISIBLE);
+            btnPlaceHolder.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    rlPlaceHolder.setVisibility(View.GONE);
+                    getHomeworkData();
+                }
+            });
+        }
+    }
+
+    @Override
+    public void onLoadMore(@NonNull RefreshLayout refreshLayout) {
+        mCurrentPage ++;
+        getHomeworkData();
+    }
+
+    @Override
+    public void onRefresh(@NonNull RefreshLayout refreshLayout) {
+        mCurrentPage = 1;
+        mRespList.clear();
+        getHomeworkData();
+    }
+}

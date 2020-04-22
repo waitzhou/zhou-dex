@@ -1,0 +1,121 @@
+package com.zhexinit.yixiaotong.base;
+
+/**
+ * description:存储全局变量
+ */
+public class Constant {
+
+    /**
+     * 测试环境
+     */
+    //private static String HOST = " http://172.27.83.18:8003/wangfaqing";
+    //private static String HOST = "http://172.27.83.18:8003/yangchonglun";
+    //private static String HOST="http://172.27.83.18:8003/wul";
+    private static String HOST_PRIMARY = "http://47.99.154.66:8003";
+
+    private static String HOST = HOST_PRIMARY + "/smart_campus_server";
+    /// 服务器网关 - 内网 测试服务器
+
+    //private static String HOST  = "https://172.27.83.18:8003/smart_campus_server";
+    // 服务器网关 - 外网
+    //private static String HOST  = "http://218.108.33.166:10006/smart_campus_server";
+
+    //腾讯云存储的图片动态获取秘钥接口
+    public static String IMG_TOKEN_URL = HOST_PRIMARY +"/image-server/image/getCredential";//直接用接口getCredential，自定义返回体 getToken
+
+
+    /**
+     * 存放SharePref的key
+     */
+    public static class KEY {
+
+        //登录用户的手机号
+        public static final String USER_PHONE_NUM = "user_phoneNum";
+        //登录后的token
+        public static final String USER_TOKEN = "user_token";
+        //登录成功后返回的init
+        public static final String INIT_INFO = "init_info";
+        //用户信息
+        public static final String USER_INFO = "user_info";
+
+        public static final String TECENT_COSXMLSERVICE_BUCKET = "pet-buddy-1253442986";
+        public static final String TECENT_COSXMLSERVICE_COSPATH = "/user_image_android/";
+    }
+
+    /**
+     * 初始化接口，登录之后调用，（需要token）
+     */
+    public static String USER_INIT = HOST + "/init";
+    // 获取登录验证码
+    public static String LOGIN_VERIFY_CODE = HOST + "/user/sendVerifyCode";
+    //根据验证码登录
+    public static String LOGIN_WITH_SMS = HOST + "/user/verifyCodeLogin";
+    //密码登录
+    public static String LOGIN_WITH_PASSWORD = HOST + "/user/passwordLogin";
+    //修改登录密码
+    public static String LOGIN_UPDATE_PASSWORD = HOST + "/user/updatePassword";
+    //获取用户信息
+    public static String GET_USER_INFO = HOST + "/user/getUserInfo";
+    //修改用户信息
+    public static String UPDATE_USER_INFO = HOST + "/user/updateUserInfo";
+    //获取孩子详情
+    public static String GET_CHILD_INFO = HOST + "/child/getChildInfo";
+    //校徽省电开关接口
+    public static String SET_POWER_SAVING = HOST + "/device/powerSaving";
+    //获取孩子的家长信息
+    public static String GET_CHILD_PARENT = HOST + "/child/getChildParents";
+    //添加孩子家长
+    public static String ADD_PARENT = HOST + "/child/addChildParent";
+    //孩子与家长的关系的列表
+    public static String GET_RELATION = HOST + "/child/getUserRelation";
+    //删除单个孩子家长
+    public static String DELETE_PARENT = HOST + "/child/deleteChildParent";
+    //非主账号解绑当前孩子
+    public static String UNBUND_CHILD = HOST + "/child/unbinding";
+
+
+    //获取围栏列表
+    public static String RAIL_GET = HOST + "/device/getRails";
+    //添加围栏
+    public static String RAIL_ADD = HOST + "/device/addRail";
+    //删除围栏
+    public static String RAIL_DELETE = HOST + "/device/deleteRail";
+    //修改围栏
+    public static String RAIL_UPDATE = HOST + "/device/updateRail";
+    //获取孩子位置信息
+    public static String POSITION_GET_CHILD = HOST + "/map/getChildSite";
+    //获取孩子列表信息
+    public static String POSITION_GET_CHILD_LIST = HOST + "/map/getChildrenSiteList";
+
+    //获取请假列表
+    public static String VACATE_GET = HOST + "/leave/list";
+    //请假数据提交
+    public static String VACATE_SUBMIT = HOST + "/leave/request";
+    //请假详细信息
+    public static String VACATE_DETAIL = HOST + "/leave/getLeaveInfo";
+
+    //首页需要的所有通知
+    public static String HOME_ALL_NO_TICE = HOST + "/notice/all";
+
+    //通讯录
+    public static String CONTACT_DATA = HOST + "/child/teacherInfo";
+
+    //考勤，获取数据列表
+    public static String ATTENDANCE_DATA = HOST + "/child/getAttendanceList";
+    //考勤数据统计
+    public static String ATTENDANCE_STATISTICAL = HOST + "/child/getAttendanceStatistics";
+
+    //课程表返回结果
+    public static String SCHEDULE_DATA = HOST + "/child/getClassCourse";
+
+    //作业列表接口
+    public static String HOMEWORK_LIST = HOST + "/homework/list";
+    //作业详情接口
+    public static String HOMEWORK_DETAIL = HOST + "/homework/homeworkDetail";
+
+    //通知数据
+    public static final String NOTICE_DATA = HOST + "/notice/schoolNotice";
+
+    //获取服务器时间
+    public static final String GET_SERVICE_TIME = HOST_PRIMARY + "/image-server/image/getSystemTime";
+}

@@ -1,0 +1,196 @@
+package com.zhexinit.yixiaotong.function.home.activity;
+
+import android.graphics.drawable.Drawable;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
+import android.util.Log;
+import android.view.View;
+import android.widget.TextView;
+
+import com.google.gson.Gson;
+import com.zhexinit.yixiaotong.R;
+import com.zhexinit.yixiaotong.base.BaseActivity;
+import com.zhexinit.yixiaotong.function.BaseResp;
+import com.zhexinit.yixiaotong.function.ChildrenWarehouse;
+import com.zhexinit.yixiaotong.function.home.entity.resp.HomewordDetailResp;
+import com.zhexinit.yixiaotong.function.home.entity.resp.HomeworkResp;
+import com.zhexinit.yixiaotong.rxjavamanager.interfaces.ResultCallBack;
+import com.zhexinit.yixiaotong.utils.RecyclerViewDivider;
+import com.zhexinit.yixiaotong.utils.commonAdapter.CommonRecyclerAdapter;
+import com.zhexinit.yixiaotong.utils.commonAdapter.CommonRecyclerHolder;
+import com.zhexinit.yixiaotong.widget.SharePopupWindow;
+import com.zhexinit.yixiaotong.widget.ToolBar;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import butterknife.BindView;
+
+/**
+ * Author:zhousx
+ * date:2018/11/9
+ * description:家庭作业详情界面
+ */
+public class HomeworkDetailActivity extends BaseActivity {
+
+    @BindView(R.id.tool_bar)
+    ToolBar toolBar;
+    @BindView(R.id.tv_school)
+    TextView tvSchool;
+    @BindView(R.id.tv_class)
+    TextView tvClass;
+    @BindView(R.id.recycler_view)
+    RecyclerView recyclerView;
+    @BindView(R.id.tv_master)
+    TextView tvMaster;
+    @BindView(R.id.date)
+    TextView date;
+
+    private String mClassId;
+    private long mHomeworkDate;
+
+    private HomeworkResp mHomeworkResp;
+    private List<HomewordDetailResp> mRespList = new ArrayList<>();
+
+    @Override
+    protected int getLayoutId() {
+        return R.layout.activity_homework_detail;
+    }
+
+    @Override
+    protected void init() {
+
+        initToolbar();
+        initData();
+        initRecyclerView();
+    }
+
+    private void initData() {
+        mClassId = getIntent().getStringExtra("classId");
+        mHomeworkDate = getIntent().getLongExtra("homeworkDate",System.currentTimeMillis());
+        getDetailData();
+    }
+
+    private void getDetailData() {
+        Map<String,String> map = new HashMap<>();
+        map.put("classId",mClassId);
+        map.put("homeworkDate",String.valueOf(mHomeworkDate));
+        String str = new Gson().toJson(map);
+        Log.e("aaaaaaa", "getDetailData: "+str);
+        ChildrenWarehouse.getInstance(this).getHomeworkDetail(map, new ResultCallBack<BaseResp<List<HomewordDetailResp>>>() {
+            @Override
+            public void onSuccess(BaseResp<List<HomewordDetailResp>> listBaseResp) {
+                if(listBaseResp.code == 0){
+                    mRespList.addAll(listBaseResp.result);
+                    recyclerView.getAdapter().notifyDataSetChanged();
+                }
+            }
+
+            @Override
+            public void onFail(String response) {
+
+            }
+        });
+    }
+
+
+    private void initToolbar() {
+        toolBar.setTitle("作业单");
+        toolBar.setBackImage();
+        toolBar.back(this);
+        toolBar.setRightTypeface(getResources().getString(R.string.tv_share));
+        toolBar.setRightTvClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                showShareWindow();
+            }
+        });
+    }
+
+    private void initRecyclerView() {
+        recyclerView.setLayoutManager(new LinearLayoutManager(this) {
+            @Override
+            public boolean canScrollVertically() {
+                return false;
+            }
+        });
+        recyclerView.setAdapter(new CommonRecyclerAdapter<HomewordDetailResp>(this, mRespList,
+                R.layout.item_homework_detail_adapter) {
+            @Override
+            public void convert(CommonRecyclerHolder holder, HomewordDetailResp item, int position) {
+                TextView textView = holder.getView(R.id.item_image);
+                holder.setText(R.id.item_tv_title,item.homeworkContent);
+
+            }
+        });
+    }
+
+    /**
+     * 设置内部适配器
+     * */
+    private void setInnerAdapter(RecyclerView recyclerView, List<String> strings) {
+        for (int i = 0; i < 2; i++) {
+            strings.add("1");
+        }
+        RecyclerViewDivider divider = new RecyclerViewDivider(this);
+        divider.setLineColor(R.color.gray_line);
+        recyclerView.addItemDecoration(divider);
+        recyclerView.setAdapter(new CommonRecyclerAdapter<String>(this, strings, R.layout.item_inner_homework_detail) {
+            @Override
+            public void convert(CommonRecyclerHolder holder, String item, int position) {
+
+            }
+        });
+    }
+
+    /**
+     * 获取课程drawable对象
+     */
+    private Drawable getLessonTag(int type) {
+        Drawable drawable = null;
+        switch (type) {
+            case 1:
+                drawable = getResources().getDrawable(R.drawable.bg_oval_gradient_shallow_blue);
+                break;
+            case 2:
+                drawable = getResources().getDrawable(R.drawable.bg_oval_gradient_red);
+                break;
+            case 3:
+                drawable = getResources().getDrawable(R.drawable.bg_oval_gradient_yellow);
+                break;
+            case 4:
+                drawable = getResources().getDrawable(R.drawable.bg_oval_gradient_blue);
+                break;
+            default:
+                drawable = getResources().getDrawable(R.drawable.bg_oval_gradient_shallow_blue);
+                break;
+        }
+        return drawable;
+    }
+
+    private String getTagText(int type) {
+        String str = "";
+        switch (type) {
+            case 1:
+                str = "语文";
+                break;
+            case 2:
+                str = "数学";
+                break;
+            case 3:
+                str = "英语";
+                break;
+            case 4:
+                str = "自然";
+                break;
+        }
+        return str;
+    }
+
+    private void showShareWindow(){
+        SharePopupWindow popupWindow = new SharePopupWindow(this,toolBar);
+        popupWindow.show();
+    }
+}

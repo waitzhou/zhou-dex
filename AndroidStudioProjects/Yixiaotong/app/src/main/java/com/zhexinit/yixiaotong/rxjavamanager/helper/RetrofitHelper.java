@@ -1,0 +1,225 @@
+package com.zhexinit.yixiaotong.rxjavamanager.helper;
+
+import android.content.Context;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
+import android.support.v4.util.SparseArrayCompat;
+
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.jakewharton.retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory;
+
+import java.io.File;
+import java.io.IOException;
+import java.security.cert.CertificateException;
+import java.util.concurrent.TimeUnit;
+
+import javax.net.ssl.HostnameVerifier;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSession;
+import javax.net.ssl.SSLSocketFactory;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
+
+import okhttp3.Cache;
+import okhttp3.CacheControl;
+import okhttp3.Interceptor;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
+import okhttp3.logging.HttpLoggingInterceptor;
+import retrofit2.Retrofit;
+import retrofit2.converter.gson.GsonConverterFactory;
+
+/**
+ * Author:@zhousx
+ * date: 2018/2/28/15:55.
+ * function :Retrofit管理类，提供一个Retrofit对象
+ */
+
+public class RetrofitHelper {
+
+    /**
+     * 地址的host
+     */
+    public static String HOST = "http://app.hzgh.org:8002/unionApp/interf/front/";
+
+    private volatile static RetrofitHelper sInstance;
+    private Retrofit mRetrofit;
+    private Context mContext;
+    private SparseArrayCompat<Object> mServiceCache;
+
+    public static RetrofitHelper create(Context context) {
+        RetrofitHelper serviceFactory = sInstance;
+        if (serviceFactory == null) {
+            synchronized (RetrofitHelper.class) {
+                serviceFactory = sInstance;
+                if (serviceFactory == null) {
+                    serviceFactory = new RetrofitHelper(context);
+                    sInstance = serviceFactory;
+                }
+            }
+        }
+        return serviceFactory;
+    }
+
+    public RetrofitHelper(Context context) {
+        mContext = context;
+
+        //cache url：缓存路径
+        File httpCacheDirectory = new File(mContext.getCacheDir(), "http_cache");
+        int cacheSize = 10 * 1024 * 1024; // 10 MiB
+        Cache cache = new Cache(httpCacheDirectory, cacheSize);
+
+        /**log日志*/
+        HttpLoggingInterceptor interceptor = new HttpLoggingInterceptor();
+        interceptor.setLevel(HttpLoggingInterceptor.Level.BODY);
+
+        OkHttpClient.Builder okbuilder = getUnsafeOkHttpClient().newBuilder()
+                .retryOnConnectionFailure(true)
+                .readTimeout(10, TimeUnit.SECONDS)
+                .connectTimeout(10, TimeUnit.SECONDS);
+
+        okbuilder.addInterceptor(new Interceptor() {
+            @Override
+            public Response intercept(Chain chain) throws IOException {
+                Request original = chain.request();
+                Request request = original.newBuilder()
+                        /*.header("", "")
+                        .header("", "")*/
+                        .method(original.method(), original.body())
+                        .build();
+                return chain.proceed(request);
+            }
+        });
+
+        //okbuilder.addInterceptor(interceptor).addInterceptor(provideCacheInteceptor()).cache(cache);
+        Gson gson = new GsonBuilder()
+                .setLenient()
+                .create();
+        Retrofit.Builder builder = new Retrofit.Builder();
+        builder.client(okbuilder.build())
+                .baseUrl(HOST)
+                .addConverterFactory(GsonConverterFactory.create(gson))
+                .addCallAdapterFactory(RxJava2CallAdapterFactory.create());
+        mRetrofit = builder.build();
+
+        mServiceCache = new SparseArrayCompat<>();
+    }
+
+    /**设置缓存interceptor*/
+    private Interceptor provideCacheInteceptor(){
+        return new Interceptor() {
+            @Override
+            public Response intercept(Chain chain) throws IOException {
+                CacheControl.Builder cacheBuilder = new CacheControl.Builder();
+                cacheBuilder.maxAge(0, TimeUnit.SECONDS);
+                cacheBuilder.maxStale(30, TimeUnit.DAYS);
+                CacheControl cacheControl = cacheBuilder.build();
+
+                Request request = chain.request();
+                if(!isConnectToNetWork(mContext)){
+                    request = request.newBuilder()
+                            .cacheControl(cacheControl)
+                            .build();
+                }
+                Response originalResponse = chain.proceed(request);
+                if (isConnectToNetWork(mContext)) {
+                    int maxAge = 0; // read from cache
+                    return originalResponse.newBuilder()
+                            .removeHeader("Pragma")
+                            .header("Cache-Control", "public ,max-age=" + maxAge)
+                            .build();
+                } else {
+                    int maxStale = 60 * 60 * 24 * 28; // tolerate 4-weeks stale
+                    return originalResponse.newBuilder()
+                            .removeHeader("Pragma")
+                            .header("Cache-Control", "public, only-if-cached, max-stale=" + maxStale)
+                            .build();
+                }
+            }
+        };
+    }
+
+    /**
+     * https不安全证书
+     * */
+    private static OkHttpClient getUnsafeOkHttpClient() {
+        try {
+            // Create a trust manager that does not validate certificate chains
+            final TrustManager[] trustAllCerts = new TrustManager[] {
+                    new X509TrustManager() {
+                        @Override
+                        public void checkClientTrusted(java.security.cert.X509Certificate[] chain, String authType) throws CertificateException {
+                        }
+
+                        @Override
+                        public void checkServerTrusted(java.security.cert.X509Certificate[] chain, String authType) throws CertificateException {
+                        }
+
+                        @Override
+                        public java.security.cert.X509Certificate[] getAcceptedIssuers() {
+                            return new java.security.cert.X509Certificate[]{};
+                        }
+                    }
+            };
+
+            // Install the all-trusting trust manager
+            final SSLContext sslContext = SSLContext.getInstance("SSL");
+            sslContext.init(null, trustAllCerts, new java.security.SecureRandom());
+            // Create an ssl socket factory with our all-trusting manager
+            final SSLSocketFactory sslSocketFactory = sslContext.getSocketFactory();
+
+            OkHttpClient.Builder builder = new OkHttpClient.Builder();
+            builder.sslSocketFactory(sslSocketFactory);
+            builder.hostnameVerifier(new HostnameVerifier() {
+                @Override
+                public boolean verify(String hostname, SSLSession session) {
+                    return true;
+                }
+            });
+
+            OkHttpClient okHttpClient = builder.build();
+            return okHttpClient;
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+
+    /**
+     * 网络是否可用
+     */
+    private boolean isConnectToNetWork(Context c) {
+        ConnectivityManager connectivityManager = (ConnectivityManager)
+                c.getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo info = null;
+        if (connectivityManager != null) {
+            info = connectivityManager.getActiveNetworkInfo();
+        }
+        if (info != null && info.isConnected()) {
+            if (info.getType() == ConnectivityManager.TYPE_MOBILE) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * 获取对应的服务
+     *
+     * @param service 服务
+     * @param <T>
+     * @return
+     */
+    @SuppressWarnings("unchecked")
+    public  <T> T provideRetrofit(Class<T> service) {
+
+        T t = (T) mServiceCache.get(service.hashCode());
+        if (t == null) {
+            t = mRetrofit.create(service);
+            mServiceCache.put(service.hashCode(), t);
+        }
+        return t;
+    }
+}

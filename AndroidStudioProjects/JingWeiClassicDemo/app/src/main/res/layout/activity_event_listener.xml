@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.example.jingweiclassicdemo.widget.MyLinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical" android:layout_width="match_parent"
+    android:background="#fff"
+    android:gravity="center"
+    android:layout_height="match_parent">
+
+    <com.example.jingweiclassicdemo.widget.MyButton1
+        android:layout_width="300dp"
+        android:layout_height="50dp"
+        android:text="button1"
+        android:textAllCaps="false"
+        android:onClick="btnClick1"/>
+
+    <com.example.jingweiclassicdemo.widget.MyButton2
+        android:layout_width="300dp"
+        android:layout_height="50dp"
+        android:text="button2"
+        android:textAllCaps="false"
+        android:layout_marginTop="80dp"
+        android:onClick="btnClick2"/>
+
+</com.example.jingweiclassicdemo.widget.MyLinearLayout>

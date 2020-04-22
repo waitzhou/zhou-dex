@@ -1,8 +1,9 @@
 task fileC{
     group 'test'
+    ext.myProperty = '123'
     doLast{
         println '666666666666'
-        filetest()
+        println fileC.myProperty
     }
 }
 
@@ -36,13 +37,20 @@ def test(){
     println name.two
 }
 
-def filetest(){
-    def filePath = '/Users/laozhou/Desktop/Android/AndroidStudioProjects/ComponentHotFixDemo/app/test.txt'
-    def file = new File(filePath)
-    println file.text
-    file.withPrintWriter {
-        it.println('银木花道')
-        it.println('漩涡鸣人')
+task filetest(dependsOn:'fileC'){
+    group 'test'
+    doLast {
+        def filePath = '/Users/laozhou/Desktop/Android/AndroidStudioProjects/ComponentHotFixDemo/app/src/main/AndroidManifest.xml'
+        def file = new File(filePath)
+        def text = file.text
+        file.withPrintWriter {
+            it.println(text)
+            it.println('银木花道')
+            it.println('漩涡鸣人')
+            it.println('1')
+            it.println('2')
+            it.println('3')
+        }
     }
 }
 

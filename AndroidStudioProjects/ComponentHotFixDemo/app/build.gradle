@@ -1,5 +1,15 @@
 apply plugin: 'com.android.application'
 
+// Creates a variable called keystorePropertiesFile, and initializes it to the
+// keystore.properties file.
+def keystorePropertiesFile = rootProject.file("keystore.properties")
+
+// Initializes a new Properties() object called keystoreProperties.
+def keystoreProperties = new Properties()
+
+// Loads the keystore.properties file into the keystoreProperties object.
+keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
+
 android {
     compileSdkVersion 29
     buildToolsVersion "29.0.2"
@@ -7,6 +17,13 @@ android {
         sourceCompatibility JavaVersion.VERSION_1_7
         targetCompatibility JavaVersion.VERSION_1_7
     }
+    /*splits {
+        density {
+            enable true
+            reset()
+            include('xhdpi', 'mdpi')
+        }
+    }*/
     defaultConfig {
         applicationId "com.example.componenthotfixdemo"
         minSdkVersion 15
@@ -16,17 +33,38 @@ android {
         multiDexEnabled true
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
+    /*flavorDimensions 'version'
+    productFlavors{
+        free{
+            dimension 'version'
+            applicationIdSuffix '.free'
+            versionNameSuffix '-free'
+        }
+        pro{
+            dimension 'version'
+            applicationIdSuffix '.pro'
+            versionNameSuffix '-pro'
+        }
+
+    }*/
     signingConfigs {
         release {
-            storeFile file('chf.keystore')
-            storePassword '123456'
-            keyAlias 'chf'
-            keyPassword '123456'
+            storeFile file(keystoreProperties['storeFile'])
+            storePassword keystoreProperties['storePassword']
+            keyAlias keystoreProperties['keyAlias']
+            keyPassword keystoreProperties['keyPassword']
         }
     }
     buildTypes {
         release {
             minifyEnabled false
+            signingConfig signingConfigs.release
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+        debug{
+            minifyEnabled false
+            ext.enableCrashlytics = false//不需要生成 Crashlytics 报告
+            ext.alwaysUpdateBuildId = false
             signingConfig signingConfigs.release
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }

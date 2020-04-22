@@ -41,5 +41,16 @@ dependencies {
     androidTestImplementation 'androidx.test:runner:1.2.0'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
 }
+
+task gradlelistener{
+    group 'gradlelistener'
+    description 'gradle监听'
+
+    doLast{
+        println('123456')
+    }
+    println('1222223456')
+}
+
 println("app   end")
 

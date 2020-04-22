@@ -1,0 +1,45 @@
+// Top-level build file where you can add configuration options common to all sub-projects/modules.
+
+buildscript {
+    repositories {
+        google()
+        jcenter()
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:3.1.4'
+        classpath 'com.didi.virtualapk:gradle:0.9.8.6' //滴滴插件化依赖
+        classpath 'org.aspectj:aspectjtools:1.8.9'  // aspectjtools 切面编程
+        // NOTE: Do not place your application dependencies here; they belong
+        // in the individual module build.gradle files
+    }
+}
+
+allprojects {
+    repositories {
+        google()
+        jcenter()
+        mavenCentral()
+    }
+}
+
+ext{
+    VERSION_COMPILE_SDK = 27
+    VERSION_BUILD_TOOLS = '27.0.3'
+
+    VERSION_MIN_SDK = 15
+    VERSION_TARGET_SDK = 25
+
+    SOURCE_COMPATIBILITY = JavaVersion.VERSION_1_7
+
+    VERSION_CODE = 1
+    VERSION_NAME = '1.0.0'
+
+    SUPPORT_VERSION = '23.4.0'
+    GLIDE_VERSION = '4.1.0'
+    ASPECTJ_VERSION = '1.8.9'
+}
+
+task clean(type: Delete) {
+    delete rootProject.buildDir
+}

@@ -1,0 +1,21 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    package="com.example.customplugin">
+
+    <application
+        android:allowBackup="true"
+        android:label="@string/custom_app_name"
+        android:supportsRtl="true"
+        android:theme="@style/custom_AppTheme"
+        tools:ignore="GoogleAppIndexingWarning">
+
+        <activity android:name=".CustomMainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+    </application>
+
+</manifest>

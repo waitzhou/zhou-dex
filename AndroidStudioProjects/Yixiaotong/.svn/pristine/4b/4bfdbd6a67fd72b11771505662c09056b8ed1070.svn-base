@@ -1,0 +1,20 @@
+package com.zhexinit.yixiaotong.function.home.entity.resp;
+
+/**
+ * Author:zhousx
+ * date:2018/11/20
+ * description:通知返回结果
+ */
+public class NoticeResp {
+
+       public int id;//": 1,
+       public int teacherId;//": 1,
+       public String classId;//": null,
+       public int schoolId;//": 1,
+       public String noticeTitle;//": "测试通知",
+       public String noticeContent;//": "哈哈哈哈哈哈哈哈哈哈哈",
+       public String noticeTime;//": "明天",
+       public boolean noticeType;//": true,
+       public long createTime;//": 1542340618000,
+       public long modifyTime;//": 1542340623000
+}

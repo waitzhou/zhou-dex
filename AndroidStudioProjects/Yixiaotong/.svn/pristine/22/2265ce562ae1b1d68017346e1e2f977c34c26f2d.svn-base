@@ -1,0 +1,171 @@
+package com.zhexinit.yixiaotong.base;
+
+import android.app.Dialog;
+import android.content.Context;
+import android.content.DialogInterface;
+import android.os.Bundle;
+import android.support.annotation.Nullable;
+import android.support.v4.app.Fragment;
+import android.support.v7.widget.LinearLayoutManager;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.view.WindowManager;
+import android.view.inputmethod.InputMethodManager;
+import android.widget.TextView;
+import android.widget.Toast;
+
+
+import com.zhexinit.yixiaotong.R;
+
+import butterknife.ButterKnife;
+import butterknife.Unbinder;
+
+/**
+ * Author:zhousx
+ * date:2018/6/4
+ * description:
+ */
+public abstract class BaseFragment extends Fragment {
+
+    protected Dialog progressDialog;
+    private WindowManager.LayoutParams layoutParams;
+    private Toast mToast;
+
+    protected int TYPE_HORIZONTAL = 0, TYPE_VERTICAL = 1;
+
+    private Unbinder mUnbinder;
+
+    protected View rootView;
+
+    @Nullable
+    @Override
+    public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+        if (rootView == null) {
+            rootView = inflater.inflate(getLayoutId(), container, false);
+        }
+        mUnbinder = ButterKnife.bind(this, rootView);
+        init(savedInstanceState);
+        return rootView;
+    }
+
+    protected abstract int getLayoutId();
+
+    protected abstract void init(Bundle savedInstanceState);
+
+    /**
+     * 获取recyclerview的布局管理者
+     */
+    public LinearLayoutManager getLayoutManager() {
+        return getLayoutManager(TYPE_VERTICAL, true);
+    }
+
+    /**
+     * 设置layoutManager
+     *
+     * @param type     类型：横向纵向
+     * @param isScroll 是否滑动 false：不能滑动（外部包括scrollView） true:可以滑动，外部不包括scrollView
+     */
+    public LinearLayoutManager getLayoutManager(int type, final boolean isScroll) {
+        LinearLayoutManager layoutManager = new LinearLayoutManager(getContext()) {
+            @Override
+            public boolean canScrollVertically() {
+                return isScroll;
+            }
+        };
+        if (type == TYPE_HORIZONTAL) {
+            layoutManager.setOrientation(LinearLayoutManager.HORIZONTAL);
+        } else {
+            layoutManager.setOrientation(LinearLayoutManager.VERTICAL);
+        }
+        return layoutManager;
+    }
+
+
+    /**
+     * 正在加载，展示加载中
+     */
+    public void showProgressDialog() {
+        showProgressDialog("正在加载中..");
+    }
+
+    /**
+     * parmas description 展示加载中
+     */
+    public void showProgressDialog(String s) {
+        showProgressDialog(s,true);
+    }
+
+    public void showProgressDialog(boolean cancelable) {
+        showProgressDialog("正在加载中..",cancelable);
+    }
+
+    public void showProgressDialog(String s,boolean cancelable) {
+        if(progressDialog == null) {
+            progressDialog = new Dialog(getContext(), R.style.load_dialog);
+            progressDialog.setContentView(R.layout.layout_loading);
+            progressDialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+        }
+        TextView msg = progressDialog.findViewById(R.id.id_tv_loadingmsg);
+        msg.setText(s);
+        progressDialog.setCancelable(true);
+        progressDialog.setCanceledOnTouchOutside(cancelable);
+        layoutParams = getActivity().getWindow().getAttributes();
+        //当弹出Popupwindow时，背景变半透明
+        layoutParams.alpha = 0.7f;
+        getActivity().getWindow().setAttributes(layoutParams);
+        progressDialog.setOnDismissListener(new DialogInterface.OnDismissListener() {
+            @Override
+            public void onDismiss(DialogInterface dialog) {
+                layoutParams.alpha = 1.0f;
+                getActivity().getWindow().setAttributes(layoutParams);
+            }
+        });
+        progressDialog.show();
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+        if(mToast != null){
+            mToast.cancel();
+        }
+    }
+
+    /**
+     * 隐藏软键盘
+     * */
+    public void hideSoftInput(View view){
+        InputMethodManager imm = (InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
+        imm.hideSoftInputFromWindow(view.getWindowToken(),0);
+    }
+
+    /**
+     * 隐藏提示加载
+     */
+    public void hideProgressDialog() {
+        if (null != progressDialog && progressDialog.isShowing()) {
+            progressDialog.dismiss();
+        }
+    }
+
+    public void showToast(String s) {
+        if (mToast == null) {
+            mToast = Toast.makeText(getActivity().getApplicationContext(), s, Toast.LENGTH_SHORT);
+        } else {
+            mToast.setText(s);
+            mToast.setDuration(Toast.LENGTH_SHORT);
+        }
+        mToast.show();
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+//        UserWarehouse.onDestroy();
+//        PetWarehouse.onDestroy();
+        if(mUnbinder != null){
+            mUnbinder.unbind();
+        }
+    }
+}

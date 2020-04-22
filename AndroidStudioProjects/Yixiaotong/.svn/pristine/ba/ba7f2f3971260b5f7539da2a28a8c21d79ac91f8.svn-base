@@ -1,0 +1,26 @@
+package com.zhexinit.yixiaotong.function.home.entity.resp;
+
+/**
+ * Author:zhousx
+ * date:2018/11/15
+ * description:请假返回结果
+ */
+public class VacateResp{
+
+    public int id;//: 2,
+    public String childId;//": "1",
+    public String userId;//: "2db43dd0-5fdb-4215-80f0-74496ef2bbb8",
+    public int leaveType;//": 1,
+    public String leaveContent;//": "有事情",
+    public String leaveImage;//": "http://pet-buddy-1253442986.cos-website.ap-shanghai.myqcloud.com/user_icon/18868793333_20180809104058.jpg",
+    public long longStartTime;//": 1542333600000,
+    public long longEndTime;//": 1542420000000,
+    public int status;//": 1,
+    public long createTime;//": 1542247446000,
+    public String masterTeacher;//": "test",
+    public String childName;//": "王小到"
+    public int teacherId;
+    public String refuseReason;
+    public String icon;
+    public long modifyTime;
+}

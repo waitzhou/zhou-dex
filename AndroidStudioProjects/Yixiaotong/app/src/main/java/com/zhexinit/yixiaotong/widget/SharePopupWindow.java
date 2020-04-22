@@ -1,0 +1,119 @@
+package com.zhexinit.yixiaotong.widget;
+
+import android.annotation.SuppressLint;
+import android.app.Activity;
+import android.graphics.drawable.ColorDrawable;
+import android.util.Log;
+import android.view.Gravity;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.view.WindowManager;
+import android.widget.PopupWindow;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import com.jakewharton.rxbinding2.view.RxView;
+import com.zhexinit.yixiaotong.R;
+
+import java.util.concurrent.TimeUnit;
+
+import io.reactivex.functions.Consumer;
+
+/**
+ * Author:zhousx
+ * date:2018/11/19
+ * description:分享弹框
+ */
+public class SharePopupWindow extends PopupWindow {
+
+    private Activity mActivity;
+    private View mView;
+
+    private TextView tvWX, tvWXCircle, tvQQ, tvQZone,tvCancel;
+
+    public SharePopupWindow(Activity activity, View view) {
+        mActivity = activity;
+        mView = view;
+        findView();
+    }
+
+
+    private void findView() {
+        View contentView = LayoutInflater.from(mActivity).inflate(R.layout.popup_window_share, null);
+        setHeight(ViewGroup.LayoutParams.WRAP_CONTENT);
+        setWidth(ViewGroup.LayoutParams.MATCH_PARENT);
+        setContentView(contentView);
+        setBackgroundDrawable(new ColorDrawable());
+        setOutsideTouchable(true);
+        setFocusable(true);
+
+        tvWX = contentView.findViewById(R.id.tv_share_wx);
+        tvWXCircle = contentView.findViewById(R.id.tv_share_wxcircle);
+        tvQQ = contentView.findViewById(R.id.tv_share_qq);
+        tvQZone = contentView.findViewById(R.id.tv_share_qzone);
+        tvCancel = contentView.findViewById(R.id.tv_cancel);
+
+        setTvClickListener(tvWX);
+        setTvClickListener(tvWXCircle);
+        setTvClickListener(tvQQ);
+        setTvClickListener(tvQZone);
+        tvCancel.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                dismiss();
+            }
+        });
+        setOnDismissListener(new OnDismissListener() {
+            @Override
+            public void onDismiss() {
+                popupDismiss();
+            }
+        });
+        setAnimationStyle(R.style.PopupBottomAnim);
+    }
+
+    private long mPrimaryClickTime;
+    @SuppressLint("CheckResult")
+    private void setTvClickListener(TextView view){
+        view.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if(mPrimaryClickTime == 0){
+                    mPrimaryClickTime = System.currentTimeMillis();
+                    Toast.makeText(mActivity, "功能正在开发中", Toast.LENGTH_SHORT).show();
+                }else {
+                    if(System.currentTimeMillis() - mPrimaryClickTime > 1500){
+                        mPrimaryClickTime = System.currentTimeMillis();
+                        Toast.makeText(mActivity, "功能正在开发中", Toast.LENGTH_SHORT).show();
+                    }
+                }
+            }
+        });
+       /* RxView.clicks(view)
+                .throttleFirst(1500, TimeUnit.MILLISECONDS)
+                .subscribe(new Consumer<Object>() {
+                    @Override
+                    public void accept(Object o) throws Exception {
+                        Log.e("", "accept: ");
+                        Toast.makeText(mActivity, "功能正在开发中", Toast.LENGTH_SHORT).show();
+                    }
+                });*/
+    }
+
+    public void popupDismiss() {
+        setWindowAlpha(1f);
+    }
+
+    public void setWindowAlpha(float alpha) {
+        WindowManager.LayoutParams layoutParams = mActivity.getWindow().getAttributes();
+        layoutParams.alpha = alpha;
+        mActivity.getWindow().setAttributes(layoutParams);
+    }
+
+    public void show() {
+        setWindowAlpha(0.7f);
+        showAtLocation(mView, Gravity.BOTTOM, 0, 0);
+    }
+
+}

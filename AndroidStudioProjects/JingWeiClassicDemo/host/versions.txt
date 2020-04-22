@@ -1,0 +1,12 @@
+base:debug:unspecified 0
+com.android.support:animated-vector-drawable:23.4.0 160
+com.android.support:appcompat-v7:23.4.0 288
+com.android.support:support-annotations:23.4.0 19252
+com.android.support:support-v4:23.4.0 224
+com.android.support:support-vector-drawable:23.4.0 160
+com.didi.virtualapk:core:0.9.8 224
+com.github.bumptech.glide:annotations:4.1.0 3689
+com.github.bumptech.glide:disklrucache:4.1.0 19341
+com.github.bumptech.glide:gifdecoder:4.1.0 17426
+com.github.bumptech.glide:glide:4.1.0 587553
+org.aspectj:aspectjrt:1.8.9 117528

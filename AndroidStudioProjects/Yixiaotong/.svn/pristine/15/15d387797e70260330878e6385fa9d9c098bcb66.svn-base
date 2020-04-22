@@ -1,0 +1,186 @@
+package com.zhexinit.yixiaotong.function.home.adapter;
+
+import android.annotation.SuppressLint;
+import android.app.ActivityManager;
+import android.content.Context;
+import android.content.Intent;
+import android.support.annotation.NonNull;
+import android.support.v7.widget.RecyclerView;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.ImageView;
+import android.widget.TextView;
+
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.engine.DiskCacheStrategy;
+import com.zhexinit.yixiaotong.R;
+import com.zhexinit.yixiaotong.event.MainRadioChangeEvent;
+import com.zhexinit.yixiaotong.function.home.MainActivity;
+import com.zhexinit.yixiaotong.function.home.activity.NoticeDetailActivity;
+import com.zhexinit.yixiaotong.function.home.entity.resp.NoticeResp;
+import com.zhexinit.yixiaotong.rxjavamanager.event.RxBus;
+import com.zhexinit.yixiaotong.utils.ActivityManagerUtil;
+import com.zhexinit.yixiaotong.utils.FragmentTabUtil;
+import com.zhexinit.yixiaotong.utils.GlideCricleTransform;
+import com.zhexinit.yixiaotong.utils.GsonUtil;
+import com.zhexinit.yixiaotong.utils.StringUtils;
+
+import java.util.List;
+
+import butterknife.BindView;
+import butterknife.ButterKnife;
+
+/**
+ * Author:zhousx
+ * date:2018/11/10
+ * description:通知适配器
+ */
+public class NoticeAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
+
+    //普通通知
+    private final int TYPE_COMMON = 1;
+    //警告通知
+    private final int TYPE_IMPORTANT = 2;
+
+
+    private Context mContext;
+
+    private List<NoticeResp> mRespList;
+
+    public NoticeAdapter(List<NoticeResp> respList) {
+        this.mRespList = respList;
+    }
+
+    @Override
+    public int getItemViewType(int position) {
+        return mRespList.get(position).messageType;
+    }
+
+    @NonNull
+    @Override
+    public RecyclerView.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+        mContext = parent.getContext();
+        switch (viewType) {
+            case 7:
+            case 8:
+                View view1 = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_notice_important, parent, false);
+                return new NoticeImporttantHolder(view1);
+            default:
+                View view2 = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_notice_common, parent, false);
+                return new NoticeCommonHolder(view2);
+        }
+    }
+
+    @SuppressLint("SetTextI18n")
+    @Override
+    public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
+        if (holder instanceof NoticeCommonHolder) {
+            NoticeCommonHolder commonHolder = (NoticeCommonHolder) holder;
+            final NoticeResp noticeResp = mRespList.get(position);
+            commonHolder.itemTvTitle.setText(noticeResp.noticeTitle);
+            commonHolder.itemTvDesc.setText(noticeResp.noticeContent);
+            commonHolder.itemTvClass.setText(noticeResp.schoolName + "  " + noticeResp.gradeInfo + noticeResp.classInfo);
+            Glide.with(mContext)
+                    .load(mRespList.get(position).messageIcon)
+                    .diskCacheStrategy(DiskCacheStrategy.ALL)
+                    .transform(new GlideCricleTransform(mContext))
+                    .into(commonHolder.itemIvImage);
+            commonHolder.itemTvDate.setText(StringUtils.longToDate(noticeResp.messageDate, "yyyy年MM月dd日"));
+
+            holder.itemView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Intent intent = new Intent(mContext, NoticeDetailActivity.class);
+                    intent.putExtra("item", GsonUtil.getInstance().getGson().toJson(noticeResp));
+                    mContext.startActivity(intent);
+                }
+            });
+        } else {
+            NoticeImporttantHolder commonHolder = (NoticeImporttantHolder) holder;
+            final NoticeResp noticeResp = mRespList.get(position);
+            commonHolder.itemTvTitle.setText(noticeResp.noticeTitle);
+            commonHolder.itemTvDesc.setText(noticeResp.noticeContent);
+            commonHolder.itemTvClass.setText(noticeResp.schoolName + "  " + noticeResp.gradeInfo + noticeResp.classInfo);
+
+            commonHolder.itemTvQueryDetail.setVisibility(noticeResp.messageType==7?View.VISIBLE:View.INVISIBLE);
+            commonHolder.itemTvDate.setText(StringUtils.longToDate(noticeResp.messageDate, "yyyy年MM月dd日"));
+            commonHolder.itemTvTime.setText(StringUtils.longToDate(noticeResp.messageDate, "yyyy年MM月dd日 HH:mm:ss"));
+            holder.itemView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    switch (noticeResp.messageType) {
+                        case 7: //7是围栏提醒，
+                            ActivityManagerUtil.getAppManager().finishActivity();
+
+                            FragmentTabUtil.RadioGroupCheckChanged lis = new FragmentTabUtil.RadioGroupCheckChanged() {
+                                @Override
+                                public void onRgCheckChanged(int position) {
+
+                                }
+                            };
+                            RxBus.getInstance().sendEvent(new MainRadioChangeEvent(2));
+                            break;
+                        case 8: //8是低电量提醒
+                            //低电量暂时点击没反应,就是没反应
+                            break;
+                        default:
+                            Intent intent = new Intent(mContext, NoticeDetailActivity.class);
+                            intent.putExtra("item", GsonUtil.getInstance().getGson().toJson(noticeResp));
+                            mContext.startActivity(intent);
+                            break;
+                    }
+                }
+            });
+        }
+    }
+
+    @Override
+    public int getItemCount() {
+        return mRespList == null ? 0 : mRespList.size();
+    }
+
+    public class NoticeCommonHolder extends RecyclerView.ViewHolder {
+
+        @BindView(R.id.item_tv_class)
+        TextView itemTvClass;
+        @BindView(R.id.item_tv_date)
+        TextView itemTvDate;
+        @BindView(R.id.item_view_holder)
+        View itemViewHolder;
+        @BindView(R.id.item_iv_image)
+        ImageView itemIvImage;
+        @BindView(R.id.item_tv_title)
+        TextView itemTvTitle;
+        @BindView(R.id.item_tv_desc)
+        TextView itemTvDesc;
+
+        public NoticeCommonHolder(View itemView) {
+            super(itemView);
+            ButterKnife.bind(this, itemView);
+        }
+    }
+
+    public class NoticeImporttantHolder extends RecyclerView.ViewHolder {
+
+        @BindView(R.id.item_tv_class)
+        TextView itemTvClass;
+        @BindView(R.id.item_tv_date)
+        TextView itemTvDate;
+        @BindView(R.id.item_iv_image)
+        ImageView itemIvImage;
+        @BindView(R.id.item_tv_title)
+        TextView itemTvTitle;
+        @BindView(R.id.item_tv_desc)
+        TextView itemTvDesc;
+        @BindView(R.id.item_tv_time)
+        TextView itemTvTime;
+        @BindView(R.id.item_tv_query_detail)
+        TextView itemTvQueryDetail;
+
+        public NoticeImporttantHolder(View itemView) {
+            super(itemView);
+            ButterKnife.bind(this, itemView);
+        }
+    }
+}

@@ -1,0 +1,45 @@
+package com.zhexinit.yixiaotong.function.home.entity.resp;
+
+/**
+ * Author:zhousx
+ * date:2018/11/17
+ * description:
+ */
+public class HomeFunctionResp {
+
+    public NoticeFunction notice;
+    public NoticeFunction attendanceNotice;
+    public NoticeFunction subjectNotice;
+    public NoticeFunction homeWorkNotice;
+    public NoticeFunction contactNotice;
+    public NoticeFunction leaveNotice;
+    public NoticeFunction scoreNotice;
+
+    public void setNotice(NoticeFunction notice) {
+        this.notice = notice;
+    }
+
+    public void setAttendanceNotice(NoticeFunction attendanceNotice) {
+        this.attendanceNotice = attendanceNotice;
+    }
+
+    public void setSubjectNotice(NoticeFunction subjectNotice) {
+        this.subjectNotice = subjectNotice;
+    }
+
+    public void setHomeWorkNotice(NoticeFunction homeWorkNotice) {
+        this.homeWorkNotice = homeWorkNotice;
+    }
+
+    public void setContactNotice(NoticeFunction contactNotice) {
+        this.contactNotice = contactNotice;
+    }
+
+    public void setLeaveNotice(NoticeFunction leaveNotice) {
+        this.leaveNotice = leaveNotice;
+    }
+
+    public void setScoreNotice(NoticeFunction scoreNotice) {
+        this.scoreNotice = scoreNotice;
+    }
+}

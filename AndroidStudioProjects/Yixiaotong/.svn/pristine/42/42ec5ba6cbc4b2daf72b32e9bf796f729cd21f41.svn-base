@@ -1,0 +1,106 @@
+package com.zhexinit.yixiaotong.function;
+
+import android.content.Context;
+
+import com.zhexinit.yixiaotong.base.Constant;
+
+import com.zhexinit.yixiaotong.function.mine.entity.LoginSuccessResp;
+import com.zhexinit.yixiaotong.function.mine.entity.UserInfoResp;
+import com.zhexinit.yixiaotong.rxjavamanager.interfaces.ResultCallBack;
+
+import java.util.Map;
+
+/**
+ * Created by:xukun
+ * date:2018/11/12
+ * description:用户接口相关
+ */
+public class UserWarehouse extends BaseWarehouse {
+
+    private static UserWarehouse instance;
+
+    public static UserWarehouse getInstance(Context context) {
+        if (instance == null) {
+            instance = new UserWarehouse(context);
+        }
+        setHeader();
+        return instance;
+    }
+
+    @Override
+    public void clearHeader() {
+        super.clearHeader();
+    }
+
+    private UserWarehouse(Context c) {
+        super(c);
+    }
+
+    /**
+     * 获取登录验证码
+     */
+    public void getLoginSmsCode(Map map, ResultCallBack<BaseResp> callBack) {
+        mHttpManager.postExecute(map, Constant.LOGIN_VERIFY_CODE, header, callBack);
+    }
+
+    /**
+     * 通过验证码登录
+     */
+    public void loginWithCode(Map map, ResultCallBack<BaseResp<LoginSuccessResp>> callBack) {
+        mHttpManager.postExecute(map, Constant.LOGIN_WITH_SMS, header, callBack);
+    }
+
+    /**
+     * 密码登陆
+     */
+    public void loginWithPassword(Map map, ResultCallBack<BaseResp<LoginSuccessResp>> callBack) {
+        mHttpManager.postExecute(map, Constant.LOGIN_WITH_PASSWORD, header, callBack);
+    }
+
+    /**
+     * 修改密码
+     */
+    public void updatePassword(Map map, ResultCallBack<BaseResp> callBack) {
+        mHttpManager.postExecute(map, Constant.LOGIN_UPDATE_PASSWORD, header, callBack);
+    }
+
+    /**
+     * 后台需要的实时用户的相关孩子，token信息等；启动App调用（登录后）
+     */
+    public void initInfo(Map map, ResultCallBack<BaseResp<LoginSuccessResp>> callBack) {
+        mHttpManager.postExecute(map, Constant.USER_INIT, header, callBack);
+    }
+
+    /**
+     * 获取用户信息
+     */
+    public void getUserInfo(Map s, ResultCallBack<BaseResp<UserInfoResp>> callBack) {
+        mHttpManager.postExecute(s, Constant.GET_USER_INFO, header, callBack);
+    }
+
+    /**
+     * 修改用户信息
+     */
+    public void upDateUserInfo(Map s, ResultCallBack<BaseResp> callBack){
+        mHttpManager.postExecute(s, Constant.UPDATE_USER_INFO, header, callBack);
+    }
+
+    /**
+     * 解除与某个孩子的绑定关系（不是这个孩子的主账号）
+     */
+    public void unBundleChild(Map s, ResultCallBack<BaseResp> callBack) {
+        mHttpManager.postExecute(s, Constant.UNBUND_CHILD, header, callBack);
+    }
+
+    /**
+     * 获取腾讯云的临时秘钥的接口
+     */
+   /* public void getCosInfo( ResultCallBack<BaseResp<CosKeyResp>> callBack){
+        mHttpManager.getExecute( Constant.IMG_TOKEN_URL, header, callBack);
+    }
+*/
+    public static void onDestroy() {
+        if (instance != null)
+            instance = null;
+    }
+}

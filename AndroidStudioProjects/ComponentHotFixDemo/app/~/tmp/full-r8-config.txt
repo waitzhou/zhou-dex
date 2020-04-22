@@ -1,0 +1,556 @@
+# This is a configuration file for ProGuard.
+# http://proguard.sourceforge.net/index.html#manual/usage.html
+#
+# Starting with version 2.2 of the Android plugin for Gradle, this file is distributed together with
+# the plugin and unpacked at build-time. The files in $ANDROID_HOME are no longer maintained and
+# will be ignored by new version of the Android plugin for Gradle.
+
+# Optimizations: If you don't want to optimize, use the proguard-android.txt configuration file
+# instead of this one, which turns off the optimization flags.
+# Adding optimization introduces certain risks, since for example not all optimizations performed by
+# ProGuard works on all versions of Dalvik.  The following flags turn off various optimizations
+# known to have issues, but the list may not be complete or up to date. (The "arithmetic"
+# optimization can be used if you are only targeting Android 2.0 or later.)  Make sure you test
+# thoroughly if you go this route.
+-optimizations !code/simplification/arithmetic,!code/simplification/cast,!field/*,!class/merging/*
+-optimizationpasses 5
+-allowaccessmodification
+
+-dontusemixedcaseclassnames
+-dontskipnonpubliclibraryclasses
+-verbose
+
+# Preserve some attributes that may be required for reflection.
+-keepattributes *Annotation*,Signature,InnerClasses,EnclosingMethod
+
+-keep public class com.google.vending.licensing.ILicensingService
+-keep public class com.android.vending.licensing.ILicensingService
+-keep public class com.google.android.vending.licensing.ILicensingService
+-dontnote com.android.vending.licensing.ILicensingService
+-dontnote com.google.vending.licensing.ILicensingService
+-dontnote com.google.android.vending.licensing.ILicensingService
+
+# For native methods, see http://proguard.sourceforge.net/manual/examples.html#native
+-keepclasseswithmembernames class * {
+    native <methods>;
+}
+
+# Keep setters in Views so that animations can still work.
+-keepclassmembers public class * extends android.view.View {
+    void set*(***);
+    *** get*();
+}
+
+# We want to keep methods in Activity that could be used in the XML attribute onClick.
+-keepclassmembers class * extends android.app.Activity {
+    public void *(android.view.View);
+}
+
+# For enumeration classes, see http://proguard.sourceforge.net/manual/examples.html#enumerations
+-keepclassmembers enum * {
+    public static **[] values();
+    public static ** valueOf(java.lang.String);
+}
+
+-keepclassmembers class * implements android.os.Parcelable {
+    public static final ** CREATOR;
+}
+
+-keepclassmembers class **.R$* {
+    public static <fields>;
+}
+
+# Preserve annotated Javascript interface methods.
+-keepclassmembers class * {
+    @android.webkit.JavascriptInterface <methods>;
+}
+
+# The support libraries contains references to newer platform versions.
+# Don't warn about those in case this app is linking against an older
+# platform version. We know about them, and they are safe.
+-dontnote android.support.**
+-dontnote androidx.**
+-dontwarn android.support.**
+-dontwarn androidx.**
+
+# This class is deprecated, but remains for backward compatibility.
+-dontwarn android.util.FloatMath
+
+# Understand the @Keep support annotation.
+-keep class android.support.annotation.Keep
+-keep class androidx.annotation.Keep
+
+-keep @android.support.annotation.Keep class * {*;}
+-keep @androidx.annotation.Keep class * {*;}
+
+-keepclasseswithmembers class * {
+    @android.support.annotation.Keep <methods>;
+}
+
+-keepclasseswithmembers class * {
+    @androidx.annotation.Keep <methods>;
+}
+
+-keepclasseswithmembers class * {
+    @android.support.annotation.Keep <fields>;
+}
+
+-keepclasseswithmembers class * {
+    @androidx.annotation.Keep <fields>;
+}
+
+-keepclasseswithmembers class * {
+    @android.support.annotation.Keep <init>(...);
+}
+
+-keepclasseswithmembers class * {
+    @androidx.annotation.Keep <init>(...);
+}
+
+# These classes are duplicated between android.jar and org.apache.http.legacy.jar.
+-dontnote org.apache.http.**
+-dontnote android.net.http.**
+
+# These classes are duplicated between android.jar and core-lambda-stubs.jar.
+-dontnote java.lang.invoke.**
+
+# Add project specific ProGuard rules here.
+# You can control the set of applied configuration files using the
+# proguardFiles setting in build.gradle.
+#
+# For more details, see
+#   http://developer.android.com/guide/developing/tools/proguard.html
+
+# If your project uses WebView with JS, uncomment the following
+# and specify the fully qualified class name to the JavaScript interface
+# class:
+#-keepclassmembers class fqcn.of.javascript.interface.for.webview {
+#   public *;
+#}
+
+# Uncomment this to preserve the line number information for
+# debugging stack traces.
+#-keepattributes SourceFile,LineNumberTable
+
+# If you keep the line number information, uncomment this to
+# hide the original source file name.
+#-renamesourcefileattribute SourceFile
+-printconfiguration ~/tmp/full-r8-config.txt
+
+# Referenced at /Users/laozhou/Desktop/Android/AndroidStudioProjects/ComponentHotFixDemo/app/build/intermediates/merged_manifests/freeDebug/universal/AndroidManifest.xml:8
+-keep class androidx.core.app.CoreComponentFactory { <init>(); }
+# Referenced at /Users/laozhou/Desktop/Android/AndroidStudioProjects/ComponentHotFixDemo/app/build/intermediates/merged_manifests/freeDebug/universal/AndroidManifest.xml:8
+-keep class com.example.componenthotfixdemo.ComponentHotFixDemo { <init>(); }
+# Referenced at /Users/laozhou/Desktop/Android/AndroidStudioProjects/ComponentHotFixDemo/app/build/intermediates/merged_manifests/freeDebug/universal/AndroidManifest.xml:9
+-keep class com.example.componenthotfixdemo.MainActivity { <init>(); }
+# Referenced at /Users/laozhou/Desktop/Android/AndroidStudioProjects/ComponentHotFixDemo/app/build/intermediates/merged_manifests/freeDebug/universal/AndroidManifest.xml:71
+-keep class com.example.login.LoginActivity { <init>(); }
+# Referenced at /Users/laozhou/Desktop/Android/AndroidStudioProjects/ComponentHotFixDemo/app/build/intermediates/merged_manifests/freeDebug/universal/AndroidManifest.xml:77
+-keep class com.example.login.RemoteService { <init>(); }
+# Referenced at /Users/laozhou/Desktop/Android/AndroidStudioProjects/ComponentHotFixDemo/app/build/intermediates/merged_manifests/freeDebug/universal/AndroidManifest.xml:78
+-keep class com.example.login.binderservice.BindTestService { <init>(); }
+# Referenced at /Users/laozhou/Desktop/Android/AndroidStudioProjects/ComponentHotFixDemo/app/build/intermediates/merged_manifests/freeDebug/universal/AndroidManifest.xml:74
+-keep class com.example.login.function.ClassReflectActivity { <init>(); }
+# Referenced at /Users/laozhou/Desktop/Android/AndroidStudioProjects/ComponentHotFixDemo/app/build/intermediates/merged_manifests/freeDebug/universal/AndroidManifest.xml:75
+-keep class com.example.login.function.ExecutorsActivity { <init>(); }
+# Referenced at /Users/laozhou/Desktop/Android/AndroidStudioProjects/ComponentHotFixDemo/app/build/intermediates/merged_manifests/freeDebug/universal/AndroidManifest.xml:73
+-keep class com.example.login.function.JobSchedulerActivity { <init>(); }
+# Referenced at /Users/laozhou/Desktop/Android/AndroidStudioProjects/ComponentHotFixDemo/app/build/intermediates/merged_manifests/freeDebug/universal/AndroidManifest.xml:80
+-keep class com.example.login.function.JobSchedulerService { <init>(); }
+# Referenced at /Users/laozhou/Desktop/Android/AndroidStudioProjects/ComponentHotFixDemo/app/build/intermediates/merged_manifests/freeDebug/universal/AndroidManifest.xml:76
+-keep class com.example.login.function.RxBindingActivity { <init>(); }
+# Referenced at /Users/laozhou/Desktop/Android/AndroidStudioProjects/ComponentHotFixDemo/app/build/intermediates/merged_manifests/freeDebug/universal/AndroidManifest.xml:72
+-keep class com.example.login.messengeservice.MessengerClientActivity { <init>(); }
+# Referenced at /Users/laozhou/Desktop/Android/AndroidStudioProjects/ComponentHotFixDemo/app/build/intermediates/merged_manifests/freeDebug/universal/AndroidManifest.xml:79
+-keep class com.example.login.messengeservice.MessengerService { <init>(); }
+# Referenced at /Users/laozhou/Desktop/Android/AndroidStudioProjects/ComponentHotFixDemo/app/build/intermediates/merged_manifests/freeDebug/universal/AndroidManifest.xml:17
+-keep class com.tencent.tinker.lib.service.DefaultTinkerResultService { <init>(); }
+# Referenced at /Users/laozhou/Desktop/Android/AndroidStudioProjects/ComponentHotFixDemo/app/build/intermediates/merged_manifests/freeDebug/universal/AndroidManifest.xml:15
+-keep class com.tencent.tinker.lib.service.TinkerPatchService { <init>(); }
+# Referenced at /Users/laozhou/Desktop/Android/AndroidStudioProjects/ComponentHotFixDemo/app/build/intermediates/merged_manifests/freeDebug/universal/AndroidManifest.xml:16
+-keep class com.tencent.tinker.lib.service.TinkerPatchService$InnerService { <init>(); }
+# Referenced at /Users/laozhou/Desktop/Android/AndroidStudioProjects/ComponentHotFixDemo/app/build/intermediates/merged_manifests/freeDebug/universal/AndroidManifest.xml:44
+-keep class com.tencent.tinker.loader.hotplug.ActivityStubs$SGTKStub_00 { <init>(); }
+# Referenced at /Users/laozhou/Desktop/Android/AndroidStudioProjects/ComponentHotFixDemo/app/build/intermediates/merged_manifests/freeDebug/universal/AndroidManifest.xml:54
+-keep class com.tencent.tinker.loader.hotplug.ActivityStubs$SGTKStub_00_T { <init>(); }
+# Referenced at /Users/laozhou/Desktop/Android/AndroidStudioProjects/ComponentHotFixDemo/app/build/intermediates/merged_manifests/freeDebug/universal/AndroidManifest.xml:45
+-keep class com.tencent.tinker.loader.hotplug.ActivityStubs$SGTKStub_01 { <init>(); }
+# Referenced at /Users/laozhou/Desktop/Android/AndroidStudioProjects/ComponentHotFixDemo/app/build/intermediates/merged_manifests/freeDebug/universal/AndroidManifest.xml:55
+-keep class com.tencent.tinker.loader.hotplug.ActivityStubs$SGTKStub_01_T { <init>(); }
+# Referenced at /Users/laozhou/Desktop/Android/AndroidStudioProjects/ComponentHotFixDemo/app/build/intermediates/merged_manifests/freeDebug/universal/AndroidManifest.xml:46
+-keep class com.tencent.tinker.loader.hotplug.ActivityStubs$SGTKStub_02 { <init>(); }
+# Referenced at /Users/laozhou/Desktop/Android/AndroidStudioProjects/ComponentHotFixDemo/app/build/intermediates/merged_manifests/freeDebug/universal/AndroidManifest.xml:56
+-keep class com.tencent.tinker.loader.hotplug.ActivityStubs$SGTKStub_02_T { <init>(); }
+# Referenced at /Users/laozhou/Desktop/Android/AndroidStudioProjects/ComponentHotFixDemo/app/build/intermediates/merged_manifests/freeDebug/universal/AndroidManifest.xml:47
+-keep class com.tencent.tinker.loader.hotplug.ActivityStubs$SGTKStub_03 { <init>(); }
+# Referenced at /Users/laozhou/Desktop/Android/AndroidStudioProjects/ComponentHotFixDemo/app/build/intermediates/merged_manifests/freeDebug/universal/AndroidManifest.xml:48
+-keep class com.tencent.tinker.loader.hotplug.ActivityStubs$SGTKStub_04 { <init>(); }
+# Referenced at /Users/laozhou/Desktop/Android/AndroidStudioProjects/ComponentHotFixDemo/app/build/intermediates/merged_manifests/freeDebug/universal/AndroidManifest.xml:49
+-keep class com.tencent.tinker.loader.hotplug.ActivityStubs$SGTKStub_05 { <init>(); }
+# Referenced at /Users/laozhou/Desktop/Android/AndroidStudioProjects/ComponentHotFixDemo/app/build/intermediates/merged_manifests/freeDebug/universal/AndroidManifest.xml:50
+-keep class com.tencent.tinker.loader.hotplug.ActivityStubs$SGTKStub_06 { <init>(); }
+# Referenced at /Users/laozhou/Desktop/Android/AndroidStudioProjects/ComponentHotFixDemo/app/build/intermediates/merged_manifests/freeDebug/universal/AndroidManifest.xml:51
+-keep class com.tencent.tinker.loader.hotplug.ActivityStubs$SGTKStub_07 { <init>(); }
+# Referenced at /Users/laozhou/Desktop/Android/AndroidStudioProjects/ComponentHotFixDemo/app/build/intermediates/merged_manifests/freeDebug/universal/AndroidManifest.xml:52
+-keep class com.tencent.tinker.loader.hotplug.ActivityStubs$SGTKStub_08 { <init>(); }
+# Referenced at /Users/laozhou/Desktop/Android/AndroidStudioProjects/ComponentHotFixDemo/app/build/intermediates/merged_manifests/freeDebug/universal/AndroidManifest.xml:53
+-keep class com.tencent.tinker.loader.hotplug.ActivityStubs$SGTKStub_09 { <init>(); }
+# Referenced at /Users/laozhou/Desktop/Android/AndroidStudioProjects/ComponentHotFixDemo/app/build/intermediates/merged_manifests/freeDebug/universal/AndroidManifest.xml:31
+-keep class com.tencent.tinker.loader.hotplug.ActivityStubs$SGTStub_00 { <init>(); }
+# Referenced at /Users/laozhou/Desktop/Android/AndroidStudioProjects/ComponentHotFixDemo/app/build/intermediates/merged_manifests/freeDebug/universal/AndroidManifest.xml:41
+-keep class com.tencent.tinker.loader.hotplug.ActivityStubs$SGTStub_00_T { <init>(); }
+# Referenced at /Users/laozhou/Desktop/Android/AndroidStudioProjects/ComponentHotFixDemo/app/build/intermediates/merged_manifests/freeDebug/universal/AndroidManifest.xml:32
+-keep class com.tencent.tinker.loader.hotplug.ActivityStubs$SGTStub_01 { <init>(); }
+# Referenced at /Users/laozhou/Desktop/Android/AndroidStudioProjects/ComponentHotFixDemo/app/build/intermediates/merged_manifests/freeDebug/universal/AndroidManifest.xml:42
+-keep class com.tencent.tinker.loader.hotplug.ActivityStubs$SGTStub_01_T { <init>(); }
+# Referenced at /Users/laozhou/Desktop/Android/AndroidStudioProjects/ComponentHotFixDemo/app/build/intermediates/merged_manifests/freeDebug/universal/AndroidManifest.xml:33
+-keep class com.tencent.tinker.loader.hotplug.ActivityStubs$SGTStub_02 { <init>(); }
+# Referenced at /Users/laozhou/Desktop/Android/AndroidStudioProjects/ComponentHotFixDemo/app/build/intermediates/merged_manifests/freeDebug/universal/AndroidManifest.xml:43
+-keep class com.tencent.tinker.loader.hotplug.ActivityStubs$SGTStub_02_T { <init>(); }
+# Referenced at /Users/laozhou/Desktop/Android/AndroidStudioProjects/ComponentHotFixDemo/app/build/intermediates/merged_manifests/freeDebug/universal/AndroidManifest.xml:34
+-keep class com.tencent.tinker.loader.hotplug.ActivityStubs$SGTStub_03 { <init>(); }
+# Referenced at /Users/laozhou/Desktop/Android/AndroidStudioProjects/ComponentHotFixDemo/app/build/intermediates/merged_manifests/freeDebug/universal/AndroidManifest.xml:35
+-keep class com.tencent.tinker.loader.hotplug.ActivityStubs$SGTStub_04 { <init>(); }
+# Referenced at /Users/laozhou/Desktop/Android/AndroidStudioProjects/ComponentHotFixDemo/app/build/intermediates/merged_manifests/freeDebug/universal/AndroidManifest.xml:36
+-keep class com.tencent.tinker.loader.hotplug.ActivityStubs$SGTStub_05 { <init>(); }
+# Referenced at /Users/laozhou/Desktop/Android/AndroidStudioProjects/ComponentHotFixDemo/app/build/intermediates/merged_manifests/freeDebug/universal/AndroidManifest.xml:37
+-keep class com.tencent.tinker.loader.hotplug.ActivityStubs$SGTStub_06 { <init>(); }
+# Referenced at /Users/laozhou/Desktop/Android/AndroidStudioProjects/ComponentHotFixDemo/app/build/intermediates/merged_manifests/freeDebug/universal/AndroidManifest.xml:38
+-keep class com.tencent.tinker.loader.hotplug.ActivityStubs$SGTStub_07 { <init>(); }
+# Referenced at /Users/laozhou/Desktop/Android/AndroidStudioProjects/ComponentHotFixDemo/app/build/intermediates/merged_manifests/freeDebug/universal/AndroidManifest.xml:39
+-keep class com.tencent.tinker.loader.hotplug.ActivityStubs$SGTStub_08 { <init>(); }
+# Referenced at /Users/laozhou/Desktop/Android/AndroidStudioProjects/ComponentHotFixDemo/app/build/intermediates/merged_manifests/freeDebug/universal/AndroidManifest.xml:40
+-keep class com.tencent.tinker.loader.hotplug.ActivityStubs$SGTStub_09 { <init>(); }
+# Referenced at /Users/laozhou/Desktop/Android/AndroidStudioProjects/ComponentHotFixDemo/app/build/intermediates/merged_manifests/freeDebug/universal/AndroidManifest.xml:57
+-keep class com.tencent.tinker.loader.hotplug.ActivityStubs$SIStub_00 { <init>(); }
+# Referenced at /Users/laozhou/Desktop/Android/AndroidStudioProjects/ComponentHotFixDemo/app/build/intermediates/merged_manifests/freeDebug/universal/AndroidManifest.xml:67
+-keep class com.tencent.tinker.loader.hotplug.ActivityStubs$SIStub_00_T { <init>(); }
+# Referenced at /Users/laozhou/Desktop/Android/AndroidStudioProjects/ComponentHotFixDemo/app/build/intermediates/merged_manifests/freeDebug/universal/AndroidManifest.xml:58
+-keep class com.tencent.tinker.loader.hotplug.ActivityStubs$SIStub_01 { <init>(); }
+# Referenced at /Users/laozhou/Desktop/Android/AndroidStudioProjects/ComponentHotFixDemo/app/build/intermediates/merged_manifests/freeDebug/universal/AndroidManifest.xml:68
+-keep class com.tencent.tinker.loader.hotplug.ActivityStubs$SIStub_01_T { <init>(); }
+# Referenced at /Users/laozhou/Desktop/Android/AndroidStudioProjects/ComponentHotFixDemo/app/build/intermediates/merged_manifests/freeDebug/universal/AndroidManifest.xml:59
+-keep class com.tencent.tinker.loader.hotplug.ActivityStubs$SIStub_02 { <init>(); }
+# Referenced at /Users/laozhou/Desktop/Android/AndroidStudioProjects/ComponentHotFixDemo/app/build/intermediates/merged_manifests/freeDebug/universal/AndroidManifest.xml:69
+-keep class com.tencent.tinker.loader.hotplug.ActivityStubs$SIStub_02_T { <init>(); }
+# Referenced at /Users/laozhou/Desktop/Android/AndroidStudioProjects/ComponentHotFixDemo/app/build/intermediates/merged_manifests/freeDebug/universal/AndroidManifest.xml:60
+-keep class com.tencent.tinker.loader.hotplug.ActivityStubs$SIStub_03 { <init>(); }
+# Referenced at /Users/laozhou/Desktop/Android/AndroidStudioProjects/ComponentHotFixDemo/app/build/intermediates/merged_manifests/freeDebug/universal/AndroidManifest.xml:61
+-keep class com.tencent.tinker.loader.hotplug.ActivityStubs$SIStub_04 { <init>(); }
+# Referenced at /Users/laozhou/Desktop/Android/AndroidStudioProjects/ComponentHotFixDemo/app/build/intermediates/merged_manifests/freeDebug/universal/AndroidManifest.xml:62
+-keep class com.tencent.tinker.loader.hotplug.ActivityStubs$SIStub_05 { <init>(); }
+# Referenced at /Users/laozhou/Desktop/Android/AndroidStudioProjects/ComponentHotFixDemo/app/build/intermediates/merged_manifests/freeDebug/universal/AndroidManifest.xml:63
+-keep class com.tencent.tinker.loader.hotplug.ActivityStubs$SIStub_06 { <init>(); }
+# Referenced at /Users/laozhou/Desktop/Android/AndroidStudioProjects/ComponentHotFixDemo/app/build/intermediates/merged_manifests/freeDebug/universal/AndroidManifest.xml:64
+-keep class com.tencent.tinker.loader.hotplug.ActivityStubs$SIStub_07 { <init>(); }
+# Referenced at /Users/laozhou/Desktop/Android/AndroidStudioProjects/ComponentHotFixDemo/app/build/intermediates/merged_manifests/freeDebug/universal/AndroidManifest.xml:65
+-keep class com.tencent.tinker.loader.hotplug.ActivityStubs$SIStub_08 { <init>(); }
+# Referenced at /Users/laozhou/Desktop/Android/AndroidStudioProjects/ComponentHotFixDemo/app/build/intermediates/merged_manifests/freeDebug/universal/AndroidManifest.xml:66
+-keep class com.tencent.tinker.loader.hotplug.ActivityStubs$SIStub_09 { <init>(); }
+# Referenced at /Users/laozhou/Desktop/Android/AndroidStudioProjects/ComponentHotFixDemo/app/build/intermediates/merged_manifests/freeDebug/universal/AndroidManifest.xml:18
+-keep class com.tencent.tinker.loader.hotplug.ActivityStubs$STDStub_00 { <init>(); }
+# Referenced at /Users/laozhou/Desktop/Android/AndroidStudioProjects/ComponentHotFixDemo/app/build/intermediates/merged_manifests/freeDebug/universal/AndroidManifest.xml:28
+-keep class com.tencent.tinker.loader.hotplug.ActivityStubs$STDStub_00_T { <init>(); }
+# Referenced at /Users/laozhou/Desktop/Android/AndroidStudioProjects/ComponentHotFixDemo/app/build/intermediates/merged_manifests/freeDebug/universal/AndroidManifest.xml:19
+-keep class com.tencent.tinker.loader.hotplug.ActivityStubs$STDStub_01 { <init>(); }
+# Referenced at /Users/laozhou/Desktop/Android/AndroidStudioProjects/ComponentHotFixDemo/app/build/intermediates/merged_manifests/freeDebug/universal/AndroidManifest.xml:29
+-keep class com.tencent.tinker.loader.hotplug.ActivityStubs$STDStub_01_T { <init>(); }
+# Referenced at /Users/laozhou/Desktop/Android/AndroidStudioProjects/ComponentHotFixDemo/app/build/intermediates/merged_manifests/freeDebug/universal/AndroidManifest.xml:20
+-keep class com.tencent.tinker.loader.hotplug.ActivityStubs$STDStub_02 { <init>(); }
+# Referenced at /Users/laozhou/Desktop/Android/AndroidStudioProjects/ComponentHotFixDemo/app/build/intermediates/merged_manifests/freeDebug/universal/AndroidManifest.xml:30
+-keep class com.tencent.tinker.loader.hotplug.ActivityStubs$STDStub_02_T { <init>(); }
+# Referenced at /Users/laozhou/Desktop/Android/AndroidStudioProjects/ComponentHotFixDemo/app/build/intermediates/merged_manifests/freeDebug/universal/AndroidManifest.xml:21
+-keep class com.tencent.tinker.loader.hotplug.ActivityStubs$STDStub_03 { <init>(); }
+# Referenced at /Users/laozhou/Desktop/Android/AndroidStudioProjects/ComponentHotFixDemo/app/build/intermediates/merged_manifests/freeDebug/universal/AndroidManifest.xml:22
+-keep class com.tencent.tinker.loader.hotplug.ActivityStubs$STDStub_04 { <init>(); }
+# Referenced at /Users/laozhou/Desktop/Android/AndroidStudioProjects/ComponentHotFixDemo/app/build/intermediates/merged_manifests/freeDebug/universal/AndroidManifest.xml:23
+-keep class com.tencent.tinker.loader.hotplug.ActivityStubs$STDStub_05 { <init>(); }
+# Referenced at /Users/laozhou/Desktop/Android/AndroidStudioProjects/ComponentHotFixDemo/app/build/intermediates/merged_manifests/freeDebug/universal/AndroidManifest.xml:24
+-keep class com.tencent.tinker.loader.hotplug.ActivityStubs$STDStub_06 { <init>(); }
+# Referenced at /Users/laozhou/Desktop/Android/AndroidStudioProjects/ComponentHotFixDemo/app/build/intermediates/merged_manifests/freeDebug/universal/AndroidManifest.xml:25
+-keep class com.tencent.tinker.loader.hotplug.ActivityStubs$STDStub_07 { <init>(); }
+# Referenced at /Users/laozhou/Desktop/Android/AndroidStudioProjects/ComponentHotFixDemo/app/build/intermediates/merged_manifests/freeDebug/universal/AndroidManifest.xml:26
+-keep class com.tencent.tinker.loader.hotplug.ActivityStubs$STDStub_08 { <init>(); }
+# Referenced at /Users/laozhou/Desktop/Android/AndroidStudioProjects/ComponentHotFixDemo/app/build/intermediates/merged_manifests/freeDebug/universal/AndroidManifest.xml:27
+-keep class com.tencent.tinker.loader.hotplug.ActivityStubs$STDStub_09 { <init>(); }
+# Referenced at /Users/laozhou/.gradle/caches/transforms-2/files-2.1/5f0dc3002f88fe81b63781a5f05f0a1d/res/layout/abc_alert_dialog_title_material.xml:57
+# Referenced at /Users/laozhou/.gradle/caches/transforms-2/files-2.1/5f0dc3002f88fe81b63781a5f05f0a1d/res/layout/abc_alert_dialog_material.xml:52
+# Referenced at /Users/laozhou/.gradle/caches/transforms-2/files-2.1/5f0dc3002f88fe81b63781a5f05f0a1d/res/layout/abc_alert_dialog_button_bar_material.xml:43
+-keep class android.widget.Space { <init>(...); }
+
+# Referenced at /Users/laozhou/.gradle/caches/transforms-2/files-2.1/5f0dc3002f88fe81b63781a5f05f0a1d/res/layout/abc_select_dialog_material.xml:23
+-keep class androidx.appcompat.app.AlertController$RecycleListView { <init>(...); }
+
+# Referenced at /Users/laozhou/.gradle/caches/transforms-2/files-2.1/5f0dc3002f88fe81b63781a5f05f0a1d/res/layout/abc_action_menu_item_layout.xml:17
+-keep class androidx.appcompat.view.menu.ActionMenuItemView { <init>(...); }
+
+# Referenced at /Users/laozhou/.gradle/caches/transforms-2/files-2.1/5f0dc3002f88fe81b63781a5f05f0a1d/res/layout/abc_expanded_menu_layout.xml:17
+-keep class androidx.appcompat.view.menu.ExpandedMenuView { <init>(...); }
+
+# Referenced at /Users/laozhou/.gradle/caches/transforms-2/files-2.1/5f0dc3002f88fe81b63781a5f05f0a1d/res/layout/abc_popup_menu_item_layout.xml:17
+# Referenced at /Users/laozhou/.gradle/caches/transforms-2/files-2.1/5f0dc3002f88fe81b63781a5f05f0a1d/res/layout/abc_list_menu_item_layout.xml:17
+# Referenced at /Users/laozhou/.gradle/caches/transforms-2/files-2.1/5f0dc3002f88fe81b63781a5f05f0a1d/res/layout/abc_cascading_menu_item_layout.xml:20
+-keep class androidx.appcompat.view.menu.ListMenuItemView { <init>(...); }
+
+# Referenced at /Users/laozhou/.gradle/caches/transforms-2/files-2.1/5f0dc3002f88fe81b63781a5f05f0a1d/res/layout/abc_screen_toolbar.xml:27
+-keep class androidx.appcompat.widget.ActionBarContainer { <init>(...); }
+
+# Referenced at /Users/laozhou/.gradle/caches/transforms-2/files-2.1/5f0dc3002f88fe81b63781a5f05f0a1d/res/layout/abc_screen_toolbar.xml:43
+# Referenced at /Users/laozhou/.gradle/caches/transforms-2/files-2.1/5f0dc3002f88fe81b63781a5f05f0a1d/res/layout/abc_action_mode_bar.xml:19
+-keep class androidx.appcompat.widget.ActionBarContextView { <init>(...); }
+
+# Referenced at /Users/laozhou/.gradle/caches/transforms-2/files-2.1/5f0dc3002f88fe81b63781a5f05f0a1d/res/layout/abc_screen_toolbar.xml:17
+-keep class androidx.appcompat.widget.ActionBarOverlayLayout { <init>(...); }
+
+# Referenced at /Users/laozhou/.gradle/caches/transforms-2/files-2.1/5f0dc3002f88fe81b63781a5f05f0a1d/res/layout/abc_action_menu_layout.xml:17
+-keep class androidx.appcompat.widget.ActionMenuView { <init>(...); }
+
+# Referenced at /Users/laozhou/.gradle/caches/transforms-2/files-2.1/5f0dc3002f88fe81b63781a5f05f0a1d/res/layout/abc_activity_chooser_view.xml:19
+-keep class androidx.appcompat.widget.ActivityChooserView$InnerLayout { <init>(...); }
+
+# Referenced at /Users/laozhou/.gradle/caches/transforms-2/files-2.1/5f0dc3002f88fe81b63781a5f05f0a1d/res/layout/abc_alert_dialog_material.xml:18
+-keep class androidx.appcompat.widget.AlertDialogLayout { <init>(...); }
+
+# Referenced at /Users/laozhou/.gradle/caches/transforms-2/files-2.1/5f0dc3002f88fe81b63781a5f05f0a1d/res/layout/abc_alert_dialog_button_bar_material.xml:26
+-keep class androidx.appcompat.widget.ButtonBarLayout { <init>(...); }
+
+# Referenced at /Users/laozhou/.gradle/caches/transforms-2/files-2.1/5f0dc3002f88fe81b63781a5f05f0a1d/res/layout/abc_screen_content_include.xml:19
+-keep class androidx.appcompat.widget.ContentFrameLayout { <init>(...); }
+
+# Referenced at /Users/laozhou/.gradle/caches/transforms-2/files-2.1/5f0dc3002f88fe81b63781a5f05f0a1d/res/layout/abc_alert_dialog_title_material.xml:45
+-keep class androidx.appcompat.widget.DialogTitle { <init>(...); }
+
+# Referenced at /Users/laozhou/.gradle/caches/transforms-2/files-2.1/5f0dc3002f88fe81b63781a5f05f0a1d/res/layout/abc_screen_simple_overlay_action_mode.xml:23
+-keep class androidx.appcompat.widget.FitWindowsFrameLayout { <init>(...); }
+
+# Referenced at /Users/laozhou/.gradle/caches/transforms-2/files-2.1/5f0dc3002f88fe81b63781a5f05f0a1d/res/layout/abc_screen_simple.xml:17
+# Referenced at /Users/laozhou/.gradle/caches/transforms-2/files-2.1/5f0dc3002f88fe81b63781a5f05f0a1d/res/layout/abc_dialog_title_material.xml:22
+-keep class androidx.appcompat.widget.FitWindowsLinearLayout { <init>(...); }
+
+# Referenced at /Users/laozhou/.gradle/caches/transforms-2/files-2.1/5f0dc3002f88fe81b63781a5f05f0a1d/res/layout/abc_search_view.xml:75
+-keep class androidx.appcompat.widget.SearchView$SearchAutoComplete { <init>(...); }
+
+# Referenced at /Users/laozhou/.gradle/caches/transforms-2/files-2.1/5f0dc3002f88fe81b63781a5f05f0a1d/res/layout/abc_screen_toolbar.xml:36
+-keep class androidx.appcompat.widget.Toolbar { <init>(...); }
+
+# Referenced at /Users/laozhou/.gradle/caches/transforms-2/files-2.1/5f0dc3002f88fe81b63781a5f05f0a1d/res/layout/abc_screen_simple_overlay_action_mode.xml:32
+# Referenced at /Users/laozhou/.gradle/caches/transforms-2/files-2.1/5f0dc3002f88fe81b63781a5f05f0a1d/res/layout/abc_screen_simple.xml:25
+-keep class androidx.appcompat.widget.ViewStubCompat { <init>(...); }
+
+# Referenced at /Users/laozhou/.gradle/caches/transforms-2/files-2.1/5f0dc3002f88fe81b63781a5f05f0a1d/res/layout/abc_alert_dialog_material.xml:41
+-keep class androidx.core.widget.NestedScrollView { <init>(...); }
+
+# Referenced at /Users/laozhou/Desktop/Android/AndroidStudioProjects/ComponentHotFixDemo/app/src/main/res/layout/activity_lazy_load.xml:7
+-keep class androidx.viewpager.widget.ViewPager { <init>(...); }
+
+# Referenced at /Users/laozhou/Desktop/Android/AndroidStudioProjects/ComponentHotFixDemo/app/src/main/res/layout/activity_event_test.xml:23
+-keep class com.example.componenthotfixdemo.widget.TestStubView { <init>(...); }
+
+# Referenced at /Users/laozhou/Desktop/Android/AndroidStudioProjects/ComponentHotFixDemo/app/src/main/res/layout/activity_event_test.xml:6
+-keep class com.example.componenthotfixdemo.widget.TestViewGroup { <init>(...); }
+
+# Referenced at /Users/laozhou/Desktop/Android/AndroidStudioProjects/ComponentHotFixDemo/login/build/intermediates/packaged_res/debug/layout/activity_messenger_client.xml:13
+-keepclassmembers class * { *** bindMessengerService(android.view.View); }
+
+# Referenced at /Users/laozhou/Desktop/Android/AndroidStudioProjects/ComponentHotFixDemo/login/build/intermediates/packaged_res/debug/layout/activity_login.xml:33
+-keepclassmembers class * { *** bindService(android.view.View); }
+
+# Referenced at /Users/laozhou/Desktop/Android/AndroidStudioProjects/ComponentHotFixDemo/app/src/main/res/layout/activity_main.xml:21
+-keepclassmembers class * { *** btnClick(android.view.View); }
+
+# Referenced at /Users/laozhou/Desktop/Android/AndroidStudioProjects/ComponentHotFixDemo/login/build/intermediates/packaged_res/debug/layout/activity_job_scheduler.xml:21
+-keepclassmembers class * { *** deleteDir(android.view.View); }
+
+# Referenced at /Users/laozhou/Desktop/Android/AndroidStudioProjects/ComponentHotFixDemo/login/build/intermediates/packaged_res/debug/layout/activity_job_scheduler.xml:28
+-keepclassmembers class * { *** downloadAPK(android.view.View); }
+
+# Referenced at /Users/laozhou/Desktop/Android/AndroidStudioProjects/ComponentHotFixDemo/login/build/intermediates/packaged_res/debug/layout/activity_login.xml:25
+-keepclassmembers class * { *** jobSchedulerActivity(android.view.View); }
+
+# Referenced at /Users/laozhou/Desktop/Android/AndroidStudioProjects/ComponentHotFixDemo/login/build/intermediates/packaged_res/debug/layout/activity_login.xml:17
+-keepclassmembers class * { *** jumpmessengerActivity(android.view.View); }
+
+# Referenced at /Users/laozhou/Desktop/Android/AndroidStudioProjects/ComponentHotFixDemo/app/src/main/res/layout/activity_main.xml:36
+-keepclassmembers class * { *** lazyLoad(android.view.View); }
+
+# Referenced at /Users/laozhou/Desktop/Android/AndroidStudioProjects/ComponentHotFixDemo/app/src/main/res/layout/activity_main.xml:12
+-keepclassmembers class * { *** load(android.view.View); }
+
+# Referenced at /Users/laozhou/Desktop/Android/AndroidStudioProjects/ComponentHotFixDemo/login/build/intermediates/packaged_res/debug/layout/activity_messenger_client.xml:20
+-keepclassmembers class * { *** onClick1(android.view.View); }
+
+# Referenced at /Users/laozhou/Desktop/Android/AndroidStudioProjects/ComponentHotFixDemo/login/build/intermediates/packaged_res/debug/layout/activity_messenger_client.xml:27
+-keepclassmembers class * { *** onClick2(android.view.View); }
+
+# Referenced at /Users/laozhou/Desktop/Android/AndroidStudioProjects/ComponentHotFixDemo/login/build/intermediates/packaged_res/debug/layout/activity_login.xml:40
+-keepclassmembers class * { *** reflecttest(android.view.View); }
+
+# Referenced at /Users/laozhou/Desktop/Android/AndroidStudioProjects/ComponentHotFixDemo/login/build/intermediates/packaged_res/debug/layout/activity_job_scheduler.xml:14
+-keepclassmembers class * { *** startScheduler(android.view.View); }
+
+# Referenced at /Users/laozhou/Desktop/Android/AndroidStudioProjects/ComponentHotFixDemo/app/src/main/res/layout/activity_main.xml:29
+-keepclassmembers class * { *** startservice(android.view.View); }
+
+# Referenced at /Users/laozhou/Desktop/Android/AndroidStudioProjects/ComponentHotFixDemo/login/build/intermediates/packaged_res/debug/layout/activity_class_reflect.xml:28
+-keepclassmembers class * { *** testFeilds(android.view.View); }
+
+# Referenced at /Users/laozhou/Desktop/Android/AndroidStudioProjects/ComponentHotFixDemo/login/build/intermediates/packaged_res/debug/layout/activity_class_reflect.xml:20
+-keepclassmembers class * { *** testMethod(android.view.View); }
+
+# Referenced at /Users/laozhou/Desktop/Android/AndroidStudioProjects/ComponentHotFixDemo/login/build/intermediates/packaged_res/debug/layout/activity_login.xml:48
+-keepclassmembers class * { *** threadsTest(android.view.View); }
+
+
+# Copyright (C) 2018 The Android Open Source Project
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# Ensure that reflectively-loaded inflater is not obfuscated. This can be
+# removed when we stop supporting AAPT1 builds.
+-keepnames class androidx.appcompat.app.AppCompatViewInflater
+
+# aapt is not able to read app::actionViewClass and app:actionProviderClass to produce proguard
+# keep rules. Add a commonly used SearchView to the keep list until b/109831488 is resolved.
+-keep class androidx.appcompat.widget.SearchView { <init>(...); }
+# Copyright (C) 2016 The Android Open Source Project
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# keep setters in VectorDrawables so that animations can still work.
+-keepclassmembers class androidx.vectordrawable.graphics.drawable.VectorDrawableCompat$* {
+   void set*(***);
+   *** get*();
+}
+
+# aapt2 is not (yet) keeping FQCNs defined in the appComponentFactory <application> attribute
+-keep class androidx.core.app.CoreComponentFactory
+
+-keep public class * implements androidx.versionedparcelable.VersionedParcelable
+-keep public class android.support.**Parcelizer { *; }
+-keep public class androidx.**Parcelizer { *; }
+-keep public class androidx.versionedparcelable.ParcelImpl
+
+-keepattributes *Annotation*
+
+-keepclassmembers enum androidx.lifecycle.Lifecycle$Event {
+    <fields>;
+}
+
+-keep !interface * implements androidx.lifecycle.LifecycleObserver {
+}
+
+-keep class * implements androidx.lifecycle.GeneratedAdapter {
+    <init>(...);
+}
+
+-keepclassmembers class ** {
+    @androidx.lifecycle.OnLifecycleEvent *;
+}
+-keepclassmembers,allowobfuscation class * extends androidx.lifecycle.ViewModel {
+    <init>();
+}
+
+-keepclassmembers,allowobfuscation class * extends androidx.lifecycle.AndroidViewModel {
+    <init>(android.app.Application);
+}
+
+# Copyright (C) 2019 The Android Open Source Project
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+-keepclassmembers,allowobfuscation class * implements androidx.savedstate.SavedStateRegistry$AutoRecreated {
+    <init>();
+}
+
+-keep,allowobfuscation @interface androidx.annotation.Keep
+-keep @androidx.annotation.Keep class * {*;}
+
+-keepclasseswithmembers class * {
+    @androidx.annotation.Keep <methods>;
+}
+
+-keepclasseswithmembers class * {
+    @androidx.annotation.Keep <fields>;
+}
+
+-keepclasseswithmembers class * {
+    @androidx.annotation.Keep <init>(...);
+}
+
+-dontwarn java.util.concurrent.Flow*
+# Retrofit does reflection on generic parameters. InnerClasses is required to use Signature and
+# EnclosingMethod is required to use InnerClasses.
+-keepattributes Signature, InnerClasses, EnclosingMethod
+
+# Retrofit does reflection on method and parameter annotations.
+-keepattributes RuntimeVisibleAnnotations, RuntimeVisibleParameterAnnotations
+
+# Retain service method parameters when optimizing.
+-keepclassmembers,allowshrinking,allowobfuscation interface * {
+    @retrofit2.http.* <methods>;
+}
+
+# Ignore annotation used for build tooling.
+-dontwarn org.codehaus.mojo.animal_sniffer.IgnoreJRERequirement
+
+# Ignore JSR 305 annotations for embedding nullability information.
+-dontwarn javax.annotation.**
+
+# Guarded by a NoClassDefFoundError try/catch and only used when on the classpath.
+-dontwarn kotlin.Unit
+
+# Top-level functions that can only be used by Kotlin.
+-dontwarn retrofit2.KotlinExtensions
+-dontwarn retrofit2.KotlinExtensions$*
+
+# With R8 full mode, it sees no subtypes of Retrofit interfaces since they are created with a Proxy
+# and replaces all potential values with null. Explicitly keeping the interfaces prevents this.
+-if interface * { @retrofit2.http.* <methods>; }
+-keep,allowobfuscation interface <1>
+
+# JSR 305 annotations are for embedding nullability information.
+-dontwarn javax.annotation.**
+
+# A resource is loaded with a relative path so the package of this class must be preserved.
+-keepnames class okhttp3.internal.publicsuffix.PublicSuffixDatabase
+
+# Animal Sniffer compileOnly dependency to ensure APIs are compatible with older versions of Java.
+-dontwarn org.codehaus.mojo.animal_sniffer.*
+
+# OkHttp platform used only on JVM and when Conscrypt dependency is available.
+-dontwarn okhttp3.internal.platform.ConscryptPlatform
+
+# Animal Sniffer compileOnly dependency to ensure APIs are compatible with older versions of Java.
+-dontwarn org.codehaus.mojo.animal_sniffer.*
+
+-ignorewarnings

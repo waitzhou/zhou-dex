@@ -1,0 +1,95 @@
+package com.zhexinit.yixiaotong.base;
+
+import android.content.Intent;
+
+import com.google.gson.Gson;
+import com.zhexinit.yixiaotong.R;
+import com.zhexinit.yixiaotong.function.BaseResp;
+import com.zhexinit.yixiaotong.function.UserWarehouse;
+import com.zhexinit.yixiaotong.function.home.MainActivity;
+import com.zhexinit.yixiaotong.function.mine.activity.LoginWithSMSActivity;
+import com.zhexinit.yixiaotong.function.mine.entity.LoginSuccessResp;
+import com.zhexinit.yixiaotong.function.mine.entity.UserInfoResp;
+import com.zhexinit.yixiaotong.rxjavamanager.interfaces.ResultCallBack;
+import com.zhexinit.yixiaotong.utils.SharePerfUtils;
+import com.zhexinit.yixiaotong.utils.StringUtils;
+
+import java.util.HashMap;
+import java.util.Map;
+
+/**
+ * Author:zhousx
+ * date:2018/11/5
+ * description:引导页
+ */
+public class SplashActivity extends BaseActivity {
+
+    @Override
+    protected int getLayoutId() {
+        return R.layout.activity_splash;
+    }
+
+    @Override
+    protected void init() {
+        if (StringUtils.isEmpty(SharePerfUtils.getString(Constant.KEY.USER_PHONE_NUM))) {
+            new android.os.Handler().postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    startActivity(new Intent(SplashActivity.this, LoginWithSMSActivity.class));
+                    finish();
+                }
+            }, 2000);
+        } else {
+            initUserInfo();
+        }
+    }
+
+    /**
+     * 后台接口需要init获取相关孩子，token信息
+     */
+    private void initUserInfo() {
+        Map<String, Object> map = new HashMap<>();
+        UserWarehouse.getInstance(this).initInfo(map, new ResultCallBack<BaseResp<LoginSuccessResp>>() {
+            @Override
+            public void onSuccess(BaseResp<LoginSuccessResp> baseResp) {
+                if (baseResp.code == 0) {
+                    SharePerfUtils.putString(Constant.KEY.INIT_INFO, new Gson().toJson(baseResp.result));
+                    getUserInfo();
+                }else {
+                    showToast("用户信息失效，请登录");
+                    startActivity(new Intent(SplashActivity.this,LoginWithSMSActivity.class));
+                    finish();
+                }
+            }
+
+            @Override
+            public void onFail(String response) {
+                startActivity(new Intent(SplashActivity.this,MainActivity.class));
+                showToast(response);
+                finish();
+            }
+        });
+    }
+
+    /**
+     * 获取用户信息
+     */
+    private void getUserInfo() {
+        UserWarehouse.getInstance(this).getUserInfo(new HashMap(), new ResultCallBack<BaseResp<UserInfoResp>>() {
+            @Override
+            public void onSuccess(BaseResp<UserInfoResp> userInfoResp) {
+                if (userInfoResp.code == 0) {
+                    SharePerfUtils.putString(Constant.KEY.USER_INFO, new Gson().toJson(userInfoResp.result));
+                    startActivity(new Intent(SplashActivity.this, MainActivity.class));
+                } else showToast(userInfoResp.message);
+                finish();
+            }
+
+            @Override
+            public void onFail(String response) {
+                showToast(response);
+                finish();
+            }
+        });
+    }
+}

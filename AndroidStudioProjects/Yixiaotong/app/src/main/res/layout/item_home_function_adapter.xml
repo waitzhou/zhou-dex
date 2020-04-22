@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="80dp"
+    android:paddingLeft="16dp"
+    android:paddingRight="16dp"
+    android:background="@drawable/bg_radius6_white"
+    android:layout_marginBottom="12dp"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:elevation="1dp">
+
+    <ImageView
+        android:id="@+id/item_iv_function"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:layout_centerVertical="true"
+        android:src="@drawable/bg_oval_gray" />
+
+        <TextView
+            android:layout_marginStart="18dp"
+            android:layout_marginEnd="5dp"
+            android:layout_alignTop="@+id/item_iv_function"
+            android:layout_toEndOf="@+id/item_iv_function"
+            android:id="@+id/item_tv_function"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@color/text_color"
+            android:textSize="18sp"
+            tools:text="通知" />
+
+        <TextView
+            android:id="@+id/item_tv_desc"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/item_tv_function"
+            android:layout_alignStart="@+id/item_tv_function"
+            android:layout_marginTop="10dp"
+            android:textColor="@color/text_color9"
+            android:maxLines="1"
+            android:ellipsize="end"
+            android:layout_marginEnd="30dp"
+            tools:text="明天下午开家长会"/>
+
+
+
+
+        <TextView
+            android:id="@+id/item_tv_time"
+            android:layout_alignParentEnd="true"
+            android:layout_alignTop="@+id/item_tv_function"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@color/text_color9"
+            android:layout_gravity="end"
+            tools:text="2018年12月24日" />
+
+        <TextView
+            android:id="@+id/item_tv_notice_count"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/item_tv_time"
+            android:layout_alignEnd="@+id/item_tv_time"
+            android:layout_marginTop="10dp"
+            android:paddingLeft="3dp"
+            android:paddingRight="3dp"
+            android:textColor="@color/white"
+            android:textSize="11sp"
+            android:layout_gravity="end"
+            android:gravity="center"
+            android:paddingBottom="2dp"
+            android:background="@drawable/bg_oval_red"
+            tools:text="2"/>
+
+</RelativeLayout>

@@ -13,11 +13,6 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
-import android.widget.LinearLayout;
-import android.widget.Toast;
-
-
-import java.io.File;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
 
@@ -31,16 +26,17 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         Button button2 = findViewById(R.id.btn_02);
         button1.setOnClickListener(this);
         button2.setOnClickListener(this);
-
+        Log.d(TAG, "onCreate: ");
+        Log.d(TAG, "onCreate: pid = " +android.os.Process.myPid());
     }
 
     @Override
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.btn_01:
-                if(hasPermission()){
+                if (hasPermission()) {
 
-                }else {
+                } else {
                     requestPermission();
                 }
                 break;
@@ -81,8 +77,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     public void show() {
 
-
-
+        try {
+            Intent intent = new Intent(this, CommonWebViewActivity.class);
+            intent.putExtra("url","123456");
+            startActivity(intent);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         // test Activity and Service
 
     }

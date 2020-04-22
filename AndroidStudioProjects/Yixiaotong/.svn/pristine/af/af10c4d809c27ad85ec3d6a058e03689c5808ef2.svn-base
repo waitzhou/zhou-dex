@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <include
+        layout="@layout/layout_toolbar" />
+
+    <TextView
+        android:id="@+id/tv_title"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="32dp"
+        android:layout_marginStart="20dp"
+        android:layout_marginEnd="30dp"
+        android:textColor="@color/text_color5"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        android:text="@string/tv_back"/>
+
+    <TextView
+        android:id="@+id/tv_class"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:layout_marginStart="20dp"
+        android:layout_marginEnd="30dp"
+        android:textColor="@color/theme_center_color"
+        android:text="杭州宝书塔实验小学一年级五班 陈安之"/>
+
+    <TextView
+        android:id="@+id/tv_desc"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:layout_marginStart="20dp"
+        android:layout_marginEnd="30dp"
+        android:textColor="@color/text_color5"
+        android:text="@string/tips_holder"
+        android:lineSpacingExtra="10dp"/>
+
+    <TextView
+        android:id="@+id/tv_publisher"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="40dp"
+        android:layout_marginStart="20dp"
+        android:layout_marginEnd="30dp"
+        android:gravity="end"
+        android:textSize="12sp"
+        android:textColor="@color/text_color5"
+        android:text="余杭区大禹小学一年级二班 发"/>
+
+</LinearLayout>

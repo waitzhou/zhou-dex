@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:gravity="center_horizontal">
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1" />
+
+    <ImageView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="@mipmap/ic_no_child"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="16sp"
+        android:textColor="@color/text_color5"
+        android:text="未绑定孩子"
+        android:textStyle="bold"
+        android:layout_marginTop="20dp"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="14sp"
+        android:textColor="@color/text_color9"
+        android:layout_marginLeft="50dp"
+        android:layout_marginRight="50dp"
+        android:lineSpacingExtra="8dp"
+        android:text="可能是您的孩子在学校里预留的手机号码不是当前登陆的手机号码。"
+        android:textStyle="bold"
+        android:layout_marginTop="20dp"/>
+
+    <ImageView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="@mipmap/ic_dash_line"
+        android:layout_marginTop="20dp"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="14sp"
+        android:textColor="@color/text_color5"
+        android:text="如何绑定孩子"
+        android:layout_marginTop="20dp"/>
+
+    <TextView
+        android:layout_width="14dp"
+        android:layout_height="14dp"
+        android:layout_marginTop="20dp"
+        android:text="1"
+        android:gravity="center"
+        android:textSize="10sp"
+        android:background="@drawable/bg_oval_stroke_gray"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="12sp"
+        android:textColor="@color/text_color5"
+        android:text="与学校管理员或班主任联系"
+        android:layout_marginTop="8dp"/>
+
+    <TextView
+        android:layout_width="14dp"
+        android:layout_height="14dp"
+        android:layout_marginTop="20dp"
+        android:text="2"
+        android:gravity="center"
+        android:textSize="10sp"
+        android:background="@drawable/bg_oval_stroke_gray"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="12sp"
+        android:textColor="@color/text_color5"
+        android:text="通过其他家长邀请绑定孩子"
+        android:layout_marginTop="8dp"/>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1" />
+
+</LinearLayout>

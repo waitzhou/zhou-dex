@@ -1,0 +1,106 @@
+package com.zhexinit.yixiaotong.rxjavamanager.helper;
+
+import android.support.v4.util.SparseArrayCompat;
+
+import com.google.gson.Gson;
+import com.jakewharton.retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory;
+import com.zhexinit.yixiaotong.rxjavamanager.entity.resp.DownloadResponseBody;
+import com.zhexinit.yixiaotong.rxjavamanager.interfaces.DownloadListener;
+
+import java.io.IOException;
+import java.util.concurrent.TimeUnit;
+
+import okhttp3.Interceptor;
+import okhttp3.OkHttpClient;
+import okhttp3.Response;
+import retrofit2.Retrofit;
+import retrofit2.converter.gson.GsonConverterFactory;
+
+/**
+ * Author:@zhousx
+ * date: 2018/3/5/10:13.
+ * function :
+ */
+
+public class RetrofitDownloadHelper {
+
+    /**
+     * 地址的host
+     */
+    public static String HOST = "";
+
+    private volatile static RetrofitDownloadHelper sInstance;
+    private Retrofit mRetrofit;
+    private SparseArrayCompat<Object> mServiceCache;
+
+    public static RetrofitDownloadHelper create(DownloadListener listener) {
+        RetrofitDownloadHelper serviceFactory = sInstance;
+
+        if (serviceFactory == null) {
+            synchronized (RetrofitDownloadHelper.class) {
+                serviceFactory = sInstance;
+                if (serviceFactory == null) {
+                    serviceFactory = new RetrofitDownloadHelper(listener);
+                    sInstance = serviceFactory;
+                }
+            }
+        }
+        return serviceFactory;
+    }
+
+    public RetrofitDownloadHelper(DownloadListener listener) {
+        OkHttpClient.Builder builder = new OkHttpClient().newBuilder()
+                .retryOnConnectionFailure(true)
+                .readTimeout(10, TimeUnit.SECONDS)
+                .connectTimeout(15, TimeUnit.SECONDS)
+                .addInterceptor(new DownloadInterceptor(listener));
+        mRetrofit = new Retrofit.Builder()
+                .client(builder.build())
+                .addConverterFactory(GsonConverterFactory.create(new Gson()))
+                .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
+                .baseUrl(HOST)
+                .build();
+
+        mServiceCache = new SparseArrayCompat<>();
+    }
+
+    /**
+     * 类介绍（必填）：成功回调处理
+     * Created by Jiang on 2017/3/21 15:16.
+     */
+    public class DownloadInterceptor implements Interceptor {
+
+        private DownloadListener listener;
+
+        public DownloadInterceptor(DownloadListener listener) {
+            this.listener = listener;
+        }
+
+        @Override
+        public Response intercept(Chain chain) throws IOException {
+            Response originalResponse = chain.proceed(chain.request());
+
+            return originalResponse.newBuilder()
+                    .body(new DownloadResponseBody(originalResponse.body(), listener))
+                    .build();
+        }
+    }
+
+    /**
+     * 获取对应的服务
+     *
+     * @param service 服务
+     * @param <T>
+     * @return
+     */
+    @SuppressWarnings("unchecked")
+    public <T> T provideRetrofit(Class<T> service) {
+
+        T t = (T) mServiceCache.get(service.hashCode());
+        if (t == null) {
+            t = mRetrofit.create(service);
+            mServiceCache.put(service.hashCode(), t);
+        }
+        return t;
+    }
+}

@@ -27,5 +27,6 @@ public class LoginApp extends BaseApp {
     @Override
     public void initModuleData(Application pApplication) {
 
+
     }
 }

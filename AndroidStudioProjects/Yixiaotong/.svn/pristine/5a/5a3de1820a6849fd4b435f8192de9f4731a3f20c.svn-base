@@ -1,0 +1,490 @@
+package com.zhexinit.yixiaotong.function.home.fragment;
+
+import android.annotation.SuppressLint;
+import android.content.Intent;
+import android.graphics.Bitmap;
+import android.os.Bundle;
+import android.support.v4.content.ContextCompat;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.widget.Button;
+import android.widget.CheckBox;
+import android.widget.CompoundButton;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.ProgressBar;
+import android.widget.RelativeLayout;
+import android.widget.TextView;
+
+import com.amap.api.maps.AMap;
+import com.amap.api.maps.CameraUpdateFactory;
+import com.amap.api.maps.TextureMapView;
+import com.amap.api.maps.model.BitmapDescriptor;
+import com.amap.api.maps.model.BitmapDescriptorFactory;
+import com.amap.api.maps.model.Circle;
+import com.amap.api.maps.model.CircleOptions;
+import com.amap.api.maps.model.LatLng;
+import com.amap.api.maps.model.LatLngBounds;
+import com.amap.api.maps.model.Marker;
+import com.amap.api.maps.model.MarkerOptions;
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.engine.DiskCacheStrategy;
+import com.bumptech.glide.request.animation.GlideAnimation;
+import com.bumptech.glide.request.target.SimpleTarget;
+import com.zhexinit.yixiaotong.R;
+import com.zhexinit.yixiaotong.base.BaseFragment;
+import com.zhexinit.yixiaotong.base.Constant;
+import com.zhexinit.yixiaotong.function.BaseResp;
+import com.zhexinit.yixiaotong.function.MapWarehouse;
+import com.zhexinit.yixiaotong.function.map.activity.SafeAreaListActivity;
+import com.zhexinit.yixiaotong.function.map.entity.resp.PositionResp;
+import com.zhexinit.yixiaotong.function.map.entity.resp.RailResp;
+import com.zhexinit.yixiaotong.function.mine.entity.ChildResp;
+import com.zhexinit.yixiaotong.function.mine.entity.UserInfoResp;
+import com.zhexinit.yixiaotong.rxjavamanager.interfaces.ResultCallBack;
+import com.zhexinit.yixiaotong.utils.DipUtils;
+import com.zhexinit.yixiaotong.utils.GlideCricleTransform;
+import com.zhexinit.yixiaotong.utils.GsonUtil;
+import com.zhexinit.yixiaotong.utils.LogUtils;
+import com.zhexinit.yixiaotong.utils.SharePerfUtils;
+import com.zhexinit.yixiaotong.widget.ShowChildListPopupWindow;
+import com.zhexinit.yixiaotong.widget.ToolBar;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import butterknife.BindView;
+import butterknife.OnClick;
+
+import static android.app.Activity.RESULT_OK;
+
+/**
+ * Author:zhousx
+ * date:2018/11/5
+ * description:位置fragment
+ */
+public class PositionFragment extends BaseFragment implements AMap.OnMarkerClickListener, ShowChildListPopupWindow.PopupItemSelectListener, CompoundButton.OnCheckedChangeListener {
+
+    @BindView(R.id.tool_bar)
+    ToolBar toolBar;
+    @BindView(R.id.map_view)
+    TextureMapView mapView;
+    @BindView(R.id.tv_name)
+    TextView tvName;
+    @BindView(R.id.tv_update_time)
+    TextView tvUpdateTime;
+    @BindView(R.id.tv_electric_percent)
+    TextView tvElectricPercent;
+    @BindView(R.id.progress_bar_ele)
+    ProgressBar progressBarEle;
+    @BindView(R.id.tv_electric_life)
+    TextView tvElectricLife;
+    @BindView(R.id.tv_address)
+    TextView tvAddress;
+    @BindView(R.id.chb_safe_area)
+    CheckBox mCheckBox;
+    @BindView(R.id.rl_holder)
+    RelativeLayout mRlHolder;
+    @BindView(R.id.iv_add)
+    ImageView mIvAdd;
+
+    UserInfoResp mInfoResp;
+    private int mSelectPosition;
+
+    protected AMap aMap = null;
+    List<PositionResp> mRespList = new ArrayList<>();//所有孩子位置
+    List<Marker> mMarkerList = new ArrayList<>();
+    List<Circle> mCircleList = new ArrayList<>();
+    private int SAFE_AREA_NOTIFY = 100;//安全围栏数据修改
+
+    public static PositionFragment newInstance() {
+
+        Bundle args = new Bundle();
+
+        PositionFragment fragment = new PositionFragment();
+        fragment.setArguments(args);
+        return fragment;
+    }
+
+    @Override
+    protected int getLayoutId() {
+        return R.layout.fragment_position;
+    }
+
+    @Override
+    protected void init(Bundle savedInstanceState) {
+        initMap(savedInstanceState);
+        initData();
+        getChildSiteList();
+        mCheckBox.setOnCheckedChangeListener(this);
+    }
+
+    /**
+     * 初始化地图
+     */
+    private void initMap(Bundle savedInstanceState) {
+        mapView.onCreate(savedInstanceState);
+        if (aMap == null) {
+            aMap = mapView.getMap();
+            aMap.setTrafficEnabled(true);
+            aMap.getUiSettings().setZoomControlsEnabled(false);
+            aMap.setMapType(AMap.MAP_TYPE_NORMAL);// 一般模式
+            aMap.setOnMarkerClickListener(this);
+        }
+    }
+
+    private void initToolbar() {
+        toolBar.setTitle(mRespList.get(mSelectPosition).childName);
+        mChildResps = new ArrayList<>();
+        for (int i = 0; i < mRespList.size(); i++) {
+            ChildResp resp = new ChildResp();
+            resp.childName = mRespList.get(i).childName;
+            mChildResps.add(resp);
+        }
+        if (mRespList.size() > 1) {
+            toolBar.setTitleRightDrawable(R.string.tv_down);
+            toolBar.setTitleClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    showChildPopup();
+                }
+            });
+        }
+    }
+
+    private List<ChildResp> mChildResps;
+
+    /**
+     * 展示孩子列表
+     */
+    private void showChildPopup() {
+        ShowChildListPopupWindow popupWindow = new ShowChildListPopupWindow(getActivity(), toolBar, mChildResps, mSelectPosition, this);
+        popupWindow.show();
+    }
+
+    private void initData() {
+        mInfoResp = GsonUtil.getInstance().getGson().fromJson(SharePerfUtils.getString(Constant.KEY.USER_INFO), UserInfoResp.class);
+    }
+
+    /**
+     * 获取child位置信息
+     */
+    private void getChildSiteList() {
+        showProgressDialog();
+        mRespList.clear();
+        MapWarehouse.getInstance(getContext()).getChildSiteList(new ResultCallBack<BaseResp<List<PositionResp>>>() {
+            @Override
+            public void onSuccess(BaseResp<List<PositionResp>> baseResp) {
+                hideProgressDialog();
+                if (baseResp.code == 0) {
+                    if (baseResp.result != null && baseResp.result.size() != 0) {
+                        mRespList = baseResp.result;
+                        initToolbar();
+                        mRlHolder.setVisibility(View.VISIBLE);
+                        notifyContent(0);
+                        if (baseResp.result.get(0).primaryAccount) {
+                            mIvAdd.setVisibility(View.VISIBLE);
+                        } else {
+                            mIvAdd.setVisibility(View.GONE);
+                        }
+                    } else {
+                        showToast("位置数据为空");
+                        mRlHolder.setVisibility(View.GONE);
+                    }
+                } else {
+                    mRlHolder.setVisibility(View.GONE);
+                }
+            }
+
+            @Override
+            public void onFail(String response) {
+                mRlHolder.setVisibility(View.GONE);
+                hideProgressDialog();
+                showToast(response);
+            }
+        });
+    }
+
+    /**
+     * 刷新内容
+     */
+    @SuppressLint("SetTextI18n")
+    private void notifyContent(int selectPosition) {
+        PositionResp resp = mRespList.get(selectPosition);
+        toolBar.setTitle(mInfoResp.userChildren.get(selectPosition).childName);
+        tvName.setText(mInfoResp.userChildren.get(selectPosition).childName);
+        tvUpdateTime.setText("更新于".concat(resp.freshTime));
+        tvElectricPercent.setText(resp.devicePower + "%");
+        tvElectricLife.setText("预计可续航" + resp.durationTime + "小时");
+        setElectric(resp.devicePower);
+        if (resp.devicePower > 20) {
+            tvElectricPercent.setTextColor(ContextCompat.getColor(getContext(), R.color.text_green));
+            tvElectricLife.setTextColor(ContextCompat.getColor(getContext(), R.color.text_green));
+        } else {
+            tvElectricPercent.setTextColor(ContextCompat.getColor(getContext(), R.color.text_red));
+            tvElectricLife.setTextColor(ContextCompat.getColor(getContext(), R.color.text_red));
+        }
+        tvAddress.setText(resp.address);
+        for (Marker maker : mMarkerList) {
+            maker.remove();
+        }
+        mMarkerList.clear();
+        for (Circle circle : mCircleList) {
+            circle.remove();
+        }
+        mCircleList.clear();
+        addMarkers(selectPosition);
+    }
+
+    /**
+     * 获取围栏数据
+     */
+    private void getRails() {
+        String deviceId = mInfoResp.userChildren.get(mSelectPosition).deviceId;
+        MapWarehouse.getInstance(getContext()).getRails(deviceId, new ResultCallBack<BaseResp<List<RailResp>>>() {
+            @Override
+            public void onSuccess(BaseResp<List<RailResp>> listBaseResp) {
+                hideProgressDialog();
+                if (listBaseResp.code == 0) {
+                    if (listBaseResp.result != null && listBaseResp.result.size() != 0) {
+                        addCircles(listBaseResp.result);
+                    } else {
+                        toSafeAreaList();
+                        mCheckBox.setChecked(false);
+                        showToast("没有任何围栏数据");
+                    }
+                } else {
+                    toSafeAreaList();
+                    mCheckBox.setChecked(false);
+                    showToast(listBaseResp.message);
+                }
+            }
+
+            @Override
+            public void onFail(String response) {
+                hideProgressDialog();
+                mCheckBox.setChecked(false);
+                LogUtils.v(response);
+            }
+        });
+    }
+
+    /**
+     * @param railResps 所有围栏返回数据
+     *                  添加多个围栏
+     */
+    private void addCircles(List<RailResp> railResps) {
+        for (Circle circle : mCircleList) {
+            circle.remove();
+        }
+        mCircleList.clear();
+        if (railResps == null || railResps.size() == 0)
+            return;
+        for (int i = 0; i < railResps.size(); i++) {
+            RailResp railResp = railResps.get(i);
+            Circle circle = aMap.addCircle(new CircleOptions().
+                    center(new LatLng(railResp.latitude, railResp.longitude)).
+                    radius(railResp.railRange).
+                    fillColor(ContextCompat.getColor(getContext(), R.color.transport_red)).
+                    strokeColor(ContextCompat.getColor(getContext(), R.color.gray_line)).
+                    strokeWidth(DipUtils.dip2px(getContext(), 1)));
+            mCircleList.add(circle);
+        }
+        showAllMultiTag();
+    }
+
+    /**
+     * 显示所有围栏和选中的孩子标记
+     */
+    private void showAllMultiTag() {
+        LatLngBounds.Builder boundsBuilder = new LatLngBounds.Builder();//存放所有点的经纬度
+        for (int i = 0; i < mCircleList.size(); i++) {
+            boundsBuilder.include(mCircleList.get(i).getCenter());//把所有点都include进去（LatLng类型）
+        }
+        //boundsBuilder.include( (new LatLng(positionResp.latitude, positionResp.longitude)));
+        if (mCircleList.size() == 1) {
+            aMap.animateCamera(CameraUpdateFactory.newLatLngZoom(mCircleList.get(0).getCenter(), 14));
+        } else
+            aMap.animateCamera(CameraUpdateFactory.newLatLngBounds(boundsBuilder.build(), DipUtils.dp2px(getActivity(), 10)));//第二个参数为四周留空宽度
+    }
+
+    /**
+     * 添加多个标记
+     */
+    private void addMarkers(int selectPosition) {
+        for (int i = 0; i < mRespList.size(); i++) {
+            PositionResp positionResp = mRespList.get(i);
+            if (i == selectPosition) {
+                addBigMarker(new LatLng(positionResp.latitude, positionResp.longitude), mInfoResp.userChildren.get(mSelectPosition).icon);
+            } else {
+                addLittleMarker(new LatLng(positionResp.latitude, positionResp.longitude), mInfoResp.userChildren.get(mSelectPosition).icon);
+            }
+        }
+    }
+
+    /**
+     * 添加单个大标记
+     */
+    private void addBigMarker(final LatLng latLng, String imageUrl) {
+        Glide.with(this)
+                .load(imageUrl)
+                .asBitmap()
+                .transform(new GlideCricleTransform(getContext()))
+                .diskCacheStrategy(DiskCacheStrategy.ALL)
+                .into(new SimpleTarget<Bitmap>() {
+                    @Override
+                    public void onResourceReady(Bitmap resource, GlideAnimation<? super Bitmap> glideAnimation) {
+                        View view = LayoutInflater.from(getContext()).inflate(R.layout.layout_marker, null);
+                        LinearLayout llMarker = view.findViewById(R.id.ll_marker);
+                        ImageView imageView = view.findViewById(R.id.iv_marker);
+                        imageView.setImageBitmap(resource);
+                        ArrayList<BitmapDescriptor> giflist = new ArrayList<>();
+                        giflist.add(BitmapDescriptorFactory.fromView(view));
+                        MarkerOptions markerOption = new MarkerOptions()
+                                .position(latLng)
+                                .icons(giflist)
+                                .draggable(true);
+                        Marker marker = aMap.addMarker(markerOption);
+                        mMarkerList.add(marker);
+                        if (mMarkerList.size() == mRespList.size())
+                            showAllsMarkers();
+                    }
+                });
+    }
+
+    /**
+     * 添加单个小标记
+     */
+    private void addLittleMarker(final LatLng latLng, String imageUrl) {
+        Glide.with(this)
+                .load(imageUrl)
+                .asBitmap()
+                .transform(new GlideCricleTransform(getContext()))
+                .diskCacheStrategy(DiskCacheStrategy.ALL)
+                .into(new SimpleTarget<Bitmap>() {
+                    @Override
+                    public void onResourceReady(Bitmap resource, GlideAnimation<? super Bitmap> glideAnimation) {
+                        View view = LayoutInflater.from(getContext()).inflate(R.layout.layout_marker_little, null);
+                        LinearLayout llMarker = view.findViewById(R.id.ll_marker);
+                        ImageView imageView = view.findViewById(R.id.iv_marker);
+                        imageView.setImageBitmap(resource);
+                        ArrayList<BitmapDescriptor> giflist = new ArrayList<>();
+                        giflist.add(BitmapDescriptorFactory.fromView(view));
+                        MarkerOptions markerOption = new MarkerOptions()
+                                .position(latLng)
+                                .icons(giflist)
+                                .draggable(true);
+                        Marker marker = aMap.addMarker(markerOption);
+                        mMarkerList.add(marker);
+                        if (mMarkerList.size() == mRespList.size())
+                            showAllsMarkers();
+                    }
+                });
+    }
+
+    /**
+     * 所有标记均显示在地图当中
+     */
+    private void showAllsMarkers() {
+        LatLngBounds.Builder boundsBuilder = new LatLngBounds.Builder();//存放所有点的经纬度
+        for (int i = 0; i < mMarkerList.size(); i++) {
+            boundsBuilder.include(mMarkerList.get(i).getOptions().getPosition());//把所有点都include进去（LatLng类型）
+        }
+        aMap.animateCamera(CameraUpdateFactory.newLatLngBounds(boundsBuilder.build(), DipUtils.dp2px(getActivity(), 50)));//第二个参数为四周留空宽度
+    }
+
+    @Override
+    public boolean onMarkerClick(Marker marker) {
+        return false;
+    }
+
+    @OnClick({R.id.iv_add, R.id.tv_refresh})
+    public void onViewClicked(View view) {
+        switch (view.getId()) {
+            case R.id.iv_add:
+                toSafeAreaList();
+                break;
+            case R.id.tv_refresh:
+                refreshPage();
+                break;
+        }
+    }
+
+    /**
+     * 跳转到安全区域界面
+     */
+    private void toSafeAreaList() {
+        if (mRespList == null || mRespList.size() == 0) {
+            return;
+        }
+        Intent intent = new Intent(getContext(), SafeAreaListActivity.class);
+        intent.putExtra("childName", mInfoResp.userChildren.get(mSelectPosition).childName);
+        intent.putExtra("deviceId", mInfoResp.userChildren.get(mSelectPosition).deviceId);
+        intent.putExtra("item", GsonUtil.getInstance().getGson().toJson(mRespList.get(mSelectPosition)));
+        startActivityForResult(intent, SAFE_AREA_NOTIFY);
+    }
+
+    /**
+     * 刷新页面
+     */
+    public void refreshPage() {
+        mSelectPosition = 0;
+        if (mMarkerList != null && mMarkerList.size() != 0)
+            for (int i = 0; i < mMarkerList.size(); i++) {
+                mMarkerList.get(i).remove();
+            }
+        if (mCircleList != null && mCircleList.size() != 0)
+            for (int i = 0; i < mCircleList.size(); i++) {
+                mCircleList.get(i).remove();
+            }
+        mCheckBox.setChecked(false);
+        getChildSiteList();
+    }
+
+    /**
+     * 设置电量
+     */
+    private void setElectric(int electric) {
+        if (electric > 20) {
+            progressBarEle.setProgressDrawable(getResources().getDrawable(R.drawable.bg_progress_high_power));
+        } else {
+            progressBarEle.setProgressDrawable(getResources().getDrawable(R.drawable.bg_progress_low_power));
+        }
+        progressBarEle.setProgress(electric * 85 / 100);
+    }
+
+    @Override
+    public void popupItemSelectListener(int position, String deviceId) {
+        if (mSelectPosition != position) {
+            mCheckBox.setChecked(false);
+            mSelectPosition = position;
+            if (mRespList.get(position).primaryAccount) {
+                mIvAdd.setVisibility(View.VISIBLE);
+            } else {
+                mIvAdd.setVisibility(View.GONE);
+            }
+            notifyContent(position);
+        }
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (requestCode == SAFE_AREA_NOTIFY && resultCode == RESULT_OK) {
+            refreshPage();
+        }
+    }
+
+    @Override
+    public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+        if (isChecked) {
+            showProgressDialog();
+            getRails();
+        } else {
+            if (mCircleList != null && mCircleList.size() != 0) {
+                for (int i = 0; i < mCircleList.size(); i++) {
+                    mCircleList.get(i).remove();
+                }
+            }
+        }
+    }
+}

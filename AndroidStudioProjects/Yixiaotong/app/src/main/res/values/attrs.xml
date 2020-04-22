@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <declare-styleable name="TriangleReverseView">
+        <attr name="fillColor" format="color" />
+        <attr name="orientation" format="integer" >
+            <!--倒三角-->
+            <enum name="orientation_vertical" value="1" />
+            <!--正三角-->
+            <enum name="orientation_horizontal" value="2" />
+        </attr>
+    </declare-styleable>
+
+</resources>

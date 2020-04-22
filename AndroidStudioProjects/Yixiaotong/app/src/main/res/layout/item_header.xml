@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:background="#ffffff"
+    android:layout_height="match_parent">
+
+    <ProgressBar
+        android:id="@+id/item_progress_bar"
+        android:layout_width="32dp"
+        android:layout_height="32dp"
+        android:paddingLeft="5dp"
+        android:paddingRight="5dp"
+        android:layout_centerInParent="true"/>
+
+    <TextView
+        android:id="@+id/item_tv_loading"
+        android:text=""
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:paddingLeft="5dp"
+        android:paddingRight="5dp"
+        android:layout_centerInParent="true"/>
+
+    <View
+        android:id="@+id/item_line"
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_marginBottom="20dp"
+        android:layout_alignParentBottom="true"
+        android:background="@color/gray_line" />
+
+</RelativeLayout>

@@ -1,5 +1,6 @@
 package com.example.componenthotfixdemo;
 
+import androidx.annotation.Keep;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -12,6 +13,7 @@ import android.os.Environment;
 import android.util.Log;
 import android.view.View;
 
+import com.example.componenthotfixdemo.service.TestService;
 import com.example.componenthotfixdemo.utils.TinkerManager;
 
 public class MainActivity extends AppCompatActivity {
@@ -108,4 +110,13 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
+    public void startservice(View view) {
+        Intent intent = new Intent(this, TestService.class);
+        startService(intent);
+    }
+
+    public void lazyLoad(View view) {
+        Intent intent = new Intent(this, LazyLoadActivity.class);
+        startActivity(intent);
+    }
 }

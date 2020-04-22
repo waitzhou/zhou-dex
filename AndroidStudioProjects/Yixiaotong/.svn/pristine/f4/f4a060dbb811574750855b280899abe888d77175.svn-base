@@ -1,0 +1,96 @@
+package com.zhexinit.yixiaotong.function.home;
+
+import android.content.Intent;
+import android.os.Build;
+import android.os.SystemClock;
+import android.provider.Settings;
+import android.support.v4.app.Fragment;
+import android.util.Log;
+import android.view.View;
+import android.widget.RadioGroup;
+import android.widget.RelativeLayout;
+
+import com.zhexinit.yixiaotong.R;
+import com.zhexinit.yixiaotong.base.BaseActivity;
+import com.zhexinit.yixiaotong.base.Constant;
+import com.zhexinit.yixiaotong.function.home.fragment.CampusFragment;
+import com.zhexinit.yixiaotong.function.home.fragment.HomeFragment;
+import com.zhexinit.yixiaotong.function.home.fragment.NoBindChildFragment;
+import com.zhexinit.yixiaotong.function.home.fragment.PositionFragment;
+import com.zhexinit.yixiaotong.function.home.fragment.UserFragment;
+import com.zhexinit.yixiaotong.function.mine.entity.UserInfoResp;
+import com.zhexinit.yixiaotong.utils.BitmapUtil;
+import com.zhexinit.yixiaotong.utils.Config;
+import com.zhexinit.yixiaotong.utils.FragmentTabUtil;
+import com.zhexinit.yixiaotong.utils.GsonUtil;
+import com.zhexinit.yixiaotong.utils.SharePerfUtils;
+import com.zhexinit.yixiaotong.utils.StatusBarCompat;
+import com.zhexinit.yixiaotong.utils.StringUtils;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import butterknife.BindView;
+
+/**
+ * Author:zhousx
+ * date:2018/11/5
+ * description:首页主页面
+ */
+public class MainActivity extends BaseActivity implements FragmentTabUtil.RadioGroupCheckChanged {
+
+    @BindView(R.id.radio_group)
+    RadioGroup mRadioGroup;
+
+    List<Fragment> mFragments;
+    boolean isNoChild;
+
+    @Override
+    protected int getLayoutId() {
+        return R.layout.activity_main;
+    }
+
+    @Override
+    protected void init() {
+        initData();
+        new FragmentTabUtil(getSupportFragmentManager(), mFragments, R.id.container, mRadioGroup, this);
+    }
+
+
+    private void initData() {
+        mFragments = new ArrayList<>();
+        UserInfoResp userInfoResp = GsonUtil.getInstance().getGson().
+                fromJson(SharePerfUtils.getString(Constant.KEY.USER_INFO), UserInfoResp.class);
+        isNoChild = userInfoResp.userChildren == null || userInfoResp.userChildren.size() == 0;
+        if (isNoChild) {
+            mFragments.add(NoBindChildFragment.newInstance());
+            mFragments.add(NoBindChildFragment.newInstance());
+            mFragments.add(NoBindChildFragment.newInstance());
+        } else {
+            mFragments.add(HomeFragment.newInstance(this));
+            mFragments.add(PositionFragment.newInstance());
+            mFragments.add(CampusFragment.newInstance());
+        }
+        mFragments.add(UserFragment.newInstance());
+    }
+
+
+    private int mCurrentFragmentPosition;
+
+    @Override
+    public void onRgCheckChanged(int position) {
+        mCurrentFragmentPosition = position;
+    }
+
+    public void refreshPage() {
+        Log.e("", "refreshPage: -------------------->");
+        if (!isNoChild) {
+            HomeFragment homeFragment = (HomeFragment) mFragments.get(0);
+            if (homeFragment.isAdded())
+                homeFragment.refreshPage();
+            PositionFragment positionFragment = (PositionFragment) mFragments.get(1);
+            if(positionFragment.isAdded())
+                positionFragment.refreshPage();
+        }
+    }
+}

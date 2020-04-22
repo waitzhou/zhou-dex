@@ -1,0 +1,241 @@
+package com.zhexinit.yixiaotong.function.mine.activity;
+
+import android.content.Intent;
+import android.graphics.Rect;
+import android.text.Editable;
+import android.text.TextUtils;
+import android.text.TextWatcher;
+import android.view.View;
+import android.view.ViewTreeObserver;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.LinearLayout;
+import android.widget.TextView;
+
+import com.google.gson.Gson;
+import com.scwang.wave.MultiWaveHeader;
+import com.zhexinit.yixiaotong.R;
+import com.zhexinit.yixiaotong.base.BaseActivity;
+import com.zhexinit.yixiaotong.base.Constant;
+import com.zhexinit.yixiaotong.function.BaseResp;
+import com.zhexinit.yixiaotong.function.UserWarehouse;
+import com.zhexinit.yixiaotong.function.home.MainActivity;
+import com.zhexinit.yixiaotong.function.home.fragment.NoBindChildFragment;
+import com.zhexinit.yixiaotong.function.mine.entity.LoginSuccessResp;
+import com.zhexinit.yixiaotong.function.mine.entity.UserInfoResp;
+import com.zhexinit.yixiaotong.rxjavamanager.interfaces.ResultCallBack;
+import com.zhexinit.yixiaotong.utils.DipUtils;
+import com.zhexinit.yixiaotong.utils.SharePerfUtils;
+import com.zhexinit.yixiaotong.utils.StringUtils;
+import com.zhexinit.yixiaotong.utils.TimerCount;
+
+import java.util.HashMap;
+import java.util.Map;
+
+import butterknife.BindView;
+
+/**
+ * Created by:xukun
+ * date:2018/11/5
+ * description: 验证码登录
+ */
+public class LoginWithSMSActivity extends BaseActivity implements View.OnClickListener {
+    @BindView(R.id.root_view)
+    LinearLayout root_view;
+    @BindView(R.id.edit_phone)
+    EditText edit_phone;
+    @BindView(R.id.edit_sms)
+    EditText edit_sms;
+    @BindView(R.id.text_send_sms)
+    TextView text_sms;
+    @BindView(R.id.but_enter)
+    Button but_enter;
+    @BindView(R.id.text_password)
+    TextView text_password;
+
+    TimerCount timeCount;
+
+    @Override
+    protected int getLayoutId() {
+        return R.layout.activity_login_sms;
+    }
+
+    @Override
+    protected void init() {
+        text_sms.setOnClickListener(this);
+        but_enter.setOnClickListener(this);
+        text_password.setOnClickListener(this);
+        timeCount = new TimerCount(text_sms, false);
+        edit_phone.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                text_sms.setSelected(s.length() == 11);
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+            }
+        });
+        edit_sms.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                but_enter.setSelected(s.length() >= 6);
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+            }
+        });
+
+        MultiWaveHeader waveHeader = findViewById(R.id.waveHeader);
+//        String[] waves = new String[]{
+//                "70,25,1.4,1.4,-26",//wave-1:offsetX(dp),offsetY(dp),scaleX,scaleY,velocity(dp/s)
+//                "100,5,1.4,1.2,15",
+//                "420,0,1.15,1,-10",//wave-3:offsetX(dp),offsetY(dp),scaleX,scaleY,velocity(dp/s)
+//        };
+//        waveHeader.setWaves(TextUtils.join(" ", Arrays.asList(waves)));// custom
+
+        addLayoutListener(root_view, but_enter);
+    }
+
+    @Override
+    public void onClick(View v) {
+        switch (v.getId()) {
+            case R.id.text_send_sms:
+                if (TextUtils.isEmpty(edit_phone.getText())) {
+                    showToast("请输入手机号码");
+                } else if (!StringUtils.checkPhone(edit_phone.getText().toString())) {
+                    showToast("请输入正确格式的手机号码");
+                } else {
+                    timeCount.start();
+                    edit_sms.requestFocus();
+                    getSms();
+                }
+                break;
+            case R.id.but_enter:
+                if (TextUtils.isEmpty(edit_phone.getText())) {
+                    showToast("请输入手机号码");
+                } else if (!StringUtils.checkPhone(edit_phone.getText().toString())) {
+                    showToast("请输入正确格式的手机号码");
+                } else if (edit_sms.getText().length() != 6) {
+                    showToast("请输入6位数字验证码");
+                } else
+                    doLogin();
+                break;
+            case R.id.text_password: //密码登录
+                startActivity(new Intent(this, LoginWithPasActivity.class));
+                break;
+        }
+    }
+
+    /**
+     * 获取手机验证码
+     */
+    private void getSms() {
+        Map<String, Object> map = new HashMap<>();
+        map.put("mobile", edit_phone.getText().toString());
+        UserWarehouse.getInstance(this).getLoginSmsCode(map, new ResultCallBack<BaseResp>() {
+            @Override
+            public void onSuccess(BaseResp baseResp) {
+                if (baseResp.code != 0) {
+                    showToast(baseResp.message);
+                    timeCount.cancel();
+                }
+            }
+
+            @Override
+            public void onFail(String response) {
+                showToast(response);
+                timeCount.cancel();
+            }
+        });
+    }
+
+    /**
+     * 登录接口请求
+     */
+    private void doLogin() {
+        showProgressDialog();
+        Map<String, Object> map = new HashMap<>();
+        map.put("mobile", edit_phone.getText().toString());
+        map.put("verifyCode", edit_sms.getText().toString());
+        UserWarehouse.getInstance(this).loginWithCode(map, new ResultCallBack<BaseResp<LoginSuccessResp>>() {
+            @Override
+            public void onSuccess(BaseResp<LoginSuccessResp> baseResp) {
+                if (baseResp.code == 0) {
+                    SharePerfUtils.putString(Constant.KEY.USER_PHONE_NUM, edit_phone.getText().toString());
+                    SharePerfUtils.putString(Constant.KEY.INIT_INFO, new Gson().toJson(baseResp.result));
+                    SharePerfUtils.putString(Constant.KEY.USER_TOKEN, baseResp.result.token);
+                    getUserInfo();
+                } else {
+                    showToast(baseResp.message);
+                }
+                hideProgressDialog();
+            }
+
+            @Override
+            public void onFail(String response) {
+                hideProgressDialog();
+            }
+        });
+    }
+
+
+    /**
+     * 获取用户信息
+     */
+    private void getUserInfo() {
+        UserWarehouse.getInstance(this).getUserInfo(new HashMap(), new ResultCallBack<BaseResp<UserInfoResp>>() {
+            @Override
+            public void onSuccess(BaseResp<UserInfoResp> userInfoResp) {
+                if (userInfoResp.code == 0) {
+                    SharePerfUtils.putString(Constant.KEY.USER_INFO, new Gson().toJson(userInfoResp.result));
+                    Intent intent = new Intent(LoginWithSMSActivity.this, MainActivity.class);
+                    startActivity(intent);
+                    finish();
+                } else showToast(userInfoResp.message);
+                hideProgressDialog();
+            }
+
+            @Override
+            public void onFail(String response) {
+                hideProgressDialog();
+                showToast(response);
+            }
+        });
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        timeCount.cancel();
+    }
+
+    private void addLayoutListener(final View root, final View lastView) {
+        root.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
+            @Override
+            public void onGlobalLayout() {
+                Rect rect = new Rect();
+                root.getWindowVisibleDisplayFrame(rect);
+                int rootInvisiableHeight = root.getRootView().getHeight() - rect.bottom;
+                if (rootInvisiableHeight > DipUtils.getScreenHeight(LoginWithSMSActivity.this) / 4) {
+                    int[] location = new int[2];
+                    lastView.getLocationInWindow(location);
+                    int scrollHeight = location[1] + lastView.getHeight() - rect.bottom;
+                    root.scrollTo(0, scrollHeight);
+                } else {
+                    root.scrollTo(0, 0);
+                }
+            }
+        });
+
+    }
+}

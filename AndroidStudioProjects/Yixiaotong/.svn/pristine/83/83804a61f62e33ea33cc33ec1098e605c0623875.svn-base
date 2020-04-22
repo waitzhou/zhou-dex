@@ -1,0 +1,244 @@
+package com.zhexinit.yixiaotong.function.map.activity;
+
+import android.content.Intent;
+import android.graphics.Typeface;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
+import android.view.View;
+import android.widget.LinearLayout;
+import android.widget.TextView;
+
+import com.zhexinit.yixiaotong.R;
+import com.zhexinit.yixiaotong.base.BaseActivity;
+import com.zhexinit.yixiaotong.function.BaseResp;
+import com.zhexinit.yixiaotong.function.MapWarehouse;
+import com.zhexinit.yixiaotong.function.map.entity.req.DeleteRailReq;
+import com.zhexinit.yixiaotong.function.map.entity.resp.PositionResp;
+import com.zhexinit.yixiaotong.function.map.entity.resp.RailResp;
+import com.zhexinit.yixiaotong.rxjavamanager.interfaces.ResultCallBack;
+import com.zhexinit.yixiaotong.utils.GsonUtil;
+import com.zhexinit.yixiaotong.utils.LogUtils;
+import com.zhexinit.yixiaotong.utils.RecyclerViewDivider;
+import com.zhexinit.yixiaotong.utils.commonAdapter.CommonRecyclerAdapter;
+import com.zhexinit.yixiaotong.utils.commonAdapter.CommonRecyclerHolder;
+import com.zhexinit.yixiaotong.widget.CommonDialog;
+import com.zhexinit.yixiaotong.widget.ToolBar;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import butterknife.BindView;
+import butterknife.OnClick;
+
+/**
+ * Author:zhousx
+ * date:2018/11/13
+ * description:地址围栏列表
+ */
+public class SafeAreaListActivity extends BaseActivity {
+
+    @BindView(R.id.tool_bar)
+    ToolBar mToolBar;
+    @BindView(R.id.recycler_view)
+    RecyclerView mRecyclerView;
+    @BindView(R.id.ll_add)
+    LinearLayout mLlAdd;
+    @BindView(R.id.tv_add_text)
+    TextView mTvAddText;
+    private String mDeviceId, mChildName;
+
+    private PositionResp mPositionResp;
+    private List<RailResp> mRespList = new ArrayList<>();
+
+    @Override
+    protected int getLayoutId() {
+        return R.layout.activity_safe_area_list;
+    }
+
+    @Override
+    protected void init() {
+        initData();
+        initToolbar();
+        initContent();
+    }
+
+    private void initData() {
+        mDeviceId = getIntent().getStringExtra("deviceId");
+        mChildName = getIntent().getStringExtra("childName");
+        mPositionResp = GsonUtil.getInstance().getGson().fromJson(getIntent().getStringExtra("item"), PositionResp.class);
+        if (mPositionResp == null)
+            getChildSite();
+    }
+
+    private void initToolbar() {
+        mToolBar.setTitle(mChildName.concat("的安全区域"));
+        mToolBar.setBackImage();
+        mToolBar.back(this);
+        Typeface typeface = Typeface.createFromAsset(getAssets(), getString(R.string.tv_path));
+        mTvAddText.setTypeface(typeface);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        getRailData();
+    }
+
+    private void initContent() {
+        mRecyclerView.setLayoutManager(new LinearLayoutManager(this) {
+            @Override
+            public boolean canScrollVertically() {
+                return false;
+            }
+        });
+        RecyclerViewDivider divider = new RecyclerViewDivider(this);
+        divider.setLineColor(R.color.gray_line);
+        mRecyclerView.addItemDecoration(divider);
+        mRecyclerView.setAdapter(new CommonRecyclerAdapter<RailResp>(this, mRespList, R.layout.item_safe_area) {
+            @Override
+            public void convert(final CommonRecyclerHolder holder, final RailResp item, int position) {
+                holder.setText(R.id.item_tv_name, item.railName);
+                if (item.railTimeList != null && item.railTimeList.size() != 0)
+                    holder.setText(R.id.item_tv_time, item.railTimeList.get(0).time);
+                holder.setText(R.id.item_tv_address, (item.address == null ? "" : item.address).concat("\t\t附近").concat(String.valueOf(item.railRange)).concat("米"));
+                holder.mItemView.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        Intent intent = new Intent(SafeAreaListActivity.this, AddSafeAreaActivity.class);
+                        intent.putExtra("title", mChildName.concat("的安全区域"));
+                        if (mPositionResp != null) {
+                            intent.putExtra("lat", mPositionResp.latitude);
+                            intent.putExtra("lng", mPositionResp.longitude);
+                        }
+                        intent.putExtra("item", GsonUtil.getInstance().getGson().toJson(item));
+                        setResult(RESULT_OK);
+                        startActivity(intent);
+                    }
+                });
+                holder.mItemView.setOnLongClickListener(new View.OnLongClickListener() {
+                    @Override
+                    public boolean onLongClick(View v) {
+                        showCommonDialog(item, holder.getAdapterPosition());
+                        return false;
+                    }
+                });
+            }
+        });
+    }
+
+    /**
+     * 获取孩子的位置信息
+     */
+    private void getChildSite() {
+        MapWarehouse.getInstance(this).getChildSite(mDeviceId, new ResultCallBack<BaseResp<PositionResp>>() {
+            @Override
+            public void onSuccess(BaseResp<PositionResp> positionRespBaseResp) {
+                if (positionRespBaseResp.code == 0)
+                    mPositionResp = positionRespBaseResp.result;
+            }
+
+            @Override
+            public void onFail(String response) {
+
+            }
+        });
+    }
+
+    private void showCommonDialog(final RailResp item, final int position) {
+        final CommonDialog dialog = new CommonDialog(this, "", "是否要删除当前围栏？");
+        dialog.noTitle();
+        dialog.setNegativeClick(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                dialog.dismiss();
+            }
+        });
+        dialog.setSumbitClick(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                dialog.dismiss();
+                deleteRail(item, position);
+            }
+        });
+        dialog.show();
+    }
+
+    /**
+     * 删除围栏
+     */
+    private void deleteRail(RailResp item, final int position) {
+
+        DeleteRailReq railReq = new DeleteRailReq();
+        railReq.deviceId = item.deviceId;
+        railReq.railId = item.id;
+        MapWarehouse.getInstance(this).deleteRail(railReq, new ResultCallBack<BaseResp>() {
+            @Override
+            public void onSuccess(BaseResp baseResp) {
+                if (baseResp.code == 0) {
+                    mLlAdd.setVisibility(View.VISIBLE);
+                    mRespList.remove(position);
+                    mRecyclerView.getAdapter().notifyItemRemoved(position);
+                    setResult(RESULT_OK);
+                } else {
+                    showToast(baseResp.message);
+                }
+            }
+
+            @Override
+            public void onFail(String response) {
+
+            }
+        });
+    }
+
+    /**
+     * 获取围栏数据
+     */
+    private void getRailData() {
+        showProgressDialog();
+        mRespList.clear();
+        MapWarehouse.getInstance(this).getRails(mDeviceId, new ResultCallBack<BaseResp<List<RailResp>>>() {
+            @Override
+            public void onSuccess(BaseResp<List<RailResp>> listBaseResp) {
+                hideProgressDialog();
+                if (listBaseResp.code == 0) {
+                    if (listBaseResp.result != null && listBaseResp.result.size() != 0) {
+                        if (listBaseResp.result.size() >= 5) {
+                            mLlAdd.setVisibility(View.GONE);
+                        } else {
+                            mLlAdd.setVisibility(View.VISIBLE);
+                        }
+                        mRespList.addAll(listBaseResp.result);
+                        mRecyclerView.getAdapter().notifyDataSetChanged();
+                    }
+                } else {
+                    showToast(listBaseResp.message);
+                }
+            }
+
+            @Override
+            public void onFail(String response) {
+                hideProgressDialog();
+                LogUtils.v(response);
+            }
+        });
+    }
+
+    @OnClick(R.id.ll_add)
+    public void addSafeArea() {
+        Intent intent = new Intent(this, AddSafeAreaActivity.class);
+        intent.putExtra("deviceId", mDeviceId);
+        if (mPositionResp != null) {
+            intent.putExtra("lat", mPositionResp.latitude);
+            intent.putExtra("lng", mPositionResp.longitude);
+        }
+        intent.putExtra("title", mChildName.concat("的安全区域"));
+        setResult(RESULT_OK);
+        startActivity(intent);
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+    }
+}

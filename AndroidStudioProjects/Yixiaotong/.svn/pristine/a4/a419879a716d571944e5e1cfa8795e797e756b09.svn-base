@@ -1,0 +1,64 @@
+<resources>
+    <string name="app_name">壹校通</string>
+
+    <string name="home_page">首页</string>
+    <string name="home_position">位置</string>
+    <string name="home_campus">校园</string>
+    <string name="home_user">我的</string>
+
+
+    <string name="tv_path">icomoon.ttf</string>
+    <!--返回-->
+    <string name="tv_back">&#xe900;</string>
+    <string name="tv_setting">&#xe90d;</string>
+    <string name="tv_feedback">&#xe90c;</string>
+    <string name="tv_about">&#xe908;</string>
+    <string name="tv_help">&#xe90a;</string>
+    <string name="tv_small_head">&#xe90b;</string>
+    <string name="tv_add">&#xe909;</string>
+    <!--解除绑定-->
+    <string name="tv_unBundle">&#xe90e;</string>
+    <!--照相机-->
+    <string name="tv_camera">&#xe901;</string>
+    <!--分享-->
+    <string name="tv_share">&#xe905;</string>
+    <!--定位-->
+    <string name="tv_location">&#xe906;</string>
+    <!--搜索-->
+    <string name="tv_search">&#xe907;</string>
+    <!--向下-->
+    <string name="tv_down">&#xe902;</string>
+    <string name="tips_holder">\t\t明天下午开家长，希望各位父母务必参加，不参加者请在校讯通里请假，凡是无故不参加家长的，一律拉到野外被动物园的大象吃掉，然后报告校长，罚站，反正班主任也不会绕...... \n\t\t明天下午开家长，希望各位父母务必参加，不参加者请在校讯通里请假，凡是无故不参加家长的，一律拉到野外被动物园的大象吃掉，然后报告校长，罚站，反正班主任也不会绕...... \n\t\t明天下午开家长，希望各位父母务必参加，不参加者请在校讯通里请假，凡是无故不参加家长的，一律拉到野外被动物园的大象吃掉，然后报告校长，罚站，反正班主任也不会绕......</string>
+
+    <string name="feedback_hint">欢迎你给我们提出宝贵意见，并留下你的联系方式。以便我们更好的改进。</string>
+
+    <!--帮助中心的文字-->
+    <string name="what_pass">第一步：点击我的页面下方的设置，进入设置页面\n第二步：点击修改密码，获取正确验证码后就可以输入新密码了</string>
+    <string name="why_verifyCode">您好，可能是由于以下原因导致，请您按照以下方法依次检查：
+        \n1）您的手机验证码可能需要等待几分钟才能到达您的手机（这取决于您当地的移动运营商），为避免系统错误请不要重复点击
+        \n2）请检查您的手机是否已停止服务，或拦截我们的短信或短信收件箱已满
+        \n3）网络异常可能导致短信丢失，请您等待60s，或点击“通过语音获取验证码”通过电话模式接收验证码
+        \n4）请检查软件是否为最新版本，建议将“壹校通”APP更新到最新版
+        \n每人每天最多可获取10条验证码，建议您不要重复获取
+        获取语音验证码可尝试以下操作:
+        \n第一步：
+        点击红色文字“获取语音验证码”，此时，注意意接听来电
+        \n第二步：
+        输入您收到的语音验证码，点击“确定”，完成查验
+    </string>
+    <string name="pc_login">教师用户可以在电脑端登录，使用各项后台管理功能
+        \n家长仅支持手机端登录，给您带来的不便敬请谅解</string>
+    <string name="parent_more">
+        第一步：点击我的页面，找到我的孩子信息点击进入
+        \n第二步：点击底部添加家长，填写手机号和与孩子关系即可添加成功并可以查看孩子的全部情况（前提是主家长）
+    </string>
+    <string name="teacher_phone">
+        第一步：首页上滑点击任课老师一栏进入任课老师页面
+        \n第二步：找到您孩子所在班级的任课老师名字，点击某某老师则进入详情页展示老师的具体信息
+        \n第三步：找到手机号码或者邮箱与之联系
+    </string>
+    <string name="child_homework">
+        第一步：首页点击作业一栏进入到作业列表
+        \n第二步：顶部则是您孩子的最新作业，根据时间可以查看是否有当天的最新作业
+    </string>
+</resources>

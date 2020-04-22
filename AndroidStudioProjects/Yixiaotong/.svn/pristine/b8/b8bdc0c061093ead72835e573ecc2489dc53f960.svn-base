@@ -1,0 +1,433 @@
+package com.zhexinit.yixiaotong.function.home.fragment;
+
+import android.annotation.SuppressLint;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
+import android.os.Build;
+import android.os.Bundle;
+import android.provider.Settings;
+import android.support.annotation.NonNull;
+import android.support.v4.content.LocalBroadcastManager;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
+import android.view.View;
+import android.widget.ImageView;
+import android.widget.RelativeLayout;
+import android.widget.TextView;
+
+import com.scwang.smartrefresh.layout.SmartRefreshLayout;
+import com.scwang.smartrefresh.layout.api.RefreshLayout;
+import com.scwang.smartrefresh.layout.listener.OnRefreshListener;
+import com.zhexinit.yixiaotong.R;
+import com.zhexinit.yixiaotong.base.BaseFragment;
+import com.zhexinit.yixiaotong.base.Constant;
+import com.zhexinit.yixiaotong.function.BaseResp;
+import com.zhexinit.yixiaotong.function.ChildrenWarehouse;
+import com.zhexinit.yixiaotong.function.home.MainActivity;
+import com.zhexinit.yixiaotong.function.home.activity.AttendanceHomeActivity;
+import com.zhexinit.yixiaotong.function.home.activity.ClassScheduleActivity;
+import com.zhexinit.yixiaotong.function.home.activity.ContactActivity;
+import com.zhexinit.yixiaotong.function.home.activity.HomeworkActivity;
+import com.zhexinit.yixiaotong.function.home.activity.NoticeActivity;
+import com.zhexinit.yixiaotong.function.home.activity.ResultsActivity;
+import com.zhexinit.yixiaotong.function.home.activity.VacateHomeActivity;
+import com.zhexinit.yixiaotong.function.home.entity.resp.HomeFunctionResp;
+import com.zhexinit.yixiaotong.function.home.entity.resp.NoticeFunction;
+import com.zhexinit.yixiaotong.function.mine.JPushReceiver;
+import com.zhexinit.yixiaotong.function.mine.entity.UserInfoResp;
+import com.zhexinit.yixiaotong.rxjavamanager.interfaces.ResultCallBack;
+import com.zhexinit.yixiaotong.utils.Config;
+import com.zhexinit.yixiaotong.utils.GsonUtil;
+import com.zhexinit.yixiaotong.utils.LogUtils;
+import com.zhexinit.yixiaotong.utils.RecyclerViewDivider;
+import com.zhexinit.yixiaotong.utils.SharePerfUtils;
+import com.zhexinit.yixiaotong.utils.StatusBarCompat;
+import com.zhexinit.yixiaotong.utils.StringUtils;
+import com.zhexinit.yixiaotong.utils.commonAdapter.CommonRecyclerAdapter;
+import com.zhexinit.yixiaotong.utils.commonAdapter.CommonRecyclerHolder;
+import com.zhexinit.yixiaotong.widget.YixiaotongRefreshHeader;
+
+import java.util.ArrayList;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Set;
+
+import butterknife.BindView;
+import cn.jpush.android.api.JPushInterface;
+
+/**
+ * Author:zhousx
+ * date:2018/11/5
+ * description:主页fragment
+ */
+public class HomeFragment extends BaseFragment implements OnRefreshListener {
+
+    @BindView(R.id.tv_title)
+    TextView tvTitle;
+    @BindView(R.id.tv_desc)
+    TextView tvDesc;
+    @BindView(R.id.iv_child_icon)
+    ImageView ivChildIcon;
+    @BindView(R.id.refresh_header)
+    YixiaotongRefreshHeader mRefreshHeader;
+    @BindView(R.id.smart_refresh_layout)
+    SmartRefreshLayout mSmartRefreshLayout;
+    @BindView(R.id.recycler_view)
+    RecyclerView recyclerView;
+    @BindView(R.id.rl_no_net)
+    RelativeLayout mRelativeLayout;
+
+    HomeFunctionResp mHomeFunctionResp;
+
+    private final String MESSAGE_TYPE_NOTICE = "notification", MESSAGE_TYPE_ATTENDANCE = "attendance",
+            MESSAGE_TYPE_SUBJECT = "subject", MESSAGE_TYPE_HOMEWORK = "homework",
+            MESSAGE_TYPE_SCORE = "score", MESSAGE_TYPE_LEAVE = "leave",
+            MESSAGE_TYPE_CONTACT = "contact";
+
+
+    private List<String> mStrings = new ArrayList<>();
+
+    public static HomeFragment newInstance(MainActivity activity) {
+
+        Bundle args = new Bundle();
+
+        HomeFragment fragment = new HomeFragment(activity);
+        fragment.setArguments(args);
+        return fragment;
+    }
+
+    private MainActivity mActivity;
+
+    public HomeFragment() {
+    }
+
+    @SuppressLint("ValidFragment")
+    public HomeFragment(MainActivity activity) {
+        mActivity = activity;
+    }
+
+    @Override
+    protected int getLayoutId() {
+        return R.layout.fragment_home;
+    }
+
+    @Override
+    protected void init(Bundle savedInstanceState) {
+
+        initContent();
+        initListener();
+        initRecyclerView();
+        getData();
+        registerMessageReceiver();
+    }
+
+    private void initListener() {
+        mSmartRefreshLayout.setPrimaryColorsId(R.color.theme_center_color, R.color.theme_center_color);//全局设置主题颜色
+        mSmartRefreshLayout.setHeaderMaxDragRate(1);
+        mSmartRefreshLayout.setHeaderTriggerRate(0.8f);
+        mSmartRefreshLayout.setEnableLoadMore(false);
+        mSmartRefreshLayout.setOnRefreshListener(this);
+    }
+
+    private void initContent() {
+        UserInfoResp infoResp = GsonUtil.getInstance().getGson().fromJson(SharePerfUtils.getString(Constant.KEY.USER_INFO), UserInfoResp.class);
+        tvDesc.setText(StringUtils.getWelcomeData().concat("!")/*.concat(infoResp.userName)*/);
+
+        //设置极光推送的tag，别名
+        JPushInterface.setAlias(getActivity(), 1, SharePerfUtils.getString(Constant.KEY.USER_PHONE_NUM));
+        if (infoResp != null && infoResp.userChildren != null) {
+            for (int i = 0; i < infoResp.userChildren.size(); i++) {
+                Set<String> d = new LinkedHashSet<>();
+                d.add(infoResp.userChildren.get(i).childId.replace("-", ""));
+                d.add("schoolId_" + infoResp.userChildren.get(i).schoolId);
+                d.add("classId_" + infoResp.userChildren.get(i).childClassId);
+                d.add("deviceId_" + infoResp.userChildren.get(i).deviceId);
+                JPushInterface.setTags(getActivity(), i, d);
+            }
+        }
+    }
+
+    private void getData() {
+        ChildrenWarehouse.getInstance(getContext()).getHomeNiticeData(new ResultCallBack<BaseResp<HomeFunctionResp>>() {
+            @Override
+            public void onSuccess(BaseResp<HomeFunctionResp> homeFunctionRespBaseResp) {
+                if (homeFunctionRespBaseResp.code == 0 && homeFunctionRespBaseResp.result.indexNotices != null) {
+                    mHomeFunctionResp = homeFunctionRespBaseResp.result;
+                }
+                setFunctionTitle();
+                recyclerView.getAdapter().notifyDataSetChanged();
+                mSmartRefreshLayout.finishRefresh(1000);
+            }
+
+            @Override
+            public void onFail(String response) {
+                setFunctionTitle();
+                recyclerView.getAdapter().notifyDataSetChanged();
+                mSmartRefreshLayout.finishRefresh(1000);
+            }
+        });
+    }
+
+    private void setFunctionTitle() {
+        mStrings.add("通知");
+        mStrings.add("考勤");
+        mStrings.add("课程表");
+        mStrings.add("作业");
+        mStrings.add("成绩");
+        mStrings.add("请假");
+        mStrings.add("任课老师");
+    }
+
+    private void initRecyclerView() {
+        recyclerView.setLayoutManager(new LinearLayoutManager(getContext()) {
+            @Override
+            public boolean canScrollVertically() {
+                return false;
+            }
+        });
+
+        recyclerView.setAdapter(new CommonRecyclerAdapter<String>(getContext(), mStrings, R.layout.item_home_function_adapter) {
+            @Override
+            public void convert(CommonRecyclerHolder holder, final String item, final int position) {
+                holder.setText(R.id.item_tv_function, item);
+                final ImageView imageView = holder.getView(R.id.item_iv_function);
+                final TextView desc = holder.getView(R.id.item_tv_desc);
+                final TextView time = holder.getView(R.id.item_tv_time);
+                final TextView text_count = holder.getView(R.id.item_tv_notice_count);
+                switch (item) {
+                    case "通知":
+                        imageView.setImageResource(R.mipmap.ic_function_notice);
+                        setPushCount(JPushReceiver.NOTIFICATION_TOTAL, text_count);
+                        setTvDescAndTime(MESSAGE_TYPE_NOTICE, desc, time);
+                        break;
+                    case "考勤":
+                        imageView.setImageResource(R.mipmap.ic_function_attendance);
+                        setPushCount(JPushReceiver.ATTENDANCE_TOTAL, text_count);
+                        setTvDescAndTime(MESSAGE_TYPE_ATTENDANCE, desc, time);
+                        break;
+                    case "作业":
+                        imageView.setImageResource(R.mipmap.ic_function_homework);
+                        setPushCount(JPushReceiver.HOMEWORK_TOTAL, text_count);
+                        setTvDescAndTime(MESSAGE_TYPE_HOMEWORK, desc, time);
+                        break;
+                    case "请假":
+                        imageView.setImageResource(R.mipmap.ic_function_vacate);
+                        setPushCount(JPushReceiver.LEAVE_TOTAL, text_count);
+                        setTvDescAndTime(MESSAGE_TYPE_LEAVE, desc, time);
+                        break;
+                    case "课程表":
+                        imageView.setImageResource(R.mipmap.ic_function_class_schedule);
+                        setPushCount(JPushReceiver.SUBJECT_TOTAL, text_count);
+                        setTvDescAndTime(MESSAGE_TYPE_SUBJECT, desc, time);
+                        break;
+                    case "任课老师":
+                        imageView.setImageResource(R.mipmap.ic_function_contact);
+                        setPushCount(JPushReceiver.CONTACT_TOTAL, text_count);
+                        setTvDescAndTime(MESSAGE_TYPE_CONTACT, desc, time);
+                        break;
+                    case "成绩":
+                        setPushCount(JPushReceiver.SCORE_TOTAL, text_count);
+                        imageView.setImageResource(R.mipmap.ic_function_results);
+                        setTvDescAndTime(MESSAGE_TYPE_SCORE, desc, time);
+                        break;
+                    default:
+                        break;
+                }
+                holder.mItemView.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        switch (item) {
+                            case "通知":
+                                startActivity(new Intent(getContext(), NoticeActivity.class));
+                                SharePerfUtils.putInt(JPushReceiver.NOTIFICATION_TOTAL, 0);
+                                break;
+                            case "考勤":
+                                startActivity(new Intent(getContext(), AttendanceHomeActivity.class));
+                                SharePerfUtils.putInt(JPushReceiver.ATTENDANCE_TOTAL, 0);
+                                break;
+                            case "作业":
+                                startActivity(new Intent(getContext(), HomeworkActivity.class));
+                                SharePerfUtils.putInt(JPushReceiver.HOMEWORK_TOTAL, 0);
+                                break;
+                            case "请假":
+                                startActivity(new Intent(getContext(), VacateHomeActivity.class));
+                                SharePerfUtils.putInt(JPushReceiver.LEAVE_TOTAL, 0);
+                                break;
+                            case "课程表":
+                                startActivity(new Intent(getContext(), ClassScheduleActivity.class));
+                                SharePerfUtils.putInt(JPushReceiver.SUBJECT_TOTAL, 0);
+                                break;
+                            case "任课老师":
+                                startActivity(new Intent(getContext(), ContactActivity.class));
+                                SharePerfUtils.putInt(JPushReceiver.CONTACT_TOTAL, 0);
+                                break;
+                            case "成绩":
+                                startActivity(new Intent(getContext(), ResultsActivity.class));
+                                SharePerfUtils.putInt(JPushReceiver.SCORE_TOTAL, 0);
+                                break;
+                            default:
+                                break;
+                        }
+                        text_count.setVisibility(View.GONE);
+                    }
+                });
+            }
+        });
+    }
+
+    private void setPushCount(String type, TextView text_count) {
+        int count = SharePerfUtils.getInt(type);
+        text_count.setSelected(count > 9);
+        text_count.setText(count > 99 ? "99+" : String.valueOf(count));
+        text_count.setVisibility(count > 0 ? View.VISIBLE : View.INVISIBLE);
+    }
+
+    private void setTvDescAndTime(String type, TextView tvDesc, TextView tvTime) {
+        if (mHomeFunctionResp == null || mHomeFunctionResp.indexNotices == null)
+            return;
+        int size = mHomeFunctionResp.indexNotices.size();
+        for (int i = 0; i < size; i++) {
+            NoticeFunction function = mHomeFunctionResp.indexNotices.get(i);
+            if (type.equals(function.messageType)) {
+                tvDesc.setText(function.content);
+                tvTime.setText(function.datetime > 0 ? StringUtils.getTimeDescription(function.datetime) : "");
+            }
+        }
+    }
+
+    /**
+     * 刷新界面
+     */
+    public void refreshPage() {
+        mStrings.clear();
+        tvDesc.setText(StringUtils.getWelcomeData().concat("!"));
+        getData();
+    }
+
+
+    @Override
+    public void onRefresh(@NonNull RefreshLayout refreshLayout) {
+        refreshPage();
+    }
+
+    public void registerMessageReceiver() {
+        MainReceiver receiver = new MainReceiver();
+        IntentFilter filter = new IntentFilter();
+        filter.setPriority(IntentFilter.SYSTEM_HIGH_PRIORITY);
+        filter.addAction(MESSAGE_RECEIVED_ACTION);
+        LocalBroadcastManager.getInstance(getContext()).registerReceiver(receiver, filter);
+    }
+
+    public static final String MESSAGE_RECEIVED_ACTION = "com.zhixinit.yixiaotong.MESSAGE_RECEIVED_ACTION";
+    public static final String KEY_MESSAGE = "message";//消息内容
+    public static final String KEY_MESSAGE_TYPE = "messageType"; //消息类型
+    public static final String KEY_NOTIFICATION_DATA = "notificationData";//推送的时间
+
+    class MainReceiver extends BroadcastReceiver {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            try {
+                if (MESSAGE_RECEIVED_ACTION.equals(intent.getAction())) {
+                    String messageType = intent.getStringExtra(KEY_MESSAGE_TYPE);
+                    String message = intent.getStringExtra(KEY_MESSAGE);
+                    String data = intent.getStringExtra(KEY_NOTIFICATION_DATA);
+                    if (mHomeFunctionResp == null) {
+                        mHomeFunctionResp = new HomeFunctionResp();
+                        mHomeFunctionResp.indexNotices = new ArrayList<>();
+                        NoticeFunction function = new NoticeFunction();
+                        function.messageType = messageType;
+                        function.datetime = Long.parseLong(data);
+                        function.content = message;
+                        mHomeFunctionResp.indexNotices.add(function);
+                    } else {
+                        switch (messageType) {
+                            case "notification":
+                                setPushDate(MESSAGE_TYPE_NOTICE, message, data);
+                                break;
+                            case "attendance":
+                                setPushDate(MESSAGE_TYPE_ATTENDANCE, message, data);
+                                break;
+                            case "subject":
+                                setPushDate(MESSAGE_TYPE_SUBJECT, message, data);
+                                break;
+                            case "homework":
+                                setPushDate(MESSAGE_TYPE_HOMEWORK, message, data);
+                                break;
+                            case "score":
+                                setPushDate(MESSAGE_TYPE_SCORE, message, data);
+                                break;
+                            case "leave":
+                                setPushDate(MESSAGE_TYPE_LEAVE, message, data);
+                                break;
+                            case "contact":
+                                setPushDate(MESSAGE_TYPE_CONTACT, message, data);
+                                break;
+                        }
+                    }
+                    recyclerView.getAdapter().notifyDataSetChanged();
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private void setPushDate(String type, String message, String data) {
+        int size = mHomeFunctionResp.indexNotices.size();
+        for (int i = 0; i < size; i++) {
+            NoticeFunction function = mHomeFunctionResp.indexNotices.get(i);
+            if (type.equals(function.messageType)) {
+                function.content = message;
+                function.datetime = Long.valueOf(data);
+            }
+        }
+
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        setNonetContent();
+    }
+
+    private void setNonetContent() {
+        if (!Config.isConnectToWifi(getActivity()) && !Config.isConnectToNetWork(getActivity())) {
+            mRelativeLayout.setVisibility(View.VISIBLE);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+                RelativeLayout.LayoutParams layoutParams = (RelativeLayout.LayoutParams) mRelativeLayout.getLayoutParams();
+                layoutParams.topMargin = StatusBarCompat.getStatusBarHeight(getActivity());
+            }
+            mRelativeLayout.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    jumpToSettingNetPage();
+                }
+            });
+        } else {
+            mRelativeLayout.setVisibility(View.GONE);
+        }
+
+    }
+
+    /**
+     * 跳转到开启网络界面
+     */
+    private void jumpToSettingNetPage() {
+        /*if(Config.ishasSimCard(getContext())) {
+            Intent intent = new Intent(Settings.ACTION_DATA_ROAMING_SETTINGS);
+            startActivityForResult(intent,1);
+        }else {*/
+        Intent intent = new Intent(Settings.ACTION_WIFI_SETTINGS);
+        startActivityForResult(intent, 1);
+        //}
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (requestCode == 1 && (Config.isConnectToNetWork(getActivity()) || Config.isConnectToWifi(getActivity()))) {
+            mActivity.refreshPage();
+        }
+    }
+}

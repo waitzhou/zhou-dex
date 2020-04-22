@@ -1,0 +1,127 @@
+package com.zhexinit.yixiaotong.widget;
+
+import android.content.Context;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Paint;
+import android.graphics.RectF;
+import android.util.AttributeSet;
+import android.view.View;
+
+/**
+ * Created by:xukun
+ * date:2018/11/17
+ * description:
+ */
+public class Power2 extends View{
+    // 外框画笔
+    private Paint paint = new Paint();
+
+    // 电量画笔
+    private Paint powerPaint = new Paint();
+
+    // 电池边框矩形
+    private RectF recBattery = null;
+
+    // 电池头矩形
+    private RectF recHead = null;
+
+    // 电池电量矩形
+    private RectF recPower = null;
+
+    // 电池边框粗细
+    private float mStokeWidth = 2f;
+
+    // 电池长度
+    private float batteryWidth = 50f;
+
+    // 电池高度
+    private float batteryHeight = 20f;
+
+    // 电池头高度
+    private float headHei = 10f;
+
+    // 电池头宽度
+    private float headWid = 5f;
+
+    // 电量颜色
+    private int powerColor = Color.GREEN;
+
+    // 电量百分比
+    private float pow = 0.8f;
+
+
+    public Power2(Context context) {
+        super(context);
+        initView();
+    }
+
+    public Power2(Context context, AttributeSet attrs) {
+        super(context, attrs);
+        initView();
+    }
+
+    public Power2(Context context, AttributeSet attrs, int defStyleAttr) {
+        super(context, attrs, defStyleAttr);
+        initView();
+    }
+
+
+    @Override
+    protected void onDraw(Canvas canvas) {
+        super.onDraw(canvas);
+        canvas.drawRoundRect(recBattery, 1, 1, paint);
+        canvas.drawRoundRect(recHead, 0, 0, paint);
+        canvas.drawRoundRect(recPower, 0, 0, powerPaint);
+    }
+
+    public void initView() {
+        // 初始化电池边框画笔
+        paint.setStyle(Paint.Style.STROKE);
+        paint.setColor(Color.GRAY);
+        paint.setStrokeWidth(mStokeWidth);
+        // 初始化电池电量画笔
+        powerPaint.setStyle(Paint.Style.FILL);
+        powerPaint.setColor(powerColor);
+
+        // 初始化电池边框
+        recBattery = new RectF(mStokeWidth / 2, mStokeWidth / 2, batteryWidth, batteryHeight);
+        // 初始化电池头
+        recHead = new RectF(batteryWidth, (batteryHeight - headHei) / 2, batteryWidth + headWid, (batteryHeight + headHei) / 2);
+        // 初始化电池电量
+        recPower = new RectF(mStokeWidth , mStokeWidth , batteryWidth * pow , batteryHeight - mStokeWidth);
+    }
+
+    /**
+     * 屏幕高宽
+     */
+    private int measureWidth;
+    private int measureHeigth;
+
+    @Override
+    protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+        measureWidth = MeasureSpec.getSize(widthMeasureSpec);
+        measureHeigth = MeasureSpec.getSize(heightMeasureSpec);
+        int widMode = MeasureSpec.getMode(widthMeasureSpec);
+        int widthSize = MeasureSpec.getSize(widthMeasureSpec);
+        int heiMode = MeasureSpec.getMode(heightMeasureSpec);
+        int heiSize = MeasureSpec.getSize(heightMeasureSpec);
+        if (widMode == MeasureSpec.AT_MOST && heiMode == MeasureSpec.AT_MOST) {
+            setMeasuredDimension((int) (batteryWidth+mStokeWidth*2+headWid), (int) (batteryHeight+mStokeWidth*2));
+        } else if (widMode == MeasureSpec.EXACTLY && heiMode == MeasureSpec.AT_MOST) {
+            setMeasuredDimension(widthSize, (int) (batteryHeight+mStokeWidth*2));
+        } else if (widMode == MeasureSpec.EXACTLY && heiMode == MeasureSpec.EXACTLY) {
+            setMeasuredDimension((int) (batteryWidth+mStokeWidth*2+headWid), heiSize);
+        } else {
+            setMeasuredDimension(widthSize, heiSize);
+        }
+    }
+
+
+    public void setPower(int power){
+
+        pow = (float) (power / 100.0);
+        recPower = new RectF(mStokeWidth , mStokeWidth , batteryWidth * pow , batteryHeight - mStokeWidth);
+        invalidate();
+    }
+}

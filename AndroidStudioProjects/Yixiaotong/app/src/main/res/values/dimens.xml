@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!--toolbar高度-->
+    <dimen name="tool_bar_height">45dp</dimen>
+    <!--虚线高度-->
+    <dimen name="line_height">1dp</dimen>
+    <!--投影高度-->
+    <dimen name="elevation_height">3dp</dimen>
+
+</resources>

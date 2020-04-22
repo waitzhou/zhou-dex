@@ -1,0 +1,187 @@
+package com.zhexinit.yixiaotong.function.home.fragment;
+
+import android.content.Intent;
+import android.graphics.Typeface;
+import android.os.Bundle;
+import android.support.v7.widget.RecyclerView;
+import android.view.View;
+import android.widget.ImageView;
+import android.widget.TextView;
+
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.engine.DiskCacheStrategy;
+import com.zhexinit.yixiaotong.R;
+import com.zhexinit.yixiaotong.base.BaseFragment;
+import com.zhexinit.yixiaotong.base.Constant;
+import com.zhexinit.yixiaotong.function.mine.activity.AboutUsActivity;
+import com.zhexinit.yixiaotong.function.mine.activity.ChildDetailActivity;
+import com.zhexinit.yixiaotong.function.mine.activity.FeedBackActivity;
+import com.zhexinit.yixiaotong.function.mine.activity.HelpCenterActivity;
+import com.zhexinit.yixiaotong.function.mine.activity.PersonInfoActivity;
+import com.zhexinit.yixiaotong.function.mine.activity.SettingActivity;
+import com.zhexinit.yixiaotong.function.mine.entity.UserInfoResp;
+import com.zhexinit.yixiaotong.function.mine.entity.ChildResp;
+import com.zhexinit.yixiaotong.utils.CanScrollLayoutManager;
+import com.zhexinit.yixiaotong.utils.GlideCricleTransform;
+import com.zhexinit.yixiaotong.utils.GsonUtil;
+import com.zhexinit.yixiaotong.utils.SharePerfUtils;
+import com.zhexinit.yixiaotong.utils.commonAdapter.CommonRecyclerAdapter;
+import com.zhexinit.yixiaotong.utils.commonAdapter.CommonRecyclerHolder;
+import com.zhexinit.yixiaotong.widget.Power;
+import com.zhexinit.yixiaotong.widget.ToolBar;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import butterknife.BindView;
+import butterknife.OnClick;
+
+/**
+ * Author:zhousx
+ * date:2018/11/5
+ * description:我的fragment
+ */
+public class UserFragment extends BaseFragment {
+    public static final String CHILD_ID="child_id";//向下页面传递的孩子的childId
+    @BindView(R.id.tool_bar)
+    ToolBar toolBar;
+    @BindView(R.id.text_phone)
+    TextView text_phone;
+    @BindView(R.id.text_my_child)
+    TextView text_my_child;
+    @BindView(R.id.img_head)
+    ImageView img_head;
+    @BindView(R.id.text_small_head)
+    TextView text_small_head;
+    @BindView(R.id.text_setting)
+    TextView text_setting;
+    @BindView(R.id.text_help)
+    TextView text_help;
+    @BindView(R.id.text_about)
+    TextView text_about;
+    @BindView(R.id.text_feedback)
+    TextView text_feedback;
+    @BindView(R.id.recycler_view)
+    RecyclerView recycleView;
+
+    private List<ChildResp> childList = new ArrayList<>();
+
+    public static UserFragment newInstance() {
+        Bundle args = new Bundle();
+        UserFragment fragment = new UserFragment();
+        fragment.setArguments(args);
+        return fragment;
+    }
+
+    @Override
+    protected int getLayoutId() {
+        return R.layout.fragment_user;
+    }
+
+    @Override
+    protected void init(Bundle savedInstanceState) {
+        toolBar.setTitle("我的");
+        setVectogram();
+
+        text_phone.setText(SharePerfUtils.getString(Constant.KEY.USER_PHONE_NUM));
+        initRecyclerView();
+
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        initUserInfo();
+    }
+
+    /**
+     * 设置页面item的矢量图和文字
+     */
+    private void setVectogram() {
+        Typeface icon = Typeface.createFromAsset(getContext().getAssets(), getResources().getString(R.string.tv_path));
+        text_about.setTypeface(icon);
+        text_feedback.setTypeface(icon);
+        text_help.setTypeface(icon);
+        text_setting.setTypeface(icon);
+        text_small_head.setTypeface(icon);
+    }
+
+    //初始化recycleView
+    CommonRecyclerAdapter adapter;
+
+    private void initRecyclerView() {
+        recycleView.setLayoutManager(new CanScrollLayoutManager(getActivity()));
+        adapter = new CommonRecyclerAdapter<ChildResp>(getContext(), childList, R.layout.item_child) {
+            @Override
+            public void convert(CommonRecyclerHolder holder, final ChildResp item, final int position) {
+                TextView name = holder.itemView.findViewById(R.id.text_name);
+                TextView school_class = holder.itemView.findViewById(R.id.text_class);
+                ImageView icon = holder.itemView.findViewById(R.id.img_head);
+                TextView text_device = holder.itemView.findViewById(R.id.text_device);
+                Power power = holder.itemView.findViewById(R.id.power);
+                power.setProgress(item.devicePower);
+                power.setVisibility(item.deviceStatus!=0 ? View.VISIBLE : View.GONE);
+                text_device.setSelected(item.devicePower > 20);
+                text_device.setText(item.deviceStatus!=0 ? item.devicePower + "%" : "未绑定校徽");
+
+                name.setText(item.childName);
+                school_class.setText(item.gradeInfo + item.classInfo + "（" + item.schoolName + "）");
+                Glide.with(getActivity())
+                        .load(item.icon)
+                        .diskCacheStrategy(DiskCacheStrategy.ALL)
+                        .error(getResources().getDrawable(item.primaryAccount?R.mipmap.ic_my_child_default:R.mipmap.ic_other_child_default))
+                        .transform(new GlideCricleTransform(getContext()))
+                        .into(icon);
+                holder.itemView.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        startActivity(new Intent(getContext(), ChildDetailActivity.class).putExtra(CHILD_ID, item.childId));
+                    }
+                });
+            }
+        };
+        recycleView.setAdapter(adapter);
+    }
+
+    private void initUserInfo() {
+        UserInfoResp infoResp = GsonUtil.getInstance().getGson()
+                .fromJson(SharePerfUtils.getString(Constant.KEY.USER_INFO), UserInfoResp.class);
+        if (infoResp == null) return;
+        childList.clear();
+        Glide.with(getActivity())
+                .load(infoResp.userIcon)
+                .diskCacheStrategy(DiskCacheStrategy.ALL)
+                .error(getResources().getDrawable(R.mipmap.ic_main_parent_default))
+                .transform(new GlideCricleTransform(getContext()))
+                .into(img_head);
+
+        text_phone.setText(SharePerfUtils.getString(Constant.KEY.USER_PHONE_NUM));
+        if (infoResp.userChildren!=null)childList.addAll(infoResp.userChildren);
+        adapter.notifyDataSetChanged();
+        if (infoResp.userChildren!=null && infoResp.userChildren.size() > 0) text_my_child.setText("我的孩子");
+        else text_my_child.setText("我的孩子  （未绑定孩子信息）");
+
+    }
+
+    @OnClick({R.id.relative_user, R.id.line_setting, R.id.line_about, R.id.line_help, R.id.line_feedback})
+    public void onClick(View v) {
+        switch (v.getId()) {
+            case R.id.relative_user:
+                startActivity(new Intent(getActivity(), PersonInfoActivity.class));
+                break;
+            case R.id.line_setting: //设置
+                startActivity(new Intent(getActivity(), SettingActivity.class));
+                break;
+            case R.id.line_help: //帮助中心
+                startActivity(new Intent(getActivity(), HelpCenterActivity.class));
+                break;
+            case R.id.line_about: //关于
+                startActivity(new Intent(getActivity(), AboutUsActivity.class));
+                break;
+            case R.id.line_feedback://意见反馈
+                startActivity(new Intent(getActivity(), FeedBackActivity.class));
+                break;
+        }
+    }
+
+}

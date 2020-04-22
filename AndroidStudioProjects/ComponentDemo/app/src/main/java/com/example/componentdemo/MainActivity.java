@@ -4,12 +4,15 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 
 import com.alibaba.android.arouter.launcher.ARouter;
 import com.example.commonbase.ServiceFactory;
 
 public class MainActivity extends AppCompatActivity {
+
+    private String TAG = this.getClass().getSimpleName();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -21,6 +24,7 @@ public class MainActivity extends AppCompatActivity {
                 login(pView);
             }
         });
+        Log.d(TAG, "onCreate: "+android.os.Process.myPid());
     }
 
     public void login(View pView){
@@ -35,6 +39,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void ad(View pView){
-
+        Intent intent = new Intent(this, TestActivity.class);
+        startActivity(intent);
     }
 }

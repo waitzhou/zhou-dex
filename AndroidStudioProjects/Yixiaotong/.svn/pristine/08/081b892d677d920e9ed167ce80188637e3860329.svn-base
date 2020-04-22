@@ -1,0 +1,29 @@
+package com.zhexinit.yixiaotong.function.mine.activity;
+
+import com.zhexinit.yixiaotong.R;
+import com.zhexinit.yixiaotong.base.BaseActivity;
+import com.zhexinit.yixiaotong.widget.ToolBar;
+
+import butterknife.BindView;
+
+/**
+ * Created by:xukun
+ * date:2018/11/12
+ * description: 意见反馈页面
+ */
+public class FeedBackActivity extends BaseActivity {
+    @BindView(R.id.tool_bar)
+    ToolBar toolBar;
+    @Override
+    protected int getLayoutId() {
+        return R.layout.activity_feedback;
+    }
+
+    @Override
+    protected void init() {
+        toolBar.setBackImage();
+        toolBar.back(this);
+        toolBar.setTitle("意见反馈");
+        toolBar.setRightTv("提交");
+    }
+}

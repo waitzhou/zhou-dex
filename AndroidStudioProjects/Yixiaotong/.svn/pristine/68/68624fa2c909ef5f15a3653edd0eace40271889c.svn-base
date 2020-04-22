@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="colorPrimary">#0E7EF5</color>
+    <color name="colorPrimaryDark">#0E7EF5</color>
+    <color name="colorAccent">#FF4081</color>
+
+    <color name="text_color1">#171717</color>
+    <color name="text_color">#333333</color>
+    <color name="text_color5">#555555</color>
+    <color name="text_color6">#666666</color>
+    <color name="text_color8">#8f8f8f</color>
+    <color name="text_color9">#999999</color>
+    <color name="text_color10">#aaaaaa</color>
+    <color name="text_colorb">#bbbbbb</color>
+    <color name="text_common">#333333</color>
+    <color name="text_d9">#d9d9d9</color>
+    <color name="text_green">#7ED321</color>
+    <color name="text_red">#FF6565</color>
+    <color name="text_yellow">#FAB611</color>
+    <color name="bg_red">#FFD7D7</color>
+    <color name="transport_red">#55FF6565</color>
+
+    <color name="gray_line">#edecec</color>
+    <color name="bg_color">#f5f5f5</color>
+
+    <color name="black">#000000</color>
+    <color name="white">#ffffff</color>
+    <color name="half_white">#ccffffff</color>
+    <color name="transport_bg">#b0000000</color>
+    <color name="transport_3">#30000000</color>
+    <color name="transport_8">#88cccccc</color>
+    <color name="transport_6">#6f000000</color>
+    <color name="transport_2">#22000000</color>
+    <color name="transport_line">#d0000000</color>
+    <color name="transport">#00000000</color>
+
+
+
+    <color name="theme_start_color">#026CDC</color>
+    <color name="theme_center_color">#0E7EF5</color>
+    <color name="theme_end_color">#695EFD</color>
+
+    <color name="start_purple">#E782F6</color>
+    <color name="end_purple">#CA4BEA</color>
+
+    <color name="start_shallow_blue">#7EE7FD</color>
+    <color name="end_shallow__blue">#43C8F8</color>
+
+    <color name="start_red">#FF9E9E</color>
+    <color name="end_red">#FF6565</color>
+    
+    <color name="start_blue">#A9ADFA</color>
+    <color name="end_blue">#7075F4</color>
+</resources>

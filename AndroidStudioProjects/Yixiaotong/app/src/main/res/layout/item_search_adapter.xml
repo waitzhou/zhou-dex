@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="horizontal"
+    android:layout_width="match_parent"
+    android:gravity="center_vertical"
+    android:paddingStart="24dp"
+    android:paddingEnd="24dp"
+    android:layout_height="54dp">
+
+    <TextView
+        android:id="@+id/item_tv_position"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/tv_location"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:lines="1"
+        android:ellipsize="end"
+        android:id="@+id/item_tv_address"
+        android:layout_marginStart="13dp"
+        android:layout_marginEnd="13dp"
+        android:text="杭州市城西银泰E座9楼"
+        android:textColor="@color/text_color9"/>
+
+</LinearLayout>

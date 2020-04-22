@@ -1,0 +1,15 @@
+<resources>
+
+    <style name="AppTheme" parent="BaseAppTheme" />
+        <!--<item name="android:windowTranslucentStatus">true</item>
+        <item name="android:fitsSystemWindows">true</item>
+        <item name="android:windowDrawsSystemBarBackgrounds">true</item>
+        <item name="android:statusBarColor">@color/colorPrimary</item>
+    </style>-->
+
+    <style name="fullStatus" parent="Theme.AppCompat.Light.NoActionBar" >
+        <item name="android:windowTranslucentStatus">true</item>
+        <item name="android:statusBarColor">@color/transport</item>
+    </style>
+
+</resources>

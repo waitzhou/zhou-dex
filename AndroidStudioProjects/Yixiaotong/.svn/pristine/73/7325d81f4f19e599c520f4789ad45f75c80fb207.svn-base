@@ -1,0 +1,280 @@
+package com.zhexinit.yixiaotong.rxjavamanager.http;
+
+import android.content.Context;
+import android.os.Handler;
+import android.os.Looper;
+import android.util.Log;
+
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.zhexinit.yixiaotong.BuildConfig;
+import com.zhexinit.yixiaotong.rxjavamanager.helper.RetrofitHelper;
+import com.zhexinit.yixiaotong.rxjavamanager.interfaces.Api;
+import com.zhexinit.yixiaotong.rxjavamanager.interfaces.DownloadListener;
+import com.zhexinit.yixiaotong.utils.encryptutil.SymmetricVerifyUtil;
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.lang.reflect.Field;
+import java.lang.reflect.Type;
+import java.util.HashMap;
+import java.util.Map;
+
+import io.reactivex.disposables.CompositeDisposable;
+import okhttp3.MediaType;
+import okhttp3.RequestBody;
+import okhttp3.ResponseBody;
+
+/**
+ * Author:@zhousx
+ * date: 2018/4/16/16:05.
+ * function :网络请求父类方法
+ */
+
+public class BaseHttpManager {
+
+    protected Gson mGson;
+    protected Context mContext;
+    protected Api mApi;
+    protected CompositeDisposable mCompositeDisposable;
+    private Handler mainHandler;
+
+    public BaseHttpManager(Context context) {
+        mGson = new GsonBuilder().setVersion(BuildConfig.VERSION_CODE).create();
+        mContext = context;
+        mCompositeDisposable = new CompositeDisposable();
+        mApi = RetrofitHelper.create(context).provideRetrofit(Api.class);
+        mainHandler = new Handler(Looper.getMainLooper());
+    }
+
+    public String TAG = BaseHttpManager.class.getSimpleName();
+
+
+    /**
+     * 将返回的结果进行Gson解析
+     */
+    public <T> T checkResponse(Object obj, Type type) {
+        if (obj == null) {
+            return (T) "response data is null";
+        } else if (type == String.class) {
+            return (T) mGson.toJson(obj);
+        } else {
+            if (obj instanceof String) {
+                String end = (String) obj;
+               // String end = new SymmetricVerifyUtil().getDescryptedParams(s);
+                Log.e(TAG, "checkResponse: " + end);
+                return mGson.fromJson(end, type);
+            } else {
+                String end = mGson.toJson(obj);
+                try {
+                    //String end = new SymmetricVerifyUtil().getDescryptedParams(s);
+                    Log.e(TAG, "checkResponse: " + end);
+                    return mGson.fromJson(end, type);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+            return (T) "";
+        }
+    }
+
+
+    /**
+     * 传入的obj对象
+     * 是否  增加key、sign参数
+     * <p>
+     * retrun string
+     */
+    protected String beanToString(Object o) {
+        Map map;
+        if (o == null) {
+            map = new HashMap();
+        } else {
+            if (o instanceof Map) {
+                map = (Map) o;
+            } else {
+                map = objectToMap(o);
+            }
+        }
+        if (map != null) {
+          /*  map.put("deviceId", Config.getAndroidID(mContext));
+            map.put("channel", "zx123");
+            map.put("appVersionCode", Config.getVersionCode(mContext));
+            map.put("root", Config.isRootSystem());
+            map.put("platform","android");*/
+
+            String s = mGson.toJson(map);
+            Log.e(TAG, "beanToString: "+s);
+            return s;
+            //return SymmetricVerifyUtil.encrypt(s);
+        }
+        return "";
+    }
+
+    /**
+     * obj添加key和sign后返回RequestBody
+     */
+    protected RequestBody objToRequestBody(Object obj) {
+        String str = beanToString(obj);
+        return RequestBody.create(MediaType.parse("application/json; charset=utf-8"), str);
+    }
+
+    /**
+     * obj添加key和sign后返回RequestBody
+     */
+    protected RequestBody mapToRequestBody(Map map) {
+        String str = beanToString(map);
+        return RequestBody.create(MediaType.parse("application/json; charset=utf-8"), str);
+    }
+
+
+    /**
+     * obj添加key和sign后返回RequestBody
+     */
+    protected RequestBody objToRequestBody(Object obj, Map map2) {
+        String str = beanToString(obj, map2);
+        return RequestBody.create(MediaType.parse("application/json; charset=utf-8"), str);
+    }
+
+    /**
+     * obj添加key和sign后返回RequestBody
+     */
+    protected RequestBody mapToRequestBody(Map map, Map map2) {
+        String str = beanToString(map, map2);
+        return RequestBody.create(MediaType.parse("application/json; charset=utf-8"), str);
+    }
+
+    /**
+     * 传入的obj对象
+     * 是否  增加key、sign参数
+     * <p>
+     * retrun string
+     */
+    protected String beanToString(Object o, Object o2) {
+        Map map;
+        if (o == null) {
+            map = new HashMap();
+        } else {
+            if (o instanceof Map) {
+                map = (Map) o;
+            } else {
+                map = objectToMap(o);
+            }
+        }
+        if (map != null) {
+            /*map.put("deviceId", Config.getAndroidID(mContext));
+            map.put("channel", "zx123");
+            map.put("appVersionCode", Config.getVersionCode(mContext));
+            map.put("root", Config.isRootSystem());
+            map.put("platform","android");*/
+            String s = mGson.toJson(map);
+            Log.e(TAG, "beanToString: "+s);
+            try {
+                String str = SymmetricVerifyUtil.encrypt(s);
+
+                return appendSuffix(str, o2);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        return "";
+    }
+
+    private String appendSuffix(String str, Object o) {
+        StringBuilder sb = new StringBuilder(str);
+        Map<String, String> map = null;
+        if (o == null) {
+            map = new HashMap<>();
+        } else {
+            if (o instanceof Map) {
+                map = (Map) o;
+            } else {
+                map = objectToMap(o);
+            }
+        }
+        if (map != null && map.size() != 0) {
+            for (String key : map.keySet()) {
+                sb.append("&").append(key).append("=").append(map.get(key));
+            }
+            return sb.toString();
+        }
+        return "";
+    }
+
+    /**
+     * 获取利用反射获取类里面的值和名称
+     *
+     * @param obj
+     * @return
+     * @throws IllegalAccessException
+     */
+    public Map<String, String> objectToMap(Object obj) {
+        Map<String, String> map = new HashMap<>();
+        Class<?> clazz = obj.getClass();
+        for (Field field : clazz.getDeclaredFields()) {
+            if (field == null) {
+                return null;
+            }
+            field.setAccessible(true);
+            String fieldName = field.getName();
+            String value = null;
+            try {
+                if (field.get(obj) != null)
+                    value = field.get(obj).toString();
+                else
+                    value = "";
+            } catch (IllegalAccessException e) {
+                e.printStackTrace();
+            }
+            map.put(fieldName, value);
+        }
+        return map;
+    }
+
+    /**
+     * 保存文件到本地
+     */
+    public File saveFile(ResponseBody response, String destFileDir, String destFileName,
+                         final DownloadListener listener) {
+        InputStream is = null;
+        byte[] buf = new byte[2048];
+        int len = 0;
+        FileOutputStream fos = null;
+        try {
+            is = response.byteStream();
+            long sum = 0;
+            File dir = new File(destFileDir);
+            if (!dir.exists()) {
+                dir.mkdirs();
+            }
+            File file = new File(dir, destFileName);
+            fos = new FileOutputStream(file);
+            while ((len = is.read(buf)) != -1) {
+                sum += len;
+                fos.write(buf, 0, len);
+            }
+            mainHandler.post(new Runnable() {
+                @Override
+                public void run() {
+                    listener.downloadFinish();
+                }
+            });
+            fos.flush();
+            return file;
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (NullPointerException e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                if (is != null) is.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        return null;
+    }
+}

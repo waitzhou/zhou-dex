@@ -1,0 +1,25 @@
+package com.zhexinit.yixiaotong.function.map.entity.resp;
+
+import java.util.List;
+
+/**
+ * Author:zhousx
+ * date:2018/11/20
+ * description:位置返回数据
+ */
+public class PositionResp {
+
+    public String deviceId;//": "1561",
+    public int devicePower;//": 99,
+    public double longitude;//": 120.1637,
+    public double latitude;//": 30.2628,
+    public int powerSavingType;//": 1,   省电类型 1：省电模式开启 2：省电模式关闭
+    public String address;//": "浙江省杭州市下城区武林街道延安路浙江二轻大厦",
+    public String freshTime;//": "2018-11-20 16:12:59",
+    public String durationTime;//": "5"
+
+    public String childName;
+    public String childIcon;
+    public boolean primaryAccount;//是否是主账号
+    public int deviceNumber;
+}

@@ -1,0 +1,160 @@
+package com.zhexinit.yixiaotong.widget;
+
+import android.app.Activity;
+import android.graphics.drawable.ColorDrawable;
+import android.os.Build;
+import android.support.v4.content.ContextCompat;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
+import android.view.Gravity;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.view.WindowManager;
+import android.widget.PopupWindow;
+import android.widget.RadioButton;
+import android.widget.TextView;
+
+import com.zhexinit.yixiaotong.R;
+import com.zhexinit.yixiaotong.base.Constant;
+import com.zhexinit.yixiaotong.function.mine.entity.UserInfoResp;
+import com.zhexinit.yixiaotong.function.mine.entity.ChildResp;
+import com.zhexinit.yixiaotong.utils.DipUtils;
+import com.zhexinit.yixiaotong.utils.GsonUtil;
+import com.zhexinit.yixiaotong.utils.RecyclerViewDivider;
+import com.zhexinit.yixiaotong.utils.SharePerfUtils;
+import com.zhexinit.yixiaotong.utils.StatusBarCompat;
+import com.zhexinit.yixiaotong.utils.commonAdapter.CommonRecyclerAdapter;
+import com.zhexinit.yixiaotong.utils.commonAdapter.CommonRecyclerHolder;
+
+import java.util.List;
+
+/**
+ * Author:zhousx
+ * date:2018/11/20
+ * description:
+ */
+public class ShowChildListPopupWindow extends PopupWindow {
+
+
+    private Activity mActivity;
+    private View mView;
+    private List<ChildResp> mRespList;
+    private int mSelectPosition;
+    private PopupItemSelectListener mPopupItemSelectListener;
+    private int topMargin;
+
+    public ShowChildListPopupWindow(Activity activity, View view, List<ChildResp> resps, int selectPosition, PopupItemSelectListener listener) {
+        mActivity = activity;
+        mView = view;
+        this.mRespList = resps;
+        this.mPopupItemSelectListener = listener;
+        this.mSelectPosition = selectPosition;
+        findView();
+    }
+
+    public ShowChildListPopupWindow(Activity activity, View view, List<ChildResp> resps, int selectPosition,int topMargin, PopupItemSelectListener listener) {
+        mActivity = activity;
+        mView = view;
+        this.topMargin = topMargin;
+        this.mRespList = resps;
+        this.mPopupItemSelectListener = listener;
+        this.mSelectPosition = selectPosition;
+        findView();
+    }
+
+    public ShowChildListPopupWindow(Activity activity, View view, int selectPosition, PopupItemSelectListener listener) {
+        UserInfoResp infoResp = GsonUtil.getInstance().getGson().fromJson(SharePerfUtils.getString(Constant.KEY.USER_INFO), UserInfoResp.class);
+        mActivity = activity;
+        mView = view;
+        this.mSelectPosition = selectPosition;
+        this.mPopupItemSelectListener = listener;
+        if (infoResp != null)
+            this.mRespList = infoResp.userChildren;
+        findView();
+    }
+
+    public ShowChildListPopupWindow(Activity activity, View view, int selectPosition, int topMargin, PopupItemSelectListener listener) {
+        UserInfoResp infoResp = GsonUtil.getInstance().getGson().fromJson(SharePerfUtils.getString(Constant.KEY.USER_INFO), UserInfoResp.class);
+        mActivity = activity;
+        mView = view;
+        this.mSelectPosition = selectPosition;
+        this.mPopupItemSelectListener = listener;
+        this.topMargin = topMargin;
+        if (infoResp != null)
+            this.mRespList = infoResp.userChildren;
+        findView();
+    }
+
+    private void findView() {
+        View contentView = LayoutInflater.from(mActivity).inflate(R.layout.popup_window_child_list, null);
+        setHeight(ViewGroup.LayoutParams.WRAP_CONTENT);
+        setWidth(ViewGroup.LayoutParams.WRAP_CONTENT);
+        setContentView(contentView);
+        setBackgroundDrawable(new ColorDrawable());
+        setOutsideTouchable(true);
+        setFocusable(true);
+        setOnDismissListener(new OnDismissListener() {
+            @Override
+            public void onDismiss() {
+                popupDismiss();
+            }
+        });
+        RecyclerView recyclerView = contentView.findViewById(R.id.item_recyclerView);
+        recyclerView.setLayoutManager(new LinearLayoutManager(mActivity));
+        RecyclerViewDivider divider = new RecyclerViewDivider(mActivity);
+        divider.setLineColor(R.color.gray_line);
+        recyclerView.addItemDecoration(divider);
+        recyclerView.setAdapter(new CommonRecyclerAdapter<ChildResp>(mActivity, mRespList, R.layout.popup_window_item_child) {
+            @Override
+            public void convert(CommonRecyclerHolder holder, final ChildResp item, final int position) {
+                TextView tv = holder.getView(R.id.item_tv);
+
+                holder.setText(R.id.item_tv, item.childName);
+                //radioButton.setChecked(mSelectPosition == position);
+                if (mSelectPosition == position) {
+                    tv.setTextColor(ContextCompat.getColor(mContext, R.color.theme_center_color));
+                } else {
+                    tv.setTextColor(ContextCompat.getColor(mContext, R.color.text_color9));
+                }
+                holder.mItemView.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        mPopupItemSelectListener.popupItemSelectListener(position, item.deviceId);
+                        dismiss();
+                    }
+                });
+            }
+        });
+    }
+
+    public void popupDismiss() {
+        setWindowAlpha(1f);
+    }
+
+    public void setWindowAlpha(float alpha) {
+        WindowManager.LayoutParams layoutParams = mActivity.getWindow().getAttributes();
+        layoutParams.alpha = alpha;
+        mActivity.getWindow().setAttributes(layoutParams);
+    }
+
+    public void show() {
+        setWindowAlpha(0.7f);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+            showAtLocation(mView, Gravity.CENTER_HORIZONTAL | Gravity.TOP, 0,
+                    topMargin == 0
+                            ? StatusBarCompat.getStatusBarHeight(mActivity) + DipUtils.dip2px(mActivity, 40)
+                            :  StatusBarCompat.getStatusBarHeight(mActivity) + DipUtils.dip2px(mActivity, topMargin) );
+        } else {
+            showAtLocation(mView, Gravity.CENTER_HORIZONTAL | Gravity.TOP, 0,
+                    topMargin == 0
+                            ? DipUtils.dip2px(mActivity, 40)
+                            : DipUtils.dip2px(mActivity, topMargin) );
+        }
+    }
+
+    public interface PopupItemSelectListener {
+        void popupItemSelectListener(int position, String deviceId);
+    }
+
+}

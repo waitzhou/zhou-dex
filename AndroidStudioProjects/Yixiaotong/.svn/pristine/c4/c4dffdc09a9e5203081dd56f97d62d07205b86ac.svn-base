@@ -1,0 +1,183 @@
+package com.zhexinit.yixiaotong.function.mine.activity;
+
+import android.content.Intent;
+import android.graphics.Rect;
+import android.graphics.Typeface;
+import android.text.Editable;
+import android.text.TextUtils;
+import android.text.TextWatcher;
+import android.view.View;
+import android.view.ViewTreeObserver;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.LinearLayout;
+import android.widget.TextView;
+
+import com.google.gson.Gson;
+import com.zhexinit.yixiaotong.R;
+import com.zhexinit.yixiaotong.base.BaseActivity;
+import com.zhexinit.yixiaotong.base.Constant;
+import com.zhexinit.yixiaotong.function.BaseResp;
+import com.zhexinit.yixiaotong.function.UserWarehouse;
+import com.zhexinit.yixiaotong.function.home.MainActivity;
+import com.zhexinit.yixiaotong.function.mine.entity.LoginSuccessResp;
+import com.zhexinit.yixiaotong.function.mine.entity.UserInfoResp;
+import com.zhexinit.yixiaotong.rxjavamanager.interfaces.ResultCallBack;
+import com.zhexinit.yixiaotong.utils.ActivityManagerUtil;
+import com.zhexinit.yixiaotong.utils.DipUtils;
+import com.zhexinit.yixiaotong.utils.SharePerfUtils;
+
+import java.util.HashMap;
+import java.util.Map;
+
+
+/**
+ * Created by:xukun
+ * date:2018/11/5
+ * description: 密码登录
+ */
+public class LoginWithPasActivity extends BaseActivity implements View.OnClickListener {
+
+    private EditText edit_phone, edit_password;
+    private Button but_enter;
+    private LinearLayout root_view;
+
+    @Override
+    protected int getLayoutId() {
+        return R.layout.activity_login_pasword;
+    }
+
+    @Override
+    protected void init() {
+        edit_phone = findViewById(R.id.edit_phone);
+        edit_password = findViewById(R.id.edit_pas);
+        but_enter = findViewById(R.id.but_enter);
+        root_view = findViewById(R.id.root_view);
+        but_enter.setOnClickListener(this);
+        findViewById(R.id.text_forget).setOnClickListener(this);
+
+        Typeface icon = Typeface.createFromAsset(getAssets(), getResources().getString(R.string.tv_path));
+        TextView textview = findViewById(R.id.iv_back);
+        textview.setTypeface(icon);
+        textview.setOnClickListener(this);
+        edit_phone.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                if (s.length()==11)edit_password.requestFocus();
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+
+            }
+        });
+        edit_password.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                but_enter.setSelected(s.length() >= 6);
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+            }
+        });
+        addLayoutListener(root_view,but_enter);
+    }
+
+    @Override
+    public void onClick(View v) {
+        switch (v.getId()) {
+            case R.id.iv_back:
+                finish();
+                break;
+            case R.id.but_enter:
+                if (TextUtils.isEmpty(edit_phone.getText())) {
+                    showToast("请输入手机号");
+                } else if (edit_password.getText().length()<6) {
+                    showToast("请输入正确6-16位密码");
+                } else
+                    doLogin();
+                break;
+            case R.id.text_forget:
+                finish();
+                break;
+        }
+    }
+
+    /**
+     * 密码登录
+     */
+    private void doLogin() {
+        showProgressDialog();
+        Map<String, Object> map = new HashMap<>();
+        map.put("mobile", edit_phone.getText().toString());
+        map.put("password", edit_password.getText().toString());
+        UserWarehouse.getInstance(this).loginWithPassword(map, new ResultCallBack<BaseResp<LoginSuccessResp>>() {
+            @Override
+            public void onSuccess(BaseResp<LoginSuccessResp> baseResp) {
+                if (baseResp.code == 0) {
+                    SharePerfUtils.putString(Constant.KEY.USER_PHONE_NUM,edit_phone.getText().toString());
+                    SharePerfUtils.putString(Constant.KEY.INIT_INFO,new Gson().toJson(baseResp.result));
+                    SharePerfUtils.putString(Constant.KEY.USER_TOKEN,baseResp.result.token);
+                    getUserInfo();
+                } else showToast(baseResp.message);
+                hideProgressDialog();
+            }
+
+            @Override
+            public void onFail(String response) {
+                hideProgressDialog();
+            }
+        });
+    }
+
+    /**
+     * 获取用户信息
+     */
+    private void getUserInfo() {
+        UserWarehouse.getInstance(this).getUserInfo(new HashMap(), new ResultCallBack<BaseResp<UserInfoResp>>() {
+            @Override
+            public void onSuccess(BaseResp<UserInfoResp> userInfoResp) {
+                if (userInfoResp.code == 0) {
+                    SharePerfUtils.putString(Constant.KEY.USER_INFO,new Gson().toJson(userInfoResp.result));
+                    ActivityManagerUtil.getAppManager().finishAllActivity();
+                    startActivity(new Intent(LoginWithPasActivity.this,MainActivity.class));
+                } else showToast(userInfoResp.message);
+                hideProgressDialog();
+            }
+
+            @Override
+            public void onFail(String response) {
+                showToast(response);
+            }
+        });
+    }
+
+    private void addLayoutListener(final View root, final View lastView) {
+        root.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
+            @Override
+            public void onGlobalLayout() {
+                Rect rect = new Rect();
+                root.getWindowVisibleDisplayFrame(rect);
+                int rootInvisiableHeight = root.getRootView().getHeight() - rect.bottom;
+                if (rootInvisiableHeight > DipUtils.getScreenHeight(LoginWithPasActivity.this) / 4) {
+                    int[] location = new int[2];
+                    lastView.getLocationInWindow(location);
+                    int scrollHeight = location[1] + lastView.getHeight() - rect.bottom;
+                    root.scrollTo(0, scrollHeight);
+                } else {
+                    root.scrollTo(0, 0);
+                }
+            }
+        });
+    }
+}

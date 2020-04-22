@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:gravity="center"
+    android:layout_height="match_parent">
+
+
+    <FrameLayout
+        android:id="@+id/home_content"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/home_line_color"/>
+
+    <RadioGroup
+        android:id="@+id/home_radio_group"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:paddingTop="6dp"
+        android:background="@color/home_white"
+        android:orientation="horizontal">
+
+        <RadioButton
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:button="@null"
+            android:drawableTop="@drawable/home_selector_home"
+            android:text="@string/home_label1"
+            android:textColor="@color/home_press_text"
+            android:textSize="12sp"
+            android:gravity="center"
+            android:drawablePadding="3dp"
+            android:layout_weight="1"/>
+
+        <RadioButton
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:button="@null"
+            android:drawableTop="@drawable/home_selector_classification"
+            android:text="@string/home_label2"
+            android:textColor="@color/home_press_text"
+            android:textSize="12sp"
+            android:gravity="center"
+            android:drawablePadding="3dp"
+            android:layout_weight="1"/>
+
+        <RadioButton
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:drawableTop="@drawable/home_selector_search"
+            android:button="@null"
+            android:text="@string/home_label3"
+            android:textColor="@color/home_press_text"
+            android:textSize="12sp"
+            android:gravity="center"
+            android:drawablePadding="3dp"
+            android:layout_weight="1"/>
+
+        <RadioButton
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:drawableTop="@drawable/home_selector_user"
+            android:button="@null"
+            android:text="@string/home_label4"
+            android:textColor="@color/home_press_text"
+            android:textSize="12sp"
+            android:gravity="center"
+            android:drawablePadding="3dp"
+            android:layout_weight="1"/>
+
+    </RadioGroup>
+</LinearLayout>

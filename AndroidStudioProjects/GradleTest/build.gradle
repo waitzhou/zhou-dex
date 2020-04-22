@@ -13,6 +13,7 @@ buildscript {
     dependencies {
         println("project   dependencies")
         classpath 'com.android.tools.build:gradle:3.4.1'
+
         //classpath 'com.zsx.plugin:firstplugin:1.0.1'
 
         // NOTE: Do not place your application dependencies here; they belong
@@ -39,10 +40,49 @@ task clean(type: Delete) {
     //havefun()
 }
 
-task(gradleTestzsx).doLast{
-    println("project   gradleTestzsx")
-    println "start gradle test"
-    havefun()
+gradle.addBuildListener(new BuildListener() {
+    @Override
+    void buildStarted(Gradle gradle) {
+        println('构建开始')
+    }
+
+    @Override
+    void settingsEvaluated(Settings settings) {
+        println('settings 文件解析完成')
+    }
+
+    @Override
+    void projectsLoaded(Gradle gradle) {
+        println('项目加载完成')
+        gradle.rootProject.subprojects.each { pro ->
+            pro.beforeEvaluate {
+                println("${pro.name} 项目配置之前调用")
+            }
+            pro.afterEvaluate{
+                println("${pro.name} 项目配置之后调用")
+            }
+        }
+    }
+
+    @Override
+    void projectsEvaluated(Gradle gradle) {
+        println('项目解析完成')
+
+    }
+
+    @Override
+    void buildFinished(BuildResult result) {
+        println('构建完成')
+    }
+})
+
+task gradleTestzsx{
+    group 'gradleTestzsx'
+    doLast {
+        println("project   gradleTestzsx")
+        println "start gradle test.txt"
+        havefun()
+    }
 }
 
 def havefun(){
@@ -57,7 +97,7 @@ def havefun(){
  * 操作文件
  * */
 def fileTest(){
-    def file = new File("test")
+    def file = new File("test.txt")
     file.eachLine{line,lineNo->
         println "${lineNo}  ${line}"
     }

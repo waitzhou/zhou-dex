@@ -9,6 +9,7 @@ import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AlertDialog;
@@ -25,7 +26,7 @@ import java.io.File;
 public class MainActivity extends AppCompatActivity {
 
     private static final int PERMISSION_REQUEST_CODE_STORAGE = 2018;
-    String apkName = "com.example.classifacationplugin_20191101114123.apk";
+    String apkName = "com.example.classifacationplugin_20191227094915.apk";
 
     String TAG = "MainActivity";
 

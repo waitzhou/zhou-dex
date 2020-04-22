@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical">
+
+    <TextView
+        android:id="@+id/item_tv_month"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:layout_marginBottom="15dp"
+        android:textColor="@color/text_color9"
+        android:gravity="center"
+        android:text="本月请假"/>
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="6dp"
+        android:layout_marginLeft="12dp"
+        android:layout_marginRight="12dp"
+        android:layout_marginTop="6dp"
+        android:background="@drawable/bg_radius6_white"
+        android:elevation="@dimen/elevation_height">
+
+        <ImageView
+            android:id="@+id/item_iv"
+            android:layout_width="45dp"
+            android:layout_height="45dp"
+            android:layout_centerVertical="true"
+            android:layout_marginLeft="22dp"
+            android:src="@mipmap/ic_my_child_default" />
+
+
+        <TextView
+            android:id="@+id/item_tv_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="22dp"
+            android:layout_marginTop="20dp"
+            android:layout_toRightOf="@id/item_iv"
+            android:text="陈安之的请假"
+            android:maxWidth="120dp"
+            android:ellipsize="end"
+            android:singleLine="true"
+            android:textColor="@color/text_color"
+            android:textSize="16sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/item_tv_start_time"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignLeft="@id/item_tv_title"
+            android:layout_below="@id/item_tv_title"
+            android:layout_marginTop="12dp"
+            android:text="开始时间：2018-11-03 09:00"
+            android:textColor="@color/text_color9" />
+
+        <TextView
+            android:id="@+id/item_tv_end_time"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignLeft="@id/item_tv_title"
+            android:layout_below="@id/item_tv_start_time"
+            android:layout_marginTop="12dp"
+            android:text="结束时间：2018-11-03 09:00"
+            android:textColor="@color/text_color9" />
+
+        <TextView
+            android:id="@+id/item_tv_desc"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignLeft="@id/item_tv_title"
+            android:layout_below="@id/item_tv_end_time"
+            android:layout_marginBottom="20dp"
+            android:layout_marginTop="8dp"
+            android:text="班主任-赵老师 审批中…"
+            android:textColor="@color/text_color9"
+            android:textSize="16sp" />
+
+        <TextView
+            android:id="@+id/item_tv_time"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignBottom="@id/item_tv_title"
+            android:layout_alignParentEnd="true"
+            android:layout_marginEnd="22dp"
+            android:text="五小时前"
+            android:textColor="@color/text_color9" />
+
+    </RelativeLayout>
+
+</LinearLayout>

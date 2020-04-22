@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/bg_color"
+    android:orientation="vertical">
+
+    <include layout="@layout/layout_toolbar"/>
+    <com.scwang.smartrefresh.layout.SmartRefreshLayout
+        android:id="@+id/smart_refresh"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+        <android.support.v7.widget.RecyclerView
+            android:layout_marginTop="10dp"
+            android:id="@+id/recycler_view"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+        </android.support.v7.widget.RecyclerView>
+
+        <LinearLayout
+            android:layout_marginTop="1dp"
+            android:id="@+id/line_add_parent"
+            style="@style/linearLayout_item"
+            android:gravity="center">
+            <TextView
+                android:id="@+id/text_add"
+                style="@style/child_text"
+                android:textColor="#0E7EF5"
+                android:text="@string/tv_add"/>
+            <TextView
+                style="@style/child_text"
+                android:textColor="#0E7EF5"
+                android:layout_marginLeft="12dp"
+                android:text="添加家长" />
+        </LinearLayout>
+    </LinearLayout>
+    </ScrollView>
+    </com.scwang.smartrefresh.layout.SmartRefreshLayout>
+</LinearLayout>

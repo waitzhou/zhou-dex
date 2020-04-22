@@ -1,0 +1,148 @@
+package com.zhexinit.yixiaotong.function.mine.activity;
+
+import android.text.TextUtils;
+import android.view.View;
+import android.widget.EditText;
+import android.widget.TextView;
+
+import com.zhexinit.yixiaotong.R;
+import com.zhexinit.yixiaotong.base.BaseActivity;
+import com.zhexinit.yixiaotong.base.Constant;
+import com.zhexinit.yixiaotong.function.BaseResp;
+import com.zhexinit.yixiaotong.function.UserWarehouse;
+import com.zhexinit.yixiaotong.rxjavamanager.interfaces.ResultCallBack;
+import com.zhexinit.yixiaotong.utils.SharePerfUtils;
+import com.zhexinit.yixiaotong.utils.TimerCount;
+import com.zhexinit.yixiaotong.widget.ToolBar;
+
+import java.util.HashMap;
+import java.util.Map;
+
+import butterknife.BindView;
+import butterknife.OnClick;
+
+/**
+ * Created by:xukun
+ * date:2018/11/6
+ * description: 设置或修改密码页面
+ */
+public class UpdatePassWActivity extends BaseActivity {
+    @BindView(R.id.tool_bar)
+    ToolBar toolBar;
+    @BindView(R.id.text_phone)
+    TextView text_phone;
+    @BindView(R.id.text_send_sms)
+    TextView text_send_sms;
+    @BindView(R.id.edit_sms)
+    EditText edit_sms;
+    @BindView(R.id.edit_pas)
+    EditText edit_pas;
+    @BindView(R.id.edit_sure_pas)
+    EditText edit_sure_pas;
+    private String phoneNumber;
+    private TimerCount timeCount;
+
+    boolean existPassword;
+    @Override
+    protected int getLayoutId() {
+        return R.layout.activity_change_password;
+    }
+
+    @Override
+    protected void init() {
+        existPassword=getIntent().getBooleanExtra("existPassword",true);
+        initToolbar();
+        timeCount = new TimerCount(text_send_sms,true);
+        phoneNumber = SharePerfUtils.getString(Constant.KEY.USER_PHONE_NUM);
+        text_phone.setText(phoneNumber);
+    }
+
+    private void initToolbar() {
+        toolBar.setBackImage();
+        toolBar.back(this);
+        toolBar.setTitle(existPassword?"修改密码":"设置密码");
+        toolBar.setRightTv("确认");
+        toolBar.setRightTvClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (TextUtils.isEmpty(edit_pas.getText().toString()) || edit_pas.getText().length()<6) {
+                    showToast("请输入6-16位有效密码");
+                } else if (TextUtils.isEmpty(edit_sure_pas.getText().toString())) {
+                    showToast("请再次输入修改的密码");
+                } else if (!edit_sure_pas.getText().toString().trim().equals
+                        (edit_pas.getText().toString().trim())) {
+                    showToast("两次输入的密码不一致");
+                } else if (edit_sms.getText().toString().trim().length() != 6) {
+                    showToast("请输入6位数验证码");
+                } else
+                    updatePassWord();
+            }
+        });
+    }
+
+    @OnClick({R.id.text_send_sms})
+    public void onClick(View v) {
+        switch (v.getId()) {
+            case R.id.text_send_sms:
+                if (TextUtils.isEmpty(text_phone.getText().toString()))return;
+                timeCount.start();
+                getSms();
+                break;
+        }
+    }
+
+    /**
+     * 获取手机验证码
+     */
+    private void getSms() {
+        Map<String, Object> map = new HashMap<>();
+        map.put("mobile", text_phone.getText().toString());
+        UserWarehouse.getInstance(this).getLoginSmsCode(map, new ResultCallBack<BaseResp>() {
+            @Override
+            public void onSuccess(BaseResp baseResp) {
+                if (baseResp.code != 0) {
+                    showToast(baseResp.message);
+                    timeCount.cancel();
+                }
+            }
+
+            @Override
+            public void onFail(String response) {
+                showToast(response);
+                timeCount.cancel();
+            }
+        });
+    }
+
+    /**
+     * 设置或者修改密码接口
+     */
+    private void updatePassWord() {
+        showProgressDialog();
+        Map<String, String> map = new HashMap<>();
+        map.put("mobile", phoneNumber);
+        map.put("verifyCode", edit_sms.getText().toString());
+        map.put("newPassword", edit_pas.getText().toString());
+        UserWarehouse.getInstance(this).updatePassword(map, new ResultCallBack<BaseResp>() {
+            @Override
+            public void onSuccess(BaseResp baseResp) {
+                hideProgressDialog();
+                if (baseResp.code == 0) {
+                    finish();
+                }
+                showToast(baseResp.message);
+            }
+
+            @Override
+            public void onFail(String response) {
+                hideProgressDialog();
+            }
+        });
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        timeCount.cancel();
+    }
+}

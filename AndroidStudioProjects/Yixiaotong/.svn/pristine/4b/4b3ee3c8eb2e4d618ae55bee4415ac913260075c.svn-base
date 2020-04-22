@@ -1,0 +1,114 @@
+package com.zhexinit.yixiaotong.function.home.activity;
+
+import android.support.v4.content.ContextCompat;
+import android.view.View;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.TextView;
+
+import com.bumptech.glide.Glide;
+import com.google.gson.Gson;
+import com.zhexinit.yixiaotong.R;
+import com.zhexinit.yixiaotong.base.BaseActivity;
+import com.zhexinit.yixiaotong.function.home.entity.resp.VacateResp;
+import com.zhexinit.yixiaotong.utils.StringUtils;
+import com.zhexinit.yixiaotong.widget.ToolBar;
+
+import butterknife.BindView;
+
+/**
+ * Author:zhousx
+ * date:2018/11/8
+ * description:请假详情界面
+ */
+public class VacateDetailActivity extends BaseActivity {
+
+    @BindView(R.id.tool_bar)
+    ToolBar mToolBar;
+    @BindView(R.id.tv_apply_man)
+    TextView tvApplyMan;
+    @BindView(R.id.tv_apply_type)
+    TextView tvApplyType;
+    @BindView(R.id.tv_start_time)
+    TextView tvStartTime;
+    @BindView(R.id.tv_end_time)
+    TextView tvEndTime;
+    @BindView(R.id.tv_reason)
+    TextView tvReason;
+    @BindView(R.id.iv_image)
+    ImageView ivImage;
+    @BindView(R.id.tv_manage)
+    TextView tvManage;
+    @BindView(R.id.tv_refuse_reason)
+    TextView tvRefuseReason;
+    @BindView(R.id.ll_refuse_reason)
+    LinearLayout llRefuseReason;
+    @BindView(R.id.line_reason)
+    View line;
+    VacateResp mResp;
+
+    @Override
+    protected int getLayoutId() {
+        return R.layout.activity_vacate_detail;
+    }
+
+    @Override
+    protected void init() {
+
+        initData();
+        initToolbar();
+        setContent();
+    }
+
+    private void initData() {
+        String str = getIntent().getStringExtra("item");
+        mResp = new Gson().fromJson(str, VacateResp.class);
+    }
+
+    private void setContent() {
+        tvApplyMan.setText(mResp.childName);
+        tvApplyType.setText(mResp.leaveType == 1 ? "事假" : "病假");
+        tvStartTime.setText(StringUtils.longToDate(mResp.longStartTime, "yyyy-MM-dd HH:mm"));
+        tvEndTime.setText(StringUtils.longToDate(mResp.longEndTime, "yyyy-MM-dd HH:mm"));
+        tvReason.setText(mResp.leaveContent);
+        if (mResp.leaveImage == null || mResp.leaveImage.isEmpty()) {
+            ivImage.setVisibility(View.GONE);
+        } else {
+            Glide.with(this)
+                    .load(mResp.leaveImage)
+                    .centerCrop()
+                    .into(ivImage);
+        }
+        setTextStatus(tvManage, mResp.status);
+        if (mResp.status == 3 && !mResp.refuseReason.isEmpty())
+            tvRefuseReason.setText(mResp.refuseReason);
+        else {
+            line.setVisibility(View.GONE);
+            llRefuseReason.setVisibility(View.GONE);
+        }
+    }
+
+    private void setTextStatus(TextView tv, int status) {
+        switch (status) {
+            case 2:
+                tv.setText("审批通过");
+                tv.setTextColor(ContextCompat.getColor(this, R.color.text_green));
+                break;
+            case 1:
+                tv.setText("审批中");
+                tv.setTextColor(ContextCompat.getColor(this, R.color.text_yellow));
+                break;
+            case 3:
+                tv.setText("拒绝");
+                tv.setTextColor(ContextCompat.getColor(this, R.color.text_red));
+                break;
+        }
+    }
+
+    private void initToolbar() {
+        mToolBar.setTitle(mResp.childName.concat("的请假"));
+        mToolBar.setBackImage();
+        mToolBar.back(this);
+    }
+
+}

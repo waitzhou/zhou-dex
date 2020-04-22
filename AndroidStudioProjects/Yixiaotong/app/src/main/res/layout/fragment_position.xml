@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:background="@color/white">
+
+    <include
+        android:id="@+id/tool_bar"
+        layout="@layout/layout_toolbar" />
+
+    <com.amap.api.maps.TextureMapView
+        android:id="@+id/map_view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_above="@+id/rl_holder"
+        android:layout_below="@id/tool_bar"
+        android:background="@color/bg_color" />
+
+    <RelativeLayout
+        android:id="@+id/rl_holder"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:background="@color/white"
+        xmlns:tools="http://schemas.android.com/tools"
+        android:paddingStart="27dp"
+        android:paddingEnd="22dp"
+        android:paddingTop="20dp"
+        android:paddingBottom="20dp">
+
+        <TextView
+            android:id="@+id/tv_name"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@color/text_color"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            tools:text="城西银泰" />
+
+        <TextView
+            android:id="@+id/tv_update_time"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/tv_name"
+            android:layout_alignLeft="@+id/tv_name"
+            android:layout_marginTop="10dp"
+            android:ellipsize="end"
+            android:maxLines="2"
+            android:textColor="@color/text_color9"
+            tools:text="更新于 2018年11月7日 15:12:54" />
+
+        <TextView
+            android:id="@+id/tv_electric_percent"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/tv_update_time"
+            android:layout_marginTop="25dp"
+            android:textColor="@color/text_green"
+            tools:text="100%" />
+
+        <ProgressBar
+            android:id="@+id/progress_bar_ele"
+            style="@style/Base.Widget.AppCompat.ProgressBar.Horizontal"
+            android:layout_width="31dp"
+            android:layout_height="12dp"
+            android:progress="0"
+            tools:progressDrawable="@mipmap/ic_high_electric"
+            android:layout_alignTop="@+id/tv_electric_percent"
+            android:layout_marginTop="3dp"
+            android:layout_toEndOf="@+id/tv_electric_percent"
+            android:layout_marginStart="9dp"/>
+
+        <TextView
+            android:id="@+id/tv_electric_life"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignBottom="@+id/tv_electric_percent"
+            android:layout_toEndOf="@+id/progress_bar_ele"
+            android:layout_marginStart="12dp"
+            android:textColor="@color/text_green"
+            tools:text="预计可续航1小时"/>
+
+        <TextView
+            android:id="@+id/tv_address"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/tv_electric_percent"
+            android:textColor="@color/text_color9"
+            android:layout_marginTop="12dp"
+            android:maxLines="2"
+            android:lineSpacingExtra="3dp"
+            tools:text="杭州市拱墅区紫金港路22号浙江大学西门的对的打的面正新鸡排门口"/>
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_alignParentEnd="true">
+
+            <CheckBox
+                android:id="@+id/chb_safe_area"
+                android:layout_width="80dp"
+                android:layout_height="34dp"
+                android:layout_marginBottom="5dp"
+                android:layout_marginStart="3dp"
+                android:checked="false"
+                android:paddingLeft="12dp"
+                android:paddingRight="12dp"
+                android:button="@null"
+                android:elevation="@dimen/elevation_height"
+                android:textSize="12sp"
+                android:background="@drawable/selector_safe_area" />
+
+            <ImageView
+                android:id="@+id/iv_add"
+                android:layout_width="34dp"
+                android:layout_height="34dp"
+                android:src="@mipmap/ic_add" />
+
+        </LinearLayout>
+
+    </RelativeLayout>
+
+    <TextView
+        android:id="@+id/tv_refresh"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentBottom="true"
+        android:layout_marginBottom="200dp"
+        android:layout_marginEnd="15dp"
+        android:background="@mipmap/ic_refresh"
+        android:gravity="center"
+        android:textColor="@color/white"
+        android:textSize="12sp" />
+
+</RelativeLayout>

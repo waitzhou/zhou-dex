@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/bg_color"
+    android:orientation="vertical">
+    <include  layout="@layout/layout_toolbar"/>
+
+    <LinearLayout
+        style="@style/linearLayout_item">
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="手机号码"
+            android:textColor="#ff999999"
+            android:textSize="14sp" />
+
+        <EditText
+            android:id="@+id/edit_phone"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:textColor="#ff555555"
+            android:textSize="14sp"
+            android:background="@null"
+            android:gravity="right"
+            android:inputType="number"
+            android:maxLength="11"
+            android:drawablePadding="20dp"
+            android:drawableRight="@mipmap/ic_next"/>
+    </LinearLayout>
+    <LinearLayout
+        android:layout_marginTop="1dp"
+        android:id="@+id/line_choose"
+        style="@style/linearLayout_item"
+        android:orientation="horizontal">
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="与孩子关系"
+            android:textColor="#ff999999"
+            android:textSize="14sp" />
+        <TextView
+            android:id="@+id/text_relation"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="right"
+            android:text="爸爸"
+            android:textColor="#ff555555"
+            android:textSize="14sp"
+            android:drawablePadding="20dp"
+            android:drawableRight="@mipmap/ic_next"
+            />
+    </LinearLayout>
+    <TextView
+        android:layout_marginTop="20dp"
+        android:layout_gravity="center"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="每个孩子最多添加10名家长"
+        android:textColor="#ff999999"
+        android:textSize="14sp" />
+</LinearLayout>

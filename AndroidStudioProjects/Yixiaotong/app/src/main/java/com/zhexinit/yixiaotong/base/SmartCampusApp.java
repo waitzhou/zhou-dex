@@ -1,0 +1,165 @@
+package com.zhexinit.yixiaotong.base;
+
+import android.app.Application;
+
+import android.app.Notification;
+import android.app.NotificationManager;
+import android.content.Context;
+import android.database.sqlite.SQLiteDatabase;
+import android.support.annotation.NonNull;
+import android.support.multidex.MultiDex;
+import android.support.multidex.MultiDexApplication;
+import android.widget.RemoteViews;
+
+import com.scwang.smartrefresh.layout.SmartRefreshLayout;
+import com.scwang.smartrefresh.layout.api.DefaultRefreshFooterCreator;
+import com.scwang.smartrefresh.layout.api.DefaultRefreshHeaderCreator;
+import com.scwang.smartrefresh.layout.api.RefreshFooter;
+import com.scwang.smartrefresh.layout.api.RefreshHeader;
+import com.scwang.smartrefresh.layout.api.RefreshLayout;
+import com.scwang.smartrefresh.layout.footer.ClassicsFooter;
+import com.scwang.smartrefresh.layout.header.ClassicsHeader;
+import com.tencent.cos.xml.CosXmlServiceConfig;
+import com.tencent.cos.xml.CosXmlSimpleService;
+import com.tencent.qcloud.core.auth.QCloudCredentialProvider;
+import com.tencent.qcloud.core.auth.SessionCredentialProvider;
+import com.tencent.qcloud.core.http.HttpRequest;
+import com.umeng.commonsdk.UMConfigure;
+import com.zhexinit.yixiaotong.R;
+import com.zhexinit.yixiaotong.db.DaoMaster;
+import com.zhexinit.yixiaotong.db.DaoSession;
+import com.zhexinit.yixiaotong.utils.Config;
+import com.zhexinit.yixiaotong.utils.MyCosCredentialProvider;
+
+
+import java.net.MalformedURLException;
+import java.net.URL;
+
+import cn.jpush.android.api.BasicPushNotificationBuilder;
+import cn.jpush.android.api.CustomPushNotificationBuilder;
+import cn.jpush.android.api.DefaultPushNotificationBuilder;
+import cn.jpush.android.api.JPushInterface;
+import cn.jpush.android.data.JPushLocalNotification;
+
+/**
+ * 智慧校园application
+ */
+public class SmartCampusApp extends MultiDexApplication {
+    public static Application context = null;
+    public static CosXmlSimpleService cosXmlService;
+    private DaoSession mDaoSession;
+
+    @Override
+    protected void attachBaseContext(Context base) {
+        super.attachBaseContext(base);
+        MultiDex.install(this);
+        Config.init(this);
+    }
+
+    @Override
+    public void onCreate() {
+        super.onCreate();
+        context = this;
+        initTencentCos();
+        initGreenDao();
+        initJPush();
+        initUmeng();
+    }
+
+    /**
+     * 友盟统计
+     */
+    private void initUmeng() {
+//        参数1:上下文，必须的参数，不能为空。
+//        参数2:【友盟+】 AppKey，非必须参数，如果Manifest文件中已配置AppKey，该参数可以传空，则使用Manifest中配置的AppKey，否则该参数必须传入。
+//        参数3:【友盟+】 Channel，非必须参数，如果Manifest文件中已配置Channel，该参数可以传空，则使用Manifest中配置的Channel，否则该参数必须传入，Channel命名请详见Channel渠道命名规范。
+//        参数4:设备类型，必须参数，传参数为UMConfigure.DEVICE_TYPE_PHONE则表示手机；传参数为UMConfigure.DEVICE_TYPE_BOX则表示盒子；默认为手机。
+//        参数5:Push推送业务的secret，需要集成Push功能时必须传入Push的secret，否则传空。
+        UMConfigure.init(this, "5c40233af1f55693ba001487", null, UMConfigure.DEVICE_TYPE_PHONE, null);
+    }
+
+    /**
+     * 初始化极光
+     */
+    private void initJPush() {
+        JPushInterface.setDebugMode(true);
+        JPushInterface.init(this);
+        //自定义通知栏样式
+//        BasicPushNotificationBuilder b=new BasicPushNotificationBuilder(this);
+//        JPushInterface.setDefaultPushNotificationBuilder(b);
+//        CustomPushNotificationBuilder builder=new CustomPushNotificationBuilder(this
+//        ,R.layout.notification_title,R.id.img,R.id.title,R.id.content);
+//        JPushInterface.setDefaultPushNotificationBuilder(builder);
+
+    }
+
+    class Mypush extends BasicPushNotificationBuilder {
+
+        public Mypush(Context context) {
+            super(context);
+        }
+    }
+
+
+    /**
+     * 初始化greenDao
+     */
+    private void initGreenDao() {
+        DaoMaster.DevOpenHelper helper = new DaoMaster.DevOpenHelper(this, "petbuddy.db");
+        SQLiteDatabase database = helper.getWritableDatabase();
+        DaoMaster daoMaster = new DaoMaster(database);
+        mDaoSession = daoMaster.newSession();
+    }
+
+    /**
+     * 获取dao对象
+     */
+    public DaoSession getDaoSession() {
+        return mDaoSession;
+    }
+
+    /**
+     * 初始化上传文件图片，腾讯cos
+     */
+    private void initTencentCos() {
+//        //创建 CosXmlServiceConfig 对象，根据需要修改默认的配置参数
+        CosXmlServiceConfig serviceConfig = new CosXmlServiceConfig.Builder()
+                .setAppidAndRegion("1253442986", "ap-shanghai")
+                .setDebuggable(true)
+                .builder();
+
+        //创建获取签名类(请参考下面的生成签名示例，或者参考 sdk中提供的ShortTimeCredentialProvider类）
+        MyCosCredentialProvider localCredentialProvider = MyCosCredentialProvider.getInstance();
+        //创建 CosXmlService 对象，实现对象存储服务各项操作.
+        cosXmlService = new CosXmlSimpleService(context, serviceConfig, localCredentialProvider);
+    }
+
+
+    /**
+     * 刷新和分页用到的工具类
+     * static 代码段可以防止内存泄露
+     * */
+    static {
+        //设置全局的Header构建器
+        SmartRefreshLayout.setDefaultRefreshHeaderCreator(new DefaultRefreshHeaderCreator() {
+            @NonNull
+            @Override
+            public RefreshHeader createRefreshHeader(@NonNull Context context, @NonNull RefreshLayout layout) {
+               /* layout.setPrimaryColorsId(R.color.theme_center_color, R.color.theme_center_color);//全局设置主题颜色
+                layout.setHeaderMaxDragRate(1);
+                layout.setHeaderTriggerRate(0.8f);
+                return new YixiaotongRefreshHeader(context);*/
+                return new ClassicsHeader(context);//.setTimeFormat(new DynamicTimeFormat("更新于 %s"));//指定为经典Header，默认是 贝塞尔雷达Header
+            }
+        });
+        //设置全局的Footer构建器
+        SmartRefreshLayout.setDefaultRefreshFooterCreator(new DefaultRefreshFooterCreator() {
+            @NonNull
+            @Override
+            public RefreshFooter createRefreshFooter(@NonNull Context context, @NonNull RefreshLayout layout) {
+                //指定为经典Footer，默认是 BallPulseFooter
+                return new ClassicsFooter(context).setDrawableSize(20);
+            }
+        });
+    }
+}

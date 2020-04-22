@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="home_colorPrimary">#008577</color>
+    <color name="home_colorPrimaryDark">#00574B</color>
+    <color name="home_colorAccent">#D81B60</color>
+
+    <color name="home_text_default_color">#999</color>
+    <color name="home_text_selected_color">#cba000</color>
+    <color name="home_text_color">#555</color>
+    <color name="home_line_color">#eaeaea</color>
+    <color name="home_white">#fff</color>
+</resources>

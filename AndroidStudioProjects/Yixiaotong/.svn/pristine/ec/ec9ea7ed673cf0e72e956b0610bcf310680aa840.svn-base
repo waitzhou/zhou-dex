@@ -1,0 +1,143 @@
+package com.zhexinit.yixiaotong.function.home;
+
+import android.content.Intent;
+import android.os.Build;
+import android.provider.Settings;
+import android.support.v4.app.Fragment;
+import android.view.View;
+import android.widget.RadioGroup;
+import android.widget.RelativeLayout;
+
+import com.zhexinit.yixiaotong.R;
+import com.zhexinit.yixiaotong.base.BaseActivity;
+import com.zhexinit.yixiaotong.base.Constant;
+import com.zhexinit.yixiaotong.function.home.fragment.CampusFragment;
+import com.zhexinit.yixiaotong.function.home.fragment.HomeFragment;
+import com.zhexinit.yixiaotong.function.home.fragment.NoBindChildFragment;
+import com.zhexinit.yixiaotong.function.home.fragment.PositionFragment;
+import com.zhexinit.yixiaotong.function.home.fragment.UserFragment;
+import com.zhexinit.yixiaotong.function.mine.entity.UserInfoResp;
+import com.zhexinit.yixiaotong.utils.BitmapUtil;
+import com.zhexinit.yixiaotong.utils.Config;
+import com.zhexinit.yixiaotong.utils.FragmentTabUtil;
+import com.zhexinit.yixiaotong.utils.GsonUtil;
+import com.zhexinit.yixiaotong.utils.SharePerfUtils;
+import com.zhexinit.yixiaotong.utils.StatusBarCompat;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import butterknife.BindView;
+
+/**
+ * Author:zhousx
+ * date:2018/11/5
+ * description:首页主页面
+ */
+public class MainActivity extends BaseActivity implements FragmentTabUtil.RadioGroupCheckChanged {
+
+    @BindView(R.id.radio_group)
+    RadioGroup mRadioGroup;
+    @BindView(R.id.rl_no_net)
+    RelativeLayout mRelativeLayout;
+
+    List<Fragment> mFragments;
+    boolean isNoChild;
+
+    @Override
+    protected int getLayoutId() {
+        return R.layout.activity_main;
+    }
+
+    @Override
+    protected void init() {
+        initData();
+        new FragmentTabUtil(getSupportFragmentManager(),mFragments,R.id.container,mRadioGroup,this);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        setNonetContent();
+    }
+
+    private void setNonetContent() {
+        if(!Config.isConnectToWifi(this) && !Config.isConnectToNetWork(this)){
+            mRelativeLayout.setVisibility(View.VISIBLE);
+            if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT){
+                RelativeLayout.LayoutParams layoutParams = (RelativeLayout.LayoutParams) mRelativeLayout.getLayoutParams();
+                layoutParams.topMargin = StatusBarCompat.getStatusBarHeight(this);
+            }
+            mRelativeLayout.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    jumpToSettingNetPage();
+                }
+            });
+        }else {
+            mRelativeLayout.setVisibility(View.GONE);
+        }
+
+    }
+
+    /**
+     * 跳转到开启网络界面
+     * */
+    private void jumpToSettingNetPage() {
+        if(Config.ishasSimCard(this)) {
+            Intent intent = new Intent(Settings.ACTION_DATA_ROAMING_SETTINGS);
+            startActivityForResult(intent,1);
+        }else {
+            Intent intent =  new Intent(Settings.ACTION_WIFI_SETTINGS);
+            startActivityForResult(intent,1);
+        }
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if(requestCode == 1 && (Config.isConnectToNetWork(this)||Config.isConnectToWifi(this))){
+            Fragment fragment = mFragments.get(mCurrentFragmentPosition);
+            if(isNoChild)
+                return;
+            switch (mCurrentFragmentPosition){
+                case 0:
+                    HomeFragment homeFragment = (HomeFragment) fragment;
+                    homeFragment.refreshPage();
+                    break;
+                case 1:
+                    PositionFragment positionFragment = (PositionFragment) fragment;
+                    positionFragment.refreshPage();
+                    break;
+                case 2:
+                    break;
+                case 3:
+                    UserFragment userFragment = (UserFragment) fragment;
+                    break;
+            }
+        }
+    }
+
+    private void initData() {
+        mFragments = new ArrayList<>();
+        UserInfoResp userInfoResp = GsonUtil.getInstance().getGson().
+                fromJson(SharePerfUtils.getString(Constant.KEY.USER_INFO),UserInfoResp.class);
+        isNoChild = userInfoResp.userChildren == null || userInfoResp.userChildren.size() == 0;
+        if (isNoChild) {
+            mFragments.add(NoBindChildFragment.newInstance());
+            mFragments.add(NoBindChildFragment.newInstance());
+            mFragments.add(NoBindChildFragment.newInstance());
+        }else {
+            mFragments.add(HomeFragment.newInstance());
+            mFragments.add(PositionFragment.newInstance());
+            mFragments.add(CampusFragment.newInstance());
+        }
+        mFragments.add(UserFragment.newInstance());
+    }
+
+
+    private int mCurrentFragmentPosition;
+    @Override
+    public void onRgCheckChanged(int position) {
+        mCurrentFragmentPosition = position;
+    }
+}

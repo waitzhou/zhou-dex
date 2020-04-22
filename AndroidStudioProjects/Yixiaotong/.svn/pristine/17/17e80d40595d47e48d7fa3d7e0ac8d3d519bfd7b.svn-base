@@ -1,0 +1,198 @@
+package com.zhexinit.yixiaotong.widget;
+
+import android.annotation.SuppressLint;
+import android.app.Activity;
+import android.app.Dialog;
+import android.content.Intent;
+import android.net.Uri;
+import android.os.Bundle;
+import android.view.Gravity;
+import android.view.View;
+import android.view.ViewGroup;
+import android.view.Window;
+import android.view.WindowManager;
+import android.widget.Button;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import com.zhexinit.yixiaotong.R;
+import com.zhexinit.yixiaotong.function.UserWarehouse;
+import com.zhexinit.yixiaotong.function.mine.entity.CheckUpdateResp;
+import com.zhexinit.yixiaotong.rxjavamanager.interfaces.DownloadListener;
+import com.zhexinit.yixiaotong.utils.Config;
+import com.zhexinit.yixiaotong.utils.LogUtils;
+import com.zhexinit.yixiaotong.utils.StringUtils;
+
+
+import java.io.File;
+
+
+/**
+ * Created by xukun
+ */
+
+public class UpdateDialog extends Dialog {
+
+    private Activity activity;
+    private Button update;
+    private boolean must;
+    private CheckUpdateResp data;
+    private boolean isDownLoadNow=false;//是否正在下载中
+
+    private UpdateDialog(Activity activity, CheckUpdateResp data) {
+        super(activity, R.style.DialogTheme);
+        this.activity = activity;
+        this.data = data;
+    }
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+        requestWindowFeature(Window.FEATURE_NO_TITLE);
+        setContentView(R.layout.dialog_update);
+
+        update = findViewById(R.id.tv_update_now);
+        TextView tvContent = findViewById(R.id.update_info);
+        tvContent.setText(data.versionDesc);
+
+        TextView version = findViewById(R.id.update_version);
+        version.setText("发现新版本 v".concat(data.sdkVersion));
+        must = (2 == data.forceUpdate);
+        findViewById(R.id.tv_update_cancel).setVisibility(must ? View.GONE : View.VISIBLE);
+        setCancelable(!must);
+
+        findViewById(R.id.tv_update_cancel).setOnClickListener(onClickListener);
+        update.setOnClickListener(onClickListener);
+    }
+
+
+    private View.OnClickListener onClickListener = new View.OnClickListener() {
+
+        @Override
+        public void onClick(View v) {
+            switch (v.getId()) {
+                case R.id.tv_update_cancel:
+                    dismiss();
+                    break;
+                case R.id.tv_update_now:
+                    if (!Config.isConnectToWifi(activity) && !Config.isConnectToNetWork(activity)) {
+                        Toast.makeText(activity,"网络不可用，无法下载",Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+                    if (isDownLoadNow)return;//正在下载无法点击
+                    if (!Config.isConnectToWifi(activity)) {
+                        final CommonDialog dialog = new CommonDialog(activity, "", "当前网络非WIFI，更新版本将会消耗流量是否继续？");
+                        dialog.setSumbitClick(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+                                dialog.dismiss();
+                                doCheckVersion();
+                            }
+                        });
+                        dialog.noTitle();
+                        dialog.show();
+                    } else {
+                        doCheckVersion();
+                    }
+                    break;
+                default:
+                    break;
+            }
+
+        }
+    };
+
+    //做版本下载的检查
+    private void doCheckVersion() {
+        String version = "/yixiaotong" + data.sdkVersion + ".apk";
+        if (StringUtils.isEmpty(Config.PATH_SYSTEM_CACHE)){
+            return;
+        }
+        String apkPath = Config.PATH_SYSTEM_CACHE + version;
+        LogUtils.e("我是下载路径=" + apkPath);
+
+        if (isDownload(apkPath)) {
+            update.setText("下载完成");
+            installApp(apkPath);
+        } else {
+            update.setText("下载中...");
+            UserWarehouse.getInstance(activity).downloadFile(data.sdkDownloadUrl, version, listener);
+        }
+    }
+
+    private DownloadListener listener = new DownloadListener() {
+        @Override
+        public void startDownload() {
+
+        }
+
+        @Override
+        public void inProgress(final long currentBytes, final long total, boolean finish) {
+            isDownLoadNow=true;
+            activity.runOnUiThread(new Runnable() {
+                @SuppressLint("SetTextI18n")
+                @Override
+                public void run() {
+                    update.setText("下载中" + currentBytes / 1024 / 1024 + "M" + " /" + total / 1024 / 1024 + "M");
+                }
+            });
+        }
+
+        @Override
+        public void fail(String msg) {
+            activity.runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    update.setText("下载异常，重试");
+                    update.setEnabled(true);
+                }
+            });
+        }
+
+        @Override
+        public void downloadFinish(final String path) {
+            activity.runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    update.setText("下载完成");
+                    update.setEnabled(true);
+                    installApp(path);
+                }
+            });
+            isDownLoadNow=false;
+        }
+    };
+
+    public static UpdateDialog create(Activity activity, CheckUpdateResp data) {
+        return new UpdateDialog(activity, data);
+    }
+
+    @Override
+    public void show() {
+        super.show();
+        WindowManager.LayoutParams layoutParams = getWindow().getAttributes();
+        layoutParams.width = ViewGroup.LayoutParams.MATCH_PARENT;
+        layoutParams.height = ViewGroup.LayoutParams.WRAP_CONTENT;
+        layoutParams.gravity = Gravity.CENTER;
+        getWindow().setAttributes(layoutParams);
+    }
+
+    @Override
+    public void onBackPressed() {
+        if (!must) super.onBackPressed();
+    }
+
+    private void installApp(String apkPath) {
+        Intent intent;
+        intent = new Intent(Intent.ACTION_VIEW);
+        intent.setDataAndType(Uri.fromFile(new File(apkPath)), "application/vnd.android.package-archive");
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        activity.startActivity(intent);
+    }
+
+    private static boolean isDownload(String path) {
+        File file = new File(path);
+        return file.exists();
+    }
+}

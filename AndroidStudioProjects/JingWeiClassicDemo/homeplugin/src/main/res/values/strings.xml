@@ -1,0 +1,7 @@
+<resources>
+    <string name="home_app_name">HomePlugin</string>
+    <string name="home_label1">首页</string>
+    <string name="home_label2">活动</string>
+    <string name="home_label3">导航</string>
+    <string name="home_label4">我的</string>
+</resources>

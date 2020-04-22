@@ -1,0 +1,7 @@
+task evaluationtest111{
+    group 'evaluationtest'
+    description '114141'
+    doLast{
+        println 'evaluationtest测试'
+    }
+}

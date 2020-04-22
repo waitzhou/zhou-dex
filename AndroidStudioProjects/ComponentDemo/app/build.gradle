@@ -52,6 +52,17 @@ dependencies {
     runtimeOnly project(":login")
     if (channel.toInteger() == 1)
         runtimeOnly project(":share")
+    /*switch (channel.toInteger()){
+        case 1:
+            runtimeOnly project(":share")
+            break
+        case 2:
+            runtimeOnly project(":login")
+            break
+        case 3:
+            runtimeOnly project(":huawei")
+            break
+    }*/
 }
 
 System.println('main  gradle  end')

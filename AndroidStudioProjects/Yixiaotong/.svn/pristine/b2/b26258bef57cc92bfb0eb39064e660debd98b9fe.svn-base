@@ -1,0 +1,608 @@
+package com.zhexinit.yixiaotong.function.map.activity;
+
+import android.app.Dialog;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Typeface;
+import android.os.Bundle;
+import android.support.annotation.Nullable;
+import android.support.v4.content.ContextCompat;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
+import android.text.Editable;
+import android.text.TextUtils;
+import android.text.TextWatcher;
+import android.util.Log;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.EditText;
+import android.widget.SeekBar;
+import android.widget.TextView;
+
+import com.amap.api.maps.AMap;
+import com.amap.api.maps.CameraUpdateFactory;
+import com.amap.api.maps.TextureMapView;
+import com.amap.api.maps.model.BitmapDescriptor;
+import com.amap.api.maps.model.BitmapDescriptorFactory;
+import com.amap.api.maps.model.Circle;
+import com.amap.api.maps.model.CircleOptions;
+import com.amap.api.maps.model.LatLng;
+import com.amap.api.maps.model.Marker;
+import com.amap.api.maps.model.MarkerOptions;
+import com.amap.api.services.core.LatLonPoint;
+import com.amap.api.services.geocoder.GeocodeResult;
+import com.amap.api.services.geocoder.GeocodeSearch;
+import com.amap.api.services.geocoder.RegeocodeQuery;
+import com.amap.api.services.geocoder.RegeocodeResult;
+import com.amap.api.services.help.Inputtips;
+import com.amap.api.services.help.InputtipsQuery;
+import com.amap.api.services.help.Tip;
+import com.jaygoo.widget.OnRangeChangedListener;
+import com.jaygoo.widget.RangeSeekBar;
+import com.zhexinit.yixiaotong.R;
+import com.zhexinit.yixiaotong.base.BaseActivity;
+import com.zhexinit.yixiaotong.function.BaseResp;
+import com.zhexinit.yixiaotong.function.MapWarehouse;
+import com.zhexinit.yixiaotong.function.map.entity.req.AddRailReq;
+import com.zhexinit.yixiaotong.function.map.entity.req.UpdateRailReq;
+import com.zhexinit.yixiaotong.function.map.entity.resp.RailResp;
+import com.zhexinit.yixiaotong.function.map.entity.resp.TimeList;
+import com.zhexinit.yixiaotong.rxjavamanager.interfaces.ResultCallBack;
+import com.zhexinit.yixiaotong.utils.DipUtils;
+import com.zhexinit.yixiaotong.utils.GsonUtil;
+import com.zhexinit.yixiaotong.utils.RecyclerViewDivider;
+import com.zhexinit.yixiaotong.utils.StringUtils;
+import com.zhexinit.yixiaotong.utils.commonAdapter.CommonRecyclerAdapter;
+import com.zhexinit.yixiaotong.utils.commonAdapter.CommonRecyclerHolder;
+import com.zhexinit.yixiaotong.widget.ToolBar;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import butterknife.BindView;
+import butterknife.OnClick;
+
+/**
+ * Author:zhousx
+ * date:2018/11/13
+ * description:添加地址围栏
+ */
+public class AddSafeAreaActivity extends BaseActivity implements AMap.OnMapClickListener, Inputtips.InputtipsListener, GeocodeSearch.OnGeocodeSearchListener {
+    @BindView(R.id.tool_bar)
+    ToolBar toolBar;
+    @BindView(R.id.map_view)
+    TextureMapView mapView;
+    @BindView(R.id.edt_search)
+    EditText edtSearch;
+    @BindView(R.id.tv_search_face)
+    TextView tvFace;
+    @BindView(R.id.tv_distance)
+    TextView tvDistance;
+    @BindView(R.id.seekbar_distance)
+    SeekBar seekbarDistance;
+    @BindView(R.id.tv_start_time)
+    TextView tvStartTime;
+    @BindView(R.id.tv_end_time)
+    TextView tvEndTime;
+    @BindView(R.id.seekbar2)
+    RangeSeekBar seekbar2;
+    @BindView(R.id.recycler_view)
+    RecyclerView mRecyclerView;
+    RailResp mRailResp;
+    private int TYPE_UPDATE = 2, TYPE_ADD = 1, mType;
+
+    AMap aMap = null;
+    private String CURRENT_CITY = "";
+    private String mDeviceId;//设备id
+
+    private List<Tip> mTipList;
+    private Marker mLocationMarker;//定位标记
+    private LatLng mLocationLatLng;//定位经纬度
+    private String mLocationAddress = "";//定位位置
+    private double mLat, mLng;
+    //地理逆编码  是获取城市名还是获取详细地址
+    private int TYPE_GET_CITY = 1, TYPE_GET_ADDRESS = 2, mCodeType;
+    private boolean isClickMap;//是否点击地图获取坐标位置
+
+    @Override
+    protected void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        initMap(savedInstanceState);
+        initData();
+        initListener();
+        initToolbar();
+        initRecyclerView();
+    }
+
+    private void initData() {
+        mRailResp = GsonUtil.getInstance().getGson().fromJson(getIntent().getStringExtra("item"), RailResp.class);
+        mDeviceId = getIntent().getStringExtra("deviceId");
+        mLat = getIntent().getDoubleExtra("lat", 0);
+        mLng = getIntent().getDoubleExtra("lng", 0);
+        LatLng latLng = new LatLng(mLat, mLng);
+        if (mRailResp == null) {
+            mType = TYPE_ADD;
+            addLocationMarker(latLng);
+            aMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 14));
+        } else {
+            mType = TYPE_UPDATE;
+            mLocationAddress = mRailResp.address;
+            mLocationLatLng = new LatLng(mRailResp.latitude, mRailResp.longitude);
+        }
+        positionGencode(latLng, TYPE_GET_CITY);
+    }
+
+    @Override
+    protected int getLayoutId() {
+        return R.layout.activity_add_safe_area;
+    }
+
+    @Override
+    protected void init() {
+
+    }
+
+    /**
+     * 初始化地图
+     */
+    private void initMap(Bundle savedInstanceState) {
+        mapView.onCreate(savedInstanceState);
+        if (aMap == null) {
+            aMap = mapView.getMap();
+            aMap.setTrafficEnabled(true);
+            aMap.getUiSettings().setZoomControlsEnabled(false);
+            aMap.setMapType(AMap.MAP_TYPE_NORMAL);// 一般模式
+            aMap.setOnMapClickListener(this);
+        }
+    }
+
+    private void initToolbar() {
+        if (mType != TYPE_UPDATE)
+            toolBar.setTitle("添加围栏");
+        else {
+            toolBar.setTitle("修改围栏");
+            setContent();
+        }
+        toolBar.setBackImage();
+        toolBar.back(this);
+        Typeface typeface = Typeface.createFromAsset(getAssets(), getResources().getString(R.string.tv_path));
+        tvFace.setTypeface(typeface);
+    }
+
+    private void setContent() {
+
+        moveToMap(new LatLng(mRailResp.latitude, mRailResp.longitude));
+        seekbarDistance.setProgress(mRailResp.railRange);
+        String time = mRailResp.railTimeList.get(0).time;
+        if (time != null) {
+            String[] times = time.split("-");
+            tvStartTime.setText(times[0]);
+            tvEndTime.setText(times[1]);
+            int startValue = getSeekValue(times[0]);
+            int endValue = getSeekValue(times[1]);
+            seekbar2.setValue(startValue, endValue);
+        }
+    }
+
+    private int getSeekValue(String s) {
+        String[] split = s.split(":");
+        int hours = 0;
+        if (split[0].length() > 1) {
+            hours = Integer.parseInt(String.valueOf(split[0].charAt(0))) * 10 + Integer.parseInt(String.valueOf(split[0].charAt(1)));
+        } else {
+            hours = Integer.parseInt(String.valueOf(split[0]));
+        }
+        int minute = Integer.parseInt(String.valueOf(split[1]));
+        return hours * 6 + minute / 10;
+    }
+
+    /**
+     * 初始化搜索内容列表
+     */
+    private void initRecyclerView() {
+        mTipList = new ArrayList<>();
+        mRecyclerView.setLayoutManager(new LinearLayoutManager(this));
+        RecyclerViewDivider divider = new RecyclerViewDivider(this);
+        divider.setLineColor(R.color.gray_line);
+        mRecyclerView.addItemDecoration(divider);
+        mRecyclerView.setAdapter(new CommonRecyclerAdapter<Tip>(this, mTipList, R.layout.item_search_adapter) {
+            @Override
+            public void convert(CommonRecyclerHolder holder, final Tip item, final int position) {
+                TextView tv = holder.getView(R.id.item_tv_position);
+                Typeface typeface = Typeface.createFromAsset(getAssets(), getResources().getString(R.string.tv_path));
+                tv.setTypeface(typeface);
+                holder.setText(R.id.item_tv_address, item.getAddress());
+                holder.mItemView.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        isClickMap = false;
+                        hideSoftInput(mRecyclerView);
+                        edtSearch.clearFocus();
+                        mRecyclerView.setVisibility(View.GONE);
+                        edtSearch.setText(item.getAddress());
+                        mLocationAddress = item.getAddress();
+                        mLocationLatLng = new LatLng(item.getPoint().getLatitude(), item.getPoint().getLongitude());
+                        moveToMap(new LatLng(item.getPoint().getLatitude(), item.getPoint().getLongitude()));
+                    }
+                });
+            }
+        });
+    }
+
+    /**
+     * 移动到当前位置
+     */
+    private void moveToMap(LatLng latLng) {
+        aMap.clear();
+        addLocationMarker(latLng);
+        aMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, 16));
+    }
+
+    /**
+     * 添加定位标记
+     */
+    private void addLocationMarker(LatLng latLng) {
+        if (mLocationMarker != null)
+            mLocationMarker.remove();
+        ArrayList<BitmapDescriptor> giflist = new ArrayList<>();
+        Bitmap bitmap = BitmapFactory.decodeResource(getResources(), R.mipmap.ic_location);
+        giflist.add(BitmapDescriptorFactory.fromBitmap(bitmap));
+        MarkerOptions markerOption = new MarkerOptions()
+                .position(latLng)
+                .icons(giflist)
+                .draggable(true)
+                .period(50);
+        mLocationMarker = aMap.addMarker(markerOption);
+    }
+
+    @OnClick({R.id.tv_search, R.id.tv_submit})
+    public void onViewClicked(View view) {
+        switch (view.getId()) {
+            case R.id.tv_search:
+                if (edtSearch.getText().length() != 0)
+                    inputSearch(edtSearch.getText().toString());
+                else
+                    showToast("搜索内容不为空");
+                break;
+            case R.id.tv_submit:
+                if (mType == TYPE_ADD) {
+                    if (mLocationLatLng != null && seekbarDistance.getProgress() != 0) {
+                        if (isClickMap) {
+                            positionGencode(mLocationLatLng, TYPE_GET_ADDRESS);
+                        } else if (mLocationAddress == null || mLocationAddress.equals("")) {
+                            showToast("请选择围栏地址");
+                        } else
+                            showAddNickDialog();
+                    }
+                } else {
+                    updateRail();
+                }
+
+                break;
+        }
+    }
+
+    /**
+     * 添加备注
+     */
+    private void showAddNickDialog() {
+        final Dialog dialog = new Dialog(this, R.style.DialogTheme);
+        View view = LayoutInflater.from(this).inflate(R.layout.dialog_define_content, null);
+        final EditText edt = view.findViewById(R.id.dialog_edt_name);
+        TextView commit = view.findViewById(R.id.tv_dialog_submit);
+        commit.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (TextUtils.isEmpty(edt.getText())) {
+                    showToast("请输入围栏名称");
+                } else {
+                    dialog.dismiss();
+                    addRail(edt.getText().toString());
+                }
+            }
+        });
+        dialog.setContentView(view);
+        dialog.show();
+    }
+
+    /**
+     * 添加围栏请求
+     */
+    private void addRail(String name) {
+        showProgressDialog();
+        AddRailReq railReq = new AddRailReq();
+        railReq.deviceId = mDeviceId;
+        railReq.latitude = mLocationLatLng.latitude;
+        railReq.longitude = mLocationLatLng.longitude;
+        railReq.railName = name;
+        railReq.address = mLocationAddress;
+        railReq.railRange = seekbarDistance.getProgress();
+        railReq.reqTimeList = new ArrayList<>();
+        railReq.reqTimeList.add(tvStartTime.getText().toString().concat("-").concat(tvEndTime.getText().toString()));
+        MapWarehouse.getInstance(this).addRail(railReq, new ResultCallBack<BaseResp>() {
+            @Override
+            public void onSuccess(BaseResp baseResp) {
+                hideProgressDialog();
+                showToast(baseResp.message);
+                if (baseResp.code == 0) {
+                    finish();
+                }
+            }
+
+            @Override
+            public void onFail(String response) {
+                hideProgressDialog();
+            }
+        });
+    }
+
+    /**
+     * 编辑围栏
+     */
+    private void updateRail() {
+        showProgressDialog();
+        UpdateRailReq railReq = new UpdateRailReq();
+        railReq.railId = mRailResp.id;
+        railReq.deviceId = mRailResp.deviceId;
+        railReq.latitude = mLocationLatLng.latitude;
+        railReq.longitude = mLocationLatLng.longitude;
+        railReq.railName = mRailResp.railName;
+        railReq.address = mLocationAddress;
+        railReq.railRange = seekbarDistance.getProgress();
+        railReq.railTimeList = new ArrayList<>();
+        TimeList timeList = new TimeList(mRailResp.railTimeList.get(0).timeId,
+                tvStartTime.getText().toString().concat("-").concat(tvEndTime.getText().toString()));
+        railReq.railTimeList.add(timeList);
+        MapWarehouse.getInstance(this).updateRail(railReq, new ResultCallBack<BaseResp>() {
+            @Override
+            public void onSuccess(BaseResp baseResp) {
+                hideProgressDialog();
+                showToast(baseResp.message);
+                if (baseResp.code == 0) {
+                    finish();
+                }
+            }
+
+            @Override
+            public void onFail(String response) {
+                hideProgressDialog();
+            }
+        });
+    }
+
+    private void initListener() {
+        seekbarDistance.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                tvDistance.setText(String.valueOf(progress).concat("m"));
+                if (mType == TYPE_UPDATE) {
+                    mRailResp.railRange = progress;
+                }
+                addCircles(progress);
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+
+            }
+        });
+        if (mType == TYPE_ADD)
+            seekbar2.setValue(48, 126);
+        seekbar2.setOnRangeChangedListener(new OnRangeChangedListener() {
+            @Override
+            public void onRangeChanged(RangeSeekBar view, float leftValue, float rightValue, boolean isFromUser) {
+                tvStartTime.setText(getTimes((int) leftValue));
+                tvEndTime.setText(getTimes((int) rightValue));
+            }
+
+            @Override
+            public void onStartTrackingTouch(RangeSeekBar view, boolean isLeft) {
+
+            }
+
+            @Override
+            public void onStopTrackingTouch(RangeSeekBar view, boolean isLeft) {
+
+            }
+        });
+        edtSearch.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                if (s.length() >= 2 && edtSearch.hasFocus()) {
+                    inputSearch(s.toString());
+                }
+            }
+        });
+    }
+
+    Circle mCircle;
+
+    /**
+     * 添加多个围栏
+     */
+    private void addCircles(int r) {
+        if (mCircle != null)
+            mCircle.remove();
+        if (mType == TYPE_ADD) {
+            if (mLocationLatLng == null || mLocationLatLng.longitude == 0)
+                return;
+            //addLocationMarker(latLng);
+            mCircle = aMap.addCircle(new CircleOptions().
+                    center(mLocationLatLng).
+                    radius(r).
+                    fillColor(ContextCompat.getColor(this, R.color.transport_red)).
+                    strokeColor(ContextCompat.getColor(this, R.color.gray_line)).
+                    strokeWidth(DipUtils.dip2px(this, 1)));
+            aMap.animateCamera(CameraUpdateFactory.newLatLngZoom(mLocationLatLng, 14));
+        } else {
+            LatLng latLng = new LatLng(mRailResp.latitude, mRailResp.longitude);
+            mCircle = aMap.addCircle(new CircleOptions().
+                    center(latLng).
+                    radius(r).
+                    fillColor(ContextCompat.getColor(this, R.color.transport_red)).
+                    strokeColor(ContextCompat.getColor(this, R.color.gray_line)).
+                    strokeWidth(DipUtils.dip2px(this, 1)));
+            aMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 14));
+        }
+    }
+
+    /**
+     * 内容输入舰艇
+     */
+    private void inputSearch(String input) {
+        if (mTipList != null) {
+            mTipList.clear();
+        }
+        mRecyclerView.setVisibility(View.VISIBLE);
+        /**1、继承 InputtipsListener 监听。
+         2、构造 InputtipsQuery 对象，通过 InputtipsQuery(java.lang.String keyword, java.lang.String city) 设置搜索条件。*/
+        //第二个参数传入null或者“”代表在全国进行检索，否则按照传入的city进行检索
+        InputtipsQuery inputquery = new InputtipsQuery(input, CURRENT_CITY);
+        inputquery.setCityLimit(false);//限制在当前城市
+
+        //构造 Inputtips 对象，并设置监听。
+        Inputtips inputTips = new Inputtips(this, inputquery);
+        inputTips.setInputtipsListener(this);
+        inputTips.requestInputtipsAsyn();
+    }
+
+    /**
+     * 获取 HH：mm格式的时间
+     */
+    private String getTimes(int time) {
+        if (time < 0 || time > 144) {
+            return "error";
+        } else {
+            int hour = time / 6;
+            int minute = (time % 6) * 10;
+            String strHour;
+            String strMinute;
+            if (hour < 10) {
+                strHour = "0".concat(String.valueOf(hour));
+            } else {
+                strHour = String.valueOf(hour);
+            }
+            if (minute == 0) {
+                strMinute = "0".concat(String.valueOf(minute));
+            } else {
+                strMinute = String.valueOf(minute);
+            }
+            return String.valueOf(strHour).concat(":").concat(String.valueOf(strMinute));
+        }
+    }
+
+    @Override
+    public void onMapClick(LatLng latLng) {
+        if (mRecyclerView != null && mRecyclerView.getVisibility() == View.VISIBLE) {
+            mRecyclerView.setVisibility(View.GONE);
+        }
+        hideSoftInput(mapView);
+        addLocationMarker(latLng);
+        mLocationLatLng = latLng;
+        addCircles(seekbarDistance.getProgress());
+        isClickMap = true;
+    }
+
+    @Override
+    public void onGetInputtips(List<Tip> list, int i) {
+        if (i == 1000) {
+            if (list != null && list.size() != 0) {
+                for (int j = 0; j < list.size(); j++) {
+                    if (!StringUtils.isEmpty(list.get(j).getAddress())) {
+                        mTipList.add(list.get(j));
+                    }
+                }
+                if (mTipList.size() != 0) {
+                    if (mTipList.size() > 4) {
+                        ViewGroup.LayoutParams layoutParams = mRecyclerView.getLayoutParams();
+                        layoutParams.height = DipUtils.dp2px(this, 200);
+                        mRecyclerView.setLayoutParams(layoutParams);
+                    } else {
+                        ViewGroup.LayoutParams layoutParams = mRecyclerView.getLayoutParams();
+                        layoutParams.height = ViewGroup.LayoutParams.WRAP_CONTENT;
+                        mRecyclerView.setLayoutParams(layoutParams);
+                    }
+                    mRecyclerView.getAdapter().notifyDataSetChanged();
+                } else {
+                    showToast("查询数据为空");
+                }
+            } else {
+                showToast("查询数据为空");
+            }
+        } else {
+            showToast("错误代码：".concat(String.valueOf(i)));
+        }
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        mapView.onPause();
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        mapView.onResume();
+    }
+
+
+    @Override
+    protected void onDestroy() {
+        mapView.onDestroy();
+        super.onDestroy();
+    }
+
+    GeocodeSearch mGeocodeSearch;
+
+    /**
+     * 地理逆编码
+     *
+     * @param latLng 经纬度
+     */
+    private void positionGencode(LatLng latLng, int type) {
+        mCodeType = type;
+        showProgressDialog();
+        mGeocodeSearch = new GeocodeSearch(this);
+        LatLonPoint latLonPoint = new LatLonPoint(/*39.928242, 116.388352*/latLng.latitude,latLng.longitude);
+        RegeocodeQuery query = new RegeocodeQuery(latLonPoint, 200, GeocodeSearch.AMAP);
+        mGeocodeSearch.getFromLocationAsyn(query);
+        mGeocodeSearch.setOnGeocodeSearchListener(this);
+    }
+
+    @Override
+    public void onRegeocodeSearched(RegeocodeResult regeocodeResult, int i) {
+        hideProgressDialog();
+        if (i == 1000) {
+            Log.e("---------------->", "positionGencode: " + regeocodeResult.getRegeocodeAddress().getCity());
+            if (mCodeType == TYPE_GET_CITY) {
+                CURRENT_CITY = regeocodeResult.getRegeocodeAddress().getCity();
+            }else {
+                mLocationAddress = regeocodeResult.getRegeocodeAddress().getFormatAddress();
+                showAddNickDialog();
+
+            }
+        }
+    }
+
+    @Override
+    public void onGeocodeSearched(GeocodeResult geocodeResult, int i) {
+
+    }
+}

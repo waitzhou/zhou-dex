@@ -1,0 +1,75 @@
+package com.zhexinit.yixiaotong.widget;
+
+import android.content.Context;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Paint;
+import android.graphics.RectF;
+import android.support.annotation.Nullable;
+import android.util.AttributeSet;
+import android.view.View;
+
+import com.zhexinit.yixiaotong.R;
+import com.zhexinit.yixiaotong.utils.LogUtils;
+
+/**
+ * Created by:xukun
+ * date:2018/11/13
+ * description:
+ */
+public class Power extends View{
+    private float percent = 1.0f;
+    private Context context;
+    public Power(Context context) {
+        super(context);
+        this.context=context;
+    }
+
+    public Power(Context context, @Nullable AttributeSet attrs) {
+        super(context, attrs);
+        this.context=context;
+    }
+
+
+    @Override
+    // 重写该方法,进行绘图
+    protected void onDraw(Canvas canvas) {
+        super.onDraw(canvas);
+        // 电池电量里面的绿色
+        Paint paint = new Paint();
+        // 电池电量外面的大白框
+        Paint paint1 = new Paint();
+        // 去锯齿
+        paint.setAntiAlias(true);
+
+        // 大于等于百分之20时绿色，否则为红色
+        if (percent >= 0.2f) {
+            paint.setColor(context.getResources().getColor(R.color.text_green));
+        } else {
+            paint.setColor(context.getResources().getColor(R.color.text_red));
+        }
+
+        paint1.setStrokeWidth(4);
+        paint1.setAntiAlias(true);
+        paint1.setStyle(Paint.Style.STROKE);//设置填满
+        paint1.setColor(paint.getColor());
+        int a=getWidth()-10;
+
+        int d=getWidth()-18;
+
+        // 根据电量百分比画图
+        RectF re1 = new RectF(4, 4, percent*d+4, getHeight()-4);
+        RectF re2 = new RectF(0, 0, a, getHeight());
+        RectF re3 = new RectF(a, getHeight()/2-4, getWidth()-4, getHeight()/2+4);
+        // 绘制圆角矩形
+        canvas.drawRoundRect(re1,0,0 ,paint);
+        canvas.drawRoundRect(re2,1,1, paint1);
+        canvas.drawRoundRect(re3,0,0, paint);
+    }
+
+    // 每次检测电量都重绘，在检测电量的地方调用
+    public synchronized void setProgress(int percent) {
+        this.percent = (float) (percent / 100.0);
+        postInvalidate();
+    }
+}

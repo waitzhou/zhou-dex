@@ -1,0 +1,35 @@
+<resources>
+    <string name="app_name">SmartCampus</string>
+
+    <string name="home_page">首页</string>
+    <string name="home_position">位置</string>
+    <string name="home_campus">校园</string>
+    <string name="home_user">我的</string>
+
+
+    <string name="tv_path">icomoon.ttf</string>
+    <!--返回-->
+    <string name="tv_back">&#xe900;</string>
+    <string name="tv_setting">&#xe90d;</string>
+    <string name="tv_feedback">&#xe90c;</string>
+    <string name="tv_about">&#xe908;</string>
+    <string name="tv_help">&#xe90a;</string>
+    <string name="tv_small_head">&#xe90b;</string>
+    <string name="tv_add">&#xe909;</string>
+    <!--解除绑定-->
+    <string name="tv_unBundle">&#xe90e;</string>
+    <!--照相机-->
+    <string name="tv_camera">&#xe901;</string>
+    <!--分享-->
+    <string name="tv_share">&#xe905;</string>
+    <!--定位-->
+    <string name="tv_location">&#xe906;</string>
+    <!--搜索-->
+    <string name="tv_search">&#xe907;</string>
+    <!--向下-->
+    <string name="tv_down">&#xe902;</string>
+    <string name="tips_holder">\t\t明天下午开家长，希望各位父母务必参加，不参加者请在校讯通里请假，凡是无故不参加家长的，一律拉到野外被动物园的大象吃掉，然后报告校长，罚站，反正班主任也不会绕...... \n\t\t明天下午开家长，希望各位父母务必参加，不参加者请在校讯通里请假，凡是无故不参加家长的，一律拉到野外被动物园的大象吃掉，然后报告校长，罚站，反正班主任也不会绕...... \n\t\t明天下午开家长，希望各位父母务必参加，不参加者请在校讯通里请假，凡是无故不参加家长的，一律拉到野外被动物园的大象吃掉，然后报告校长，罚站，反正班主任也不会绕......</string>
+
+    <string name="feedback_hint">欢迎你给我们提出宝贵意见，并留下你的联系方式。以便我们更好的改进。</string>
+
+</resources>

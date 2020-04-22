@@ -1,0 +1,17 @@
+package com.zhexinit.yixiaotong.function.home.entity.resp;
+
+/**
+ * Created by:xukun
+ * date:2018/11/23
+ * description:
+ */
+public class NoticeFunction {
+    public int id;
+    public String classId;
+    public int schoolId;
+    public String childId;
+    public boolean pushType;
+    public String message;
+    public boolean messageType;
+    public long createTime;
+}

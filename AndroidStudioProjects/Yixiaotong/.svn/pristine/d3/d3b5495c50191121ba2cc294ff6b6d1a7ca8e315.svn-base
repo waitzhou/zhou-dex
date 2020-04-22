@@ -1,0 +1,158 @@
+package com.zhexinit.yixiaotong.function.home.activity;
+
+import android.annotation.SuppressLint;
+import android.content.Intent;
+import android.graphics.drawable.Drawable;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
+import android.util.Log;
+import android.view.View;
+import android.widget.ImageView;
+import android.widget.TextView;
+
+import com.bumptech.glide.Glide;
+import com.zhexinit.yixiaotong.R;
+import com.zhexinit.yixiaotong.base.BaseActivity;
+import com.zhexinit.yixiaotong.function.BaseResp;
+import com.zhexinit.yixiaotong.function.ChildrenWarehouse;
+import com.zhexinit.yixiaotong.function.home.entity.resp.ContactResp;
+import com.zhexinit.yixiaotong.rxjavamanager.interfaces.ResultCallBack;
+import com.zhexinit.yixiaotong.utils.GlideCricleTransform;
+import com.zhexinit.yixiaotong.utils.GsonUtil;
+import com.zhexinit.yixiaotong.utils.RecyclerViewDivider;
+import com.zhexinit.yixiaotong.utils.commonAdapter.CommonRecyclerAdapter;
+import com.zhexinit.yixiaotong.utils.commonAdapter.CommonRecyclerHolder;
+import com.zhexinit.yixiaotong.widget.ToolBar;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import butterknife.BindView;
+
+/**
+ * Author:zhousx
+ * date:2018/11/9
+ * description:通讯录
+ */
+public class ContactActivity extends BaseActivity {
+
+    @BindView(R.id.tool_bar)
+    ToolBar toolBar;
+    @BindView(R.id.recycler_view)
+    RecyclerView recyclerView;
+
+    private List<ContactResp> mRespList = new ArrayList<>();
+    private List<String> mStrings = new ArrayList<>();
+
+    @Override
+    protected int getLayoutId() {
+        return R.layout.activity_contact;
+    }
+
+    @Override
+    protected void init() {
+        initToolbar();
+        initRecyclerView();
+        getData();
+    }
+
+    private void initToolbar() {
+        toolBar.setTitle("通讯录");
+        toolBar.setBackImage();
+        toolBar.back(this);
+    }
+
+    private void initRecyclerView() {
+        final RecyclerViewDivider divider = new RecyclerViewDivider(this);
+        divider.setLineColor(R.color.gray_line);
+        recyclerView.setLayoutManager(new LinearLayoutManager(this));
+        recyclerView.addItemDecoration(divider);
+        recyclerView.setAdapter(new CommonRecyclerAdapter<ContactResp>(this, mRespList, R.layout.item_contact_adapter) {
+            @SuppressLint("SetTextI18n")
+            @Override
+            public void convert(CommonRecyclerHolder holder, ContactResp item, final int position) {
+                RecyclerView recyclerView = holder.getView(R.id.recycler_view_item);
+                setInnerAdapter(recyclerView,item.teachers,item.gradeInfo,item.classInfo,item.schoolName);
+                TextView textView = holder.getView(R.id.item_tv);
+                textView.setText(item.gradeInfo+item.classInfo+"   "+item.childName);
+                textView.setCompoundDrawablesRelativeWithIntrinsicBounds(null,null,getDrawable(item.isOpen),null);
+                if (item.isOpen) {
+                    recyclerView.setVisibility(View.VISIBLE);
+                } else
+                    recyclerView.setVisibility(View.GONE);
+                holder.mItemView.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        mRespList.get(position).isOpen = !mRespList.get(position).isOpen;
+                        notifyDataSetChanged();
+                    }
+                });
+            }
+
+            private void setInnerAdapter(RecyclerView recyclerView, List<ContactResp.Teachers> list, final String gradeInfo, final String classInfo, final String schoolName) {
+                recyclerView.setLayoutManager(new LinearLayoutManager(ContactActivity.this));
+                recyclerView.setAdapter(new CommonRecyclerAdapter<ContactResp.Teachers>(ContactActivity.this, list, R.layout.item_contact_inner) {
+                    @Override
+                    public void convert(CommonRecyclerHolder holder, final ContactResp.Teachers item, int position) {
+                        ImageView imageView = holder.getView(R.id.item_inner_iv);
+                        TextView tvTeacherType = holder.getView(R.id.item_inner_teacher_type);
+                        TextView tvTeacherName = holder.getView(R.id.item_inner_teacher_name);
+                        TextView tvIsMaster = holder.getView(R.id.item_inner_tag);
+                        Glide.with(ContactActivity.this)
+                                .load(item.icon)
+                                .placeholder(R.mipmap.ic_user_placeholder)
+                                .transform(new GlideCricleTransform(ContactActivity.this))
+                                .into(imageView);
+                        tvTeacherType.setText(item.category.concat("老师"));
+                        tvTeacherName.setText(item.teacherName);
+                        tvIsMaster.setVisibility(item.classMaster ? View.VISIBLE : View.GONE);
+                        holder.mItemView.setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+                                Intent intent = new Intent(ContactActivity.this, ContactDetailActivity.class);
+                                intent.putExtra("item",GsonUtil.getInstance().getGson().toJson(item));
+                                intent.putExtra("gradeInfo",gradeInfo);
+                                intent.putExtra("classInfo",classInfo);
+                                intent.putExtra("schoolName",schoolName);
+                                startActivity(intent);
+                            }
+                        });
+                    }
+                });
+            }
+        });
+    }
+
+    /**
+     * 获取通讯录列表数据
+     */
+    private void getData() {
+        showProgressDialog();
+        ChildrenWarehouse.getInstance(this).getContactData(new ResultCallBack<BaseResp<List<ContactResp>>>() {
+            @Override
+            public void onSuccess(BaseResp<List<ContactResp>> contactRespBaseResp) {
+                Log.e("aaaaa", "onSuccess: " + GsonUtil.getInstance().getGson().toJson(contactRespBaseResp));
+                if (contactRespBaseResp.code == 0) {
+                    mRespList.addAll(contactRespBaseResp.result);
+                    recyclerView.getAdapter().notifyDataSetChanged();
+                }
+                hideProgressDialog();
+            }
+
+            @Override
+            public void onFail(String response) {
+                hideProgressDialog();
+            }
+        });
+    }
+
+    private Drawable getDrawable(boolean isUp) {
+        Drawable drawable = null;
+        if (isUp) {
+            drawable = getResources().getDrawable(R.mipmap.ic_up);
+        } else {
+            drawable = getResources().getDrawable(R.mipmap.ic_down);
+        }
+        return drawable;
+    }
+}

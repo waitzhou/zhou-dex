@@ -1,0 +1,83 @@
+package com.zhexinit.yixiaotong.function.mine.activity;
+
+import android.os.Handler;
+import android.text.Editable;
+import android.text.TextWatcher;
+import android.view.View;
+import android.widget.EditText;
+
+import com.zhexinit.yixiaotong.R;
+import com.zhexinit.yixiaotong.base.BaseActivity;
+import com.zhexinit.yixiaotong.utils.StringUtils;
+import com.zhexinit.yixiaotong.widget.ToolBar;
+
+
+import butterknife.BindView;
+
+/**
+ * Created by:xukun
+ * date:2018/11/12
+ * description: 意见反馈页面
+ */
+public class FeedBackActivity extends BaseActivity {
+    @BindView(R.id.tool_bar)
+    ToolBar toolBar;
+    @BindView(R.id.edit_feedback)
+    EditText edit_feedback;
+    @Override
+    protected int getLayoutId() {
+        return R.layout.activity_feedback;
+    }
+
+    @Override
+    protected void init() {
+        toolBar.setBackImage();
+        toolBar.back(this);
+        toolBar.setTitle("意见反馈");
+        toolBar.setRightTv("提交");
+        toolBar.setRightTvClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                if (StringUtils.isEmpty(edit_feedback.getText().toString())){
+                    showToast("请输入你的见解...");
+                }else {
+                    showProgressDialog();
+                    new Handler().postDelayed(new Runnable() {
+                        @Override
+                        public void run() {
+                            hideProgressDialog();
+                            showToast("提交成功");
+                            new Handler().postDelayed(new Runnable() {
+                                @Override
+                                public void run() {
+                                    finish();
+                                }
+                            },800);
+                        }
+                    },2000);
+                }
+
+            }
+        });
+
+        edit_feedback.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                if (s.length()>=140){
+                    showToast("最多只能输入140个字");
+                }
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+
+            }
+        });
+    }
+}

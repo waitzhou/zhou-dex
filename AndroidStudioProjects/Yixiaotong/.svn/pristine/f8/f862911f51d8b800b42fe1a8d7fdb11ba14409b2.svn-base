@@ -1,0 +1,110 @@
+package com.zhexinit.yixiaotong.function.home.activity;
+
+import android.support.annotation.NonNull;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
+
+import com.scwang.smartrefresh.layout.SmartRefreshLayout;
+import com.scwang.smartrefresh.layout.api.RefreshLayout;
+import com.scwang.smartrefresh.layout.listener.OnLoadMoreListener;
+import com.scwang.smartrefresh.layout.listener.OnRefreshListener;
+import com.zhexinit.yixiaotong.R;
+import com.zhexinit.yixiaotong.base.BaseActivity;
+import com.zhexinit.yixiaotong.function.BaseResp;
+import com.zhexinit.yixiaotong.function.ChildrenWarehouse;
+import com.zhexinit.yixiaotong.function.home.adapter.NoticeAdapter;
+import com.zhexinit.yixiaotong.function.home.entity.resp.NoticeResp;
+import com.zhexinit.yixiaotong.rxjavamanager.interfaces.ResultCallBack;
+import com.zhexinit.yixiaotong.widget.ToolBar;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import butterknife.BindView;
+
+/**
+ * Author:zhousx
+ * date:2018/11/6
+ * description:通知界面
+ */
+public class NoticeActivity extends BaseActivity implements OnRefreshListener, OnLoadMoreListener {
+
+    @BindView(R.id.tool_bar)
+    ToolBar toolBar;
+    @BindView(R.id.recycler_view)
+    RecyclerView recyclerView;
+    @BindView(R.id.smart_refresh_layout)
+    SmartRefreshLayout smartRefreshLayout;
+
+    private int mCurrentPage = 1;
+    private int PAGE_COUNT = 10;
+    private List<NoticeResp> mRespList = new ArrayList<>();
+
+    @Override
+    protected int getLayoutId() {
+        return R.layout.activity_notice;
+    }
+
+    @Override
+    protected void init() {
+
+        initToolbar();
+        initContent();
+        showProgressDialog();
+        getNoticeData();
+    }
+
+    /**
+     * 获取通知数据
+     * */
+    private void getNoticeData() {
+        Map<String,Integer> map = new HashMap<>();
+        map.put("page",mCurrentPage);
+        map.put("rows",PAGE_COUNT);
+        ChildrenWarehouse.getInstance(this).getNoticeData(map, new ResultCallBack<BaseResp<List<NoticeResp>>>() {
+            @Override
+            public void onSuccess(BaseResp<List<NoticeResp>> listBaseResp) {
+                hideProgressDialog();
+                if(listBaseResp.code == 0){
+                    mRespList.addAll(listBaseResp.result);
+                    recyclerView.getAdapter().notifyDataSetChanged();
+                }else {
+                    showToast(listBaseResp.message);
+                }
+            }
+
+            @Override
+            public void onFail(String response) {
+                hideProgressDialog();
+            }
+        });
+    }
+
+    private void initToolbar() {
+        toolBar.setTitle("通知");
+        toolBar.setBackImage();
+        toolBar.back(this);
+    }
+
+    private void initContent() {
+        smartRefreshLayout.setOnRefreshListener(this);
+        smartRefreshLayout.setOnLoadMoreListener(this);
+        recyclerView.setLayoutManager(new LinearLayoutManager(this));
+        recyclerView.setAdapter(new NoticeAdapter(mRespList));
+    }
+
+    @Override
+    public void onRefresh(@NonNull RefreshLayout refreshLayout) {
+        mCurrentPage = 1;
+        mRespList.clear();
+        getNoticeData();
+    }
+
+    @Override
+    public void onLoadMore(@NonNull RefreshLayout refreshLayout) {
+        mCurrentPage ++ ;
+        getNoticeData();
+    }
+}

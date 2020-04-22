@@ -1,0 +1,33 @@
+package com.zhexinit.yixiaotong.function.home.fragment;
+
+import android.os.Bundle;
+
+import com.zhexinit.yixiaotong.R;
+import com.zhexinit.yixiaotong.base.BaseFragment;
+
+/**
+ * Author:zhousx
+ * date:2018/11/5
+ * description:校园fragment
+ */
+public class CampusFragment extends BaseFragment {
+
+    public static CampusFragment newInstance() {
+
+        Bundle args = new Bundle();
+
+        CampusFragment fragment = new CampusFragment();
+        fragment.setArguments(args);
+        return fragment;
+    }
+
+    @Override
+    protected int getLayoutId() {
+        return R.layout.fragment_campus;
+    }
+
+    @Override
+    protected void init(Bundle savedInstanceState) {
+
+    }
+}

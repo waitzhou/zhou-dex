@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="80dp"
+    android:gravity="center_vertical"
+    android:background="@color/white"
+    android:layout_marginTop="1dp"
+    android:paddingLeft="20dp">
+    
+    <ImageView
+        android:id="@+id/img_icon"
+        android:layout_width="45dp"
+        android:layout_height="45dp"
+        android:layout_marginEnd="12dp"
+        android:src="@mipmap/ic_user_placeholder"/>
+    <TextView
+        android:id="@+id/text_name"
+        android:layout_toEndOf="@+id/img_icon"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="爸爸"
+        android:textColor="#ff555555"
+        android:textSize="16sp" />
+    <TextView
+        android:id="@+id/text_main"
+        android:layout_marginStart="12dp"
+        android:layout_toEndOf="@+id/text_name"
+        android:layout_width="36dp"
+        android:layout_height="16dp"
+        android:gravity="center"
+        android:text="主号"
+        android:textColor="#ffffffff"
+        android:textSize="12sp"
+        android:background="@drawable/bg_radios8_theme"/>
+    <TextView
+        android:id="@+id/text_phone"
+        android:layout_below="@+id/text_name"
+        android:layout_marginTop="8dp"
+        android:layout_toEndOf="@+id/img_icon"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="18888888888"
+        android:textColor="#ff999999"
+        android:textSize="14sp" />
+</RelativeLayout>

@@ -1,0 +1,58 @@
+package com.zhexinit.yixiaotong.function.map.entity.resp;
+
+import android.os.Parcel;
+import android.os.Parcelable;
+
+/**
+ * Author:zhousx
+ * date:2018/11/14
+ * description:获取围栏列表返回结果
+ */
+public class RailResp implements Parcelable{
+
+    public int id;//": 1,
+    public String deviceId;//": "101928374",
+    public String railName;//": "家",
+    public double longitude;//": 120.272564,
+    public double latitude;//": 30.21305,
+    public int railRange;//": 200
+    public String address;
+
+    protected RailResp(Parcel in) {
+        id = in.readInt();
+        deviceId = in.readString();
+        railName = in.readString();
+        longitude = in.readDouble();
+        latitude = in.readDouble();
+        railRange = in.readInt();
+        address = in.readString();
+    }
+
+    public static final Creator<RailResp> CREATOR = new Creator<RailResp>() {
+        @Override
+        public RailResp createFromParcel(Parcel in) {
+            return new RailResp(in);
+        }
+
+        @Override
+        public RailResp[] newArray(int size) {
+            return new RailResp[size];
+        }
+    };
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeInt(id);
+        dest.writeString(deviceId);
+        dest.writeString(railName);
+        dest.writeDouble(longitude);
+        dest.writeDouble(latitude);
+        dest.writeInt(railRange);
+        dest.writeString(address);
+    }
+}

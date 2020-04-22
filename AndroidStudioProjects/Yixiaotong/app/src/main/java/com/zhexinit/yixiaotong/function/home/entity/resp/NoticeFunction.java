@@ -1,0 +1,14 @@
+package com.zhexinit.yixiaotong.function.home.entity.resp;
+
+/**
+ * Created by:xukun
+ * date:2018/11/23
+ * description:
+ */
+public class NoticeFunction {
+
+    public String messageType;
+    public long datetime;
+    public String content;
+
+}

@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:orientation="vertical"
+    android:layout_height="wrap_content">
+
+    <TextView
+        android:id="@+id/tv_item"
+        android:layout_width="wrap_content"
+        android:layout_height="25dp"
+        android:paddingLeft="12dp"
+        android:textColor="@color/text_color4"
+        android:gravity="center"
+        android:textSize="12sp"
+        android:background="@drawable/bg_radius1_white"
+        android:elevation="1dp"
+        android:text="奶奶家"
+        android:paddingRight="12dp"/>
+
+    <com.zhexinit.yixiaotong.widget.TriangleReverseView
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        android:layout_width="10dp"
+        android:layout_height="10dp"
+        android:layout_gravity="center_horizontal"
+        app:fillColor="@color/theme_center_color"
+        android:background="@drawable/bg_reverse_triangle"/>
+
+</LinearLayout>

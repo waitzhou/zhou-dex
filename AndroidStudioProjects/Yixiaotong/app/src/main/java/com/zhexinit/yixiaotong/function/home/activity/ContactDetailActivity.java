@@ -1,0 +1,130 @@
+package com.zhexinit.yixiaotong.function.home.activity;
+
+import android.annotation.SuppressLint;
+import android.content.Intent;
+import android.net.Uri;
+import android.view.View;
+import android.widget.ImageView;
+import android.widget.TextView;
+
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.engine.DiskCacheStrategy;
+import com.zhexinit.yixiaotong.R;
+import com.zhexinit.yixiaotong.base.BaseActivity;
+import com.zhexinit.yixiaotong.function.home.entity.resp.ContactResp;
+import com.zhexinit.yixiaotong.utils.GlideCricleTransform;
+import com.zhexinit.yixiaotong.utils.GsonUtil;
+import com.zhexinit.yixiaotong.widget.CommonDialog;
+import com.zhexinit.yixiaotong.widget.ShowScaleImagePopupWindow;
+import com.zhexinit.yixiaotong.widget.ToolBar;
+
+import butterknife.BindView;
+
+/**
+ * Author:zhousx
+ * date:2018/11/10
+ * description:通讯录详情
+ */
+public class ContactDetailActivity extends BaseActivity implements View.OnClickListener {
+
+
+    @BindView(R.id.tool_bar)
+    ToolBar toolBar;
+    @BindView(R.id.iv_teacher)
+    ImageView mImageView;
+    @BindView(R.id.tv_name)
+    TextView tvName;
+    @BindView(R.id.tv_teacher_type)
+    TextView tvTeacherType;
+    @BindView(R.id.tv_phone_number)
+    TextView tvPhoneNumber;
+    @BindView(R.id.tv_school)
+    TextView tvSchool;
+    @BindView(R.id.tv_position)
+    TextView tvPosition;
+    @BindView(R.id.tv_email_address)
+    TextView tvEmailAddress;
+    ContactResp.Teachers mTeachers;
+    String mGradeInfo,mClassInfo,mSchoolName;
+
+    @Override
+    protected int getLayoutId() {
+        return R.layout.activity_contact_detail;
+    }
+
+    @Override
+    protected void init() {
+
+        initData();
+        initToolbar();
+        initContent();
+    }
+
+    private void initData() {
+        mTeachers = GsonUtil.getInstance().getGson().fromJson(getIntent().getStringExtra("item"),ContactResp.Teachers.class);
+        mGradeInfo = getIntent().getStringExtra("gradeInfo");
+        mClassInfo = getIntent().getStringExtra("classInfo");
+        mSchoolName = getIntent().getStringExtra("schoolName");
+    }
+
+    private void initToolbar() {
+        toolBar.setTitle("");
+        toolBar.setBackImage();
+        toolBar.back(this);
+    }
+
+    @SuppressLint("SetTextI18n")
+    private void initContent() {
+        tvName.setText(mTeachers.teacherName);
+        tvTeacherType.setText(mTeachers.category+"老师");
+        tvPhoneNumber.setText(mTeachers.mobile);
+        tvPhoneNumber.setOnClickListener(this);
+        tvSchool.setText(mSchoolName);
+        tvEmailAddress.setText(mTeachers.email.isEmpty() ? "暂无":mTeachers.email);
+        tvPosition.setText(mTeachers.teacherTitle.isEmpty() ? "暂无":mTeachers.teacherTitle);
+        int resImage = 0;
+        //if(mTeachers.classMaster){
+            resImage = R.mipmap.ic_head_teacher_default;
+        /*}else {
+            resImage = R.mipmap.ic_teacher_default;
+        }*/
+        Glide.with(this)
+                .load(mTeachers.icon)
+                .placeholder(resImage)
+                .diskCacheStrategy(DiskCacheStrategy.ALL)
+                .transform(new GlideCricleTransform(this))
+                .into(mImageView);
+        mImageView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                showScaleImage(mTeachers.icon);
+            }
+        });
+    }
+
+    private void showScaleImage(String url){
+        ShowScaleImagePopupWindow popupWindow = new ShowScaleImagePopupWindow(this,toolBar,url);
+        popupWindow.show();
+    }
+
+    @Override
+    public void onClick(View v) {
+       showCallPhoneDialog();
+    }
+
+    private void showCallPhoneDialog(){
+        final CommonDialog dialog = new CommonDialog(this,"","是否拨打".concat(tvPhoneNumber.getText().toString().trim()).concat("号码?"));
+        dialog.noTitle();
+        dialog.setSumbitClick(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(Intent.ACTION_DIAL);
+                Uri data = Uri.parse("tel:" + tvPhoneNumber.getText().toString());
+                intent.setData(data);
+                startActivity(intent);
+                dialog.dismiss();
+            }
+        });
+        dialog.show();
+    }
+}

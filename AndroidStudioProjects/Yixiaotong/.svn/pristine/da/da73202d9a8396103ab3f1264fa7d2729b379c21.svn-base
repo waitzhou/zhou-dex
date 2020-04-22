@@ -1,0 +1,499 @@
+package com.zhexinit.yixiaotong.rxjavamanager.http;
+
+import android.annotation.SuppressLint;
+import android.content.Context;
+import android.util.Log;
+
+import com.zhexinit.yixiaotong.rxjavamanager.entity.req.BaseRequest;
+import com.zhexinit.yixiaotong.rxjavamanager.entity.req.MultiRequestModel;
+import com.zhexinit.yixiaotong.rxjavamanager.helper.RetrofitDownloadHelper;
+import com.zhexinit.yixiaotong.rxjavamanager.interfaces.Api;
+import com.zhexinit.yixiaotong.rxjavamanager.interfaces.DownloadListener;
+import com.zhexinit.yixiaotong.rxjavamanager.interfaces.ResultCallBack;
+import com.zhexinit.yixiaotong.utils.LogUtils;
+import com.zhexinit.yixiaotong.utils.StringUtils;
+
+import java.io.File;
+import java.io.IOException;
+import java.net.ConnectException;
+import java.net.SocketTimeoutException;
+import java.net.UnknownHostException;
+import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+
+import io.reactivex.Observable;
+import io.reactivex.ObservableSource;
+import io.reactivex.Observer;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.annotations.NonNull;
+import io.reactivex.disposables.Disposable;
+import io.reactivex.functions.Function;
+import io.reactivex.schedulers.Schedulers;
+import okhttp3.MediaType;
+import okhttp3.RequestBody;
+import okhttp3.ResponseBody;
+/**
+ * Author:@zhousx
+ * date: 2018/4/16/14:26.
+ * function :网络请求
+ */
+
+public class HttpManager extends BaseHttpManager {
+
+    @SuppressLint("StaticFieldLeak")
+    private static HttpManager sInstance;
+
+    public static HttpManager getInstance(Context context) {
+        if (sInstance == null) {
+            /*HttpManager delegate = null;
+            synchronized (HttpManager.class) {
+                if (sInstance == null) {
+                    delegate = new HttpManager(context);
+                    sInstance = delegate;
+                }
+            }*/
+            sInstance = new HttpManager(context);
+        }
+        return sInstance;
+    }
+
+    private HttpManager(Context context) {
+        super(context);
+        if(mApi == null){
+
+        }
+    }
+
+    /**
+     * post网络请求（重构函数）
+     *
+     * @param request  请求对象基类，传参必须是BaseRequest的子类
+     * @param path     POST请求绝对路径
+     * @param callback 请求回调，泛型为返回参数，不传时返回string
+     */
+    public <T> void postExecute(final BaseRequest request, final String path, final String header,final ResultCallBack<T> callback) {
+        Log.e(TAG, "postExecute: "+path + "\t\t header = "+header + "\t\trequest = "+mGson.toJson(request));
+        Observable.just(request)
+                .subscribeOn(Schedulers.io())
+                .flatMap(new Function<BaseRequest, ObservableSource<Object>>() {
+                    @Override
+                    public ObservableSource<Object> apply(@NonNull BaseRequest baseRequest) throws Exception {
+                        return mApi.post(path,header,RequestBody.create(MediaType.parse("application/json; charset=utf-8"),mGson.toJson(request)));
+                    }
+                })
+                .map(new Function<Object, T>() {
+                    @Override
+                    public T apply(@NonNull Object o) throws Exception {
+                        return checkResponse(o, callback.mType);
+                    }
+                })
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Observer<T>() {
+                    @Override
+                    public void onSubscribe(@NonNull Disposable d) {
+                        mCompositeDisposable.add(d);
+                    }
+
+                    @Override
+                    public void onNext(@NonNull T t) {
+                        callback.onSuccess(t);
+                    }
+
+                    @Override
+                    public void onError(@NonNull Throwable e) {
+                        Log.e(TAG, "onError: " + e.getMessage());
+                        if (e instanceof IOException) {
+                            if (e instanceof SocketTimeoutException || e instanceof ConnectException || e instanceof UnknownHostException) {
+                                callback.onFail("与服务器断开连接");
+                            } else {
+                                callback.onFail(e.toString());
+                            }
+                        } else {
+                            callback.onFail(e.toString());
+                        }
+                    }
+
+                    @Override
+                    public void onComplete() {
+
+                    }
+                });
+    }
+
+    /**
+     * post网络请求（重构函数）
+     *
+     * @param str      请求字符串，传参必须是BaseRequest的子类
+     * @param path     POST请求绝对路径
+     * @param callback 请求回调，泛型为返回参数，不传时返回string
+     */
+    public <T> void postExecute(final String str, final String path, final String header,final ResultCallBack<T> callback) {
+        Log.e(TAG, "postExecute: path = "+path + "\t\theader = "+header + "\b str"+str);
+        final String data=StringUtils.isEmpty(str)?"":str;
+        Observable.just(data)
+                .subscribeOn(Schedulers.io())
+                .flatMap(new Function<String, ObservableSource<Object>>() {
+                    @Override
+                    public ObservableSource<Object> apply(@NonNull String baseRequest) throws Exception {
+                        return mApi.post(path,header, RequestBody.create(MediaType.parse("application/json; charset=utf-8"),data));
+                    }
+                })
+                .map(new Function<Object, T>() {
+                    @Override
+                    public T apply(@NonNull Object o) throws Exception {
+                        return checkResponse(o, callback.mType);
+                    }
+                })
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Observer<T>() {
+                    @Override
+                    public void onSubscribe(@NonNull Disposable d) {
+                        mCompositeDisposable.add(d);
+                    }
+
+                    @Override
+                    public void onNext(@NonNull T t) {
+                        callback.onSuccess(t);
+                    }
+
+                    @Override
+                    public void onError(@NonNull Throwable e) {
+                        Log.e(TAG, "onError: " + e.getMessage());
+                        if (e instanceof IOException) {
+                            if (e instanceof SocketTimeoutException || e instanceof ConnectException || e instanceof UnknownHostException) {
+                                callback.onFail("与服务器断开连接");
+                            } else {
+                                callback.onFail(e.toString());
+                            }
+                        } else {
+                            callback.onFail(e.toString());
+                        }
+                    }
+
+                    @Override
+                    public void onComplete() {
+
+                    }
+                });
+    }
+
+    /**
+     * post网络请求（重构函数）
+     *
+     * @param path     POST请求绝对路径
+     * @param callback 请求回调，泛型为返回参数，不传时返回string
+     */
+    public <T> void postExecute(final String path, final String header,final ResultCallBack<T> callback) {
+        Log.e(TAG, "postExecute: path = "+path + "\t\theader = "+header);
+        Observable.just("")
+                .subscribeOn(Schedulers.io())
+                .flatMap(new Function<String, ObservableSource<Object>>() {
+                    @Override
+                    public ObservableSource<Object> apply(@NonNull String baseRequest) throws Exception {
+                        return mApi.post(path,header);
+                    }
+                })
+                .map(new Function<Object, T>() {
+                    @Override
+                    public T apply(@NonNull Object o) throws Exception {
+                        return checkResponse(o, callback.mType);
+                    }
+                })
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Observer<T>() {
+                    @Override
+                    public void onSubscribe(@NonNull Disposable d) {
+                        mCompositeDisposable.add(d);
+                    }
+
+                    @Override
+                    public void onNext(@NonNull T t) {
+                        callback.onSuccess(t);
+                    }
+
+                    @Override
+                    public void onError(@NonNull Throwable e) {
+                        Log.e(TAG, "onError: " + e.getMessage());
+                        if (e instanceof IOException) {
+                            if (e instanceof SocketTimeoutException || e instanceof ConnectException || e instanceof UnknownHostException) {
+                                callback.onFail("与服务器断开连接");
+                            } else {
+                                callback.onFail(e.toString());
+                            }
+                        } else {
+                            callback.onFail(e.toString());
+                        }
+                    }
+
+                    @Override
+                    public void onComplete() {
+
+                    }
+                });
+    }
+
+    /**
+     * post网络请求（重构函数）
+     *
+     * @param map      哈希map请求对象
+     * @param path     POST请求绝对路径
+     * @param callback 请求回调，泛型为返回参数，不传时返回string
+     */
+    public <T> void postExecute(final Map map, final String path,final String header, final ResultCallBack<T> callback) {
+        LogUtils.e("   path = "+path + "\t\theader = "+header);
+        Observable.just(map)
+                .subscribeOn(Schedulers.io())
+                .flatMap(new Function<Map, ObservableSource<Object>>() {
+                    @Override
+                    public ObservableSource<Object> apply(@NonNull Map map) throws Exception {
+                        return mApi.post(path, header,mapToRequestBody(map));
+                    }
+                })
+                .map(new Function<Object, T>() {
+                    @Override
+                    public T apply(@NonNull Object o) throws Exception {
+                        return checkResponse(o, callback.mType);
+                    }
+                })
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Observer<T>() {
+                    @Override
+                    public void onSubscribe(@NonNull Disposable d) {
+                        mCompositeDisposable.add(d);
+                    }
+
+                    @Override
+                    public void onNext(@NonNull T t) {
+                        callback.onSuccess(t);
+                    }
+
+                    @Override
+                    public void onError(@NonNull Throwable e) {
+                        Log.e(TAG, "onError: " + e.getMessage());
+                        if (e instanceof IOException) {
+                            if (e instanceof SocketTimeoutException || e instanceof ConnectException || e instanceof UnknownHostException) {
+                                callback.onFail("与服务器断开连接");
+                            } else {
+                                callback.onFail(e.toString());
+                            }
+                        } else {
+                            callback.onFail(e.toString());
+                        }
+                    }
+
+                    @Override
+                    public void onComplete() {
+
+                    }
+                });
+    }
+
+    /**
+     * get网络请求
+     * @param path     get请求绝对路径
+     * @param callback 请求回调，泛型为返回参数，不传时返回string
+     */
+    public <T> void getExecute( final String path,final String header, final ResultCallBack<T> callback) {
+        LogUtils.e("   path = "+path + "\t\theader = "+header);
+        Observable.just("")
+                .subscribeOn(Schedulers.io())
+                .flatMap(new Function<String, ObservableSource<Object>>() {
+                    @Override
+                    public ObservableSource<Object> apply(@NonNull String map) throws Exception {
+                        return mApi.get(path, header);
+                    }
+                })
+                .map(new Function<Object, T>() {
+                    @Override
+                    public T apply(@NonNull Object o) throws Exception {
+                        return checkResponse(o, callback.mType);
+                    }
+                })
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Observer<T>() {
+                    @Override
+                    public void onSubscribe(@NonNull Disposable d) {
+                        mCompositeDisposable.add(d);
+                    }
+
+                    @Override
+                    public void onNext(@NonNull T t) {
+                        callback.onSuccess(t);
+                    }
+
+                    @Override
+                    public void onError(@NonNull Throwable e) {
+                        Log.e(TAG, "onError: " + e.getMessage());
+                        if (e instanceof IOException) {
+                            if (e instanceof SocketTimeoutException || e instanceof ConnectException || e instanceof UnknownHostException) {
+                                callback.onFail("与服务器断开连接");
+                            } else {
+                                callback.onFail(e.toString());
+                            }
+                        } else {
+                            callback.onFail(e.toString());
+                        }
+                    }
+
+                    @Override
+                    public void onComplete() {
+
+                    }
+                });
+    }
+    /**
+     * 文件下载（暂时不支持断点续传）
+     *
+     * @param url      下载路劲
+     * @param dirName  保存文件的文件夹名
+     * @param fileName 保存的文件名
+     * @param listener 文件下载回调，返回进度
+     */
+    public void download(final String url, final String dirName, final String fileName, final DownloadListener listener) {
+        final Api api = RetrofitDownloadHelper.create(listener).provideRetrofit(Api.class);
+        Observable.just(url)
+                .subscribeOn(Schedulers.io())
+                .flatMap(new Function<String, ObservableSource<ResponseBody>>() {
+                    @Override
+                    public ObservableSource<ResponseBody> apply(@NonNull String s) throws Exception {
+                        return api.download(url);
+                    }
+                })
+                .map(new Function<ResponseBody, File>() {
+                    @Override
+                    public File apply(ResponseBody responseBody) throws Exception {
+                        return saveFile(responseBody, dirName, fileName, listener);
+
+                    }
+                })
+                .observeOn(AndroidSchedulers.mainThread()).
+                subscribe(new Observer<File>() {
+                    @Override
+                    public void onSubscribe(@NonNull Disposable d) {
+                        mCompositeDisposable.add(d);
+                    }
+
+                    @Override
+                    public void onNext(@NonNull File responseBody) {
+
+                    }
+
+                    @Override
+                    public void onError(@NonNull Throwable e) {
+                        listener.fail(e.getMessage());
+                    }
+
+                    @Override
+                    public void onComplete() {
+
+                    }
+                });
+    }
+
+    /**
+     * 多个请求
+     *
+     * @param requestModels 多个请求的model对象
+     * @param callback      响应回调
+     */
+    public void multiExecute(final List<MultiRequestModel> requestModels, final ResultCallBack<List<Object>> callback) {
+        Observable.zip(getMultiRequest(requestModels), new Function<Object[], List<Object>>() {
+            @Override
+            public List<Object> apply(@NonNull Object[] objects) throws Exception {
+                if (objects == null || objects.length == 0) {
+                    return null;
+                } else if (requestModels.get(0).type != null) {
+                    List<Object> list = new ArrayList<>();
+                    for (int i = 0; i < objects.length; i++) {
+                        Object o = checkResponse(objects[i], requestModels.get(i).type);
+                        Log.e(TAG, "apply: " + mGson.toJson(o));
+                        list.add(o);
+                    }
+                    return list;
+                } else {
+                    List<Object> list = new ArrayList<>();
+                    for (Object obj : objects) {
+                        Log.e(TAG, "apply: " + mGson.toJson(obj));
+                        list.add(obj);
+                    }
+                    return list;
+                }
+            }
+        }).subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread()).subscribe(new Observer<List<Object>>() {
+            @Override
+            public void onSubscribe(@NonNull Disposable d) {
+                mCompositeDisposable.add(d);
+            }
+
+            @Override
+            public void onNext(@NonNull List<Object> objects) {
+                if (objects != null && objects.size() != 0) {
+                    callback.onSuccess(objects);
+                } else {
+                    callback.onFail("数据出错了");
+                }
+            }
+
+            @Override
+            public void onError(@NonNull Throwable e) {
+                if (e instanceof IOException) {
+                    if (e instanceof SocketTimeoutException || e instanceof ConnectException || e instanceof UnknownHostException) {
+                        callback.onFail("与服务器断开连接");
+                    } else {
+                        callback.onError(e.toString());
+                    }
+                } else {
+                    callback.onError(e.toString());
+                }
+            }
+
+            @Override
+            public void onComplete() {
+
+            }
+        });
+    }
+
+    /**
+     * 获取多个请求的对象
+     *
+     * @param requestModels 多个请求的model
+     * @return 请求对象列表
+     */
+    private Iterable<Observable<Object>> getMultiRequest(List<MultiRequestModel> requestModels) {
+        List<Observable<Object>> observables = new LinkedList<>();
+        for (MultiRequestModel request : requestModels) {
+            switch (request.mRequestType) {
+                case Post:
+                    observables.add(mApi.post(request.path,request.header, objToRequestBody(request.baseRequestModel)));
+                    break;
+                case Get:
+                    observables.add(mApi.get(request.path,request.header));
+                    break;
+            }
+        }
+        return observables;
+    }
+
+    /**
+     * 终止所有请求
+     * *
+     */
+    public void cancelAllPost() {
+        if(mApi != null){
+            mApi = null;
+        }
+        if (mCompositeDisposable != null) {
+            mCompositeDisposable.clear();
+        }
+    }
+
+    public void onDestroy(){
+        if(sInstance != null){
+            cancelAllPost();
+            sInstance = null;
+        }
+    }
+}

@@ -1,0 +1,86 @@
+package com.zhexinit.yixiaotong.function.home.activity;
+
+import android.annotation.SuppressLint;
+import android.widget.ImageView;
+import android.widget.TextView;
+
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.engine.DiskCacheStrategy;
+import com.zhexinit.yixiaotong.R;
+import com.zhexinit.yixiaotong.base.BaseActivity;
+import com.zhexinit.yixiaotong.function.home.entity.resp.ContactResp;
+import com.zhexinit.yixiaotong.utils.GlideCricleTransform;
+import com.zhexinit.yixiaotong.utils.GsonUtil;
+import com.zhexinit.yixiaotong.widget.ToolBar;
+
+import butterknife.BindView;
+
+/**
+ * Author:zhousx
+ * date:2018/11/10
+ * description:通讯录详情
+ */
+public class ContactDetailActivity extends BaseActivity {
+
+
+    @BindView(R.id.tool_bar)
+    ToolBar toolBar;
+    @BindView(R.id.iv_teacher)
+    ImageView mImageView;
+    @BindView(R.id.tv_name)
+    TextView tvName;
+    @BindView(R.id.tv_teacher_type)
+    TextView tvTeacherType;
+    @BindView(R.id.tv_phone_number)
+    TextView tvPhoneNumber;
+    @BindView(R.id.tv_school)
+    TextView tvSchool;
+    @BindView(R.id.tv_position)
+    TextView tvPosition;
+    @BindView(R.id.tv_email_address)
+    TextView tvEmailAddress;
+    ContactResp.Teachers mTeachers;
+    String mGradeInfo,mClassInfo,mSchoolName;
+
+    @Override
+    protected int getLayoutId() {
+        return R.layout.activity_contact_detail;
+    }
+
+    @Override
+    protected void init() {
+
+        initData();
+        initToolbar();
+        initContent();
+    }
+
+    private void initData() {
+        mTeachers = GsonUtil.getInstance().getGson().fromJson(getIntent().getStringExtra("item"),ContactResp.Teachers.class);
+        mGradeInfo = getIntent().getStringExtra("gradeInfo");
+        mClassInfo = getIntent().getStringExtra("classInfo");
+        mSchoolName = getIntent().getStringExtra("schoolName");
+    }
+
+    private void initToolbar() {
+        toolBar.setTitle("");
+        toolBar.setBackImage();
+        toolBar.back(this);
+    }
+
+    @SuppressLint("SetTextI18n")
+    private void initContent() {
+        tvName.setText(mTeachers.teacherName);
+        tvTeacherType.setText(mTeachers.category+"老师   （"+mGradeInfo+mClassInfo+(mTeachers.classMaster ? "    班主任)":")"));
+        tvPhoneNumber.setText("手机号码    "+mTeachers.mobile);
+        tvSchool.setText("所在学校    "+mSchoolName);
+        tvEmailAddress.setText("邮箱地址    "+(mTeachers.email.isEmpty() ? "暂无":mTeachers.email));
+        tvPosition.setText("岗位职称    "+ (mTeachers.teacherTitle.isEmpty() ? "暂无":mTeachers.teacherTitle));
+        Glide.with(this)
+                .load(mTeachers.icon)
+                .placeholder(R.mipmap.ic_user_placeholder)
+                .diskCacheStrategy(DiskCacheStrategy.ALL)
+                .transform(new GlideCricleTransform(this))
+                .into(mImageView);
+    }
+}

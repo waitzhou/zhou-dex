@@ -1,0 +1,23 @@
+package com.zhexinit.yixiaotong.function.home.entity.resp;
+
+/**
+ * Author:zhousx
+ * date:2018/11/9
+ * description:作业列表返回结果
+ */
+public class HomeworkResp {
+
+    public int messageType;
+
+    public String childName;
+
+    public long homeworkDate;
+
+    public String childId;
+
+    public String childIcon;
+
+    public int schoolId;
+
+    public int classId;
+}

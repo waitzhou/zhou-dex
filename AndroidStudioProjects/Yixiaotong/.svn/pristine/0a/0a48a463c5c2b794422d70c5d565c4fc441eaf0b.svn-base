@@ -1,0 +1,50 @@
+package com.zhexinit.yixiaotong.function.home;
+
+import android.support.v4.app.Fragment;
+import android.widget.RadioGroup;
+
+import com.zhexinit.yixiaotong.R;
+import com.zhexinit.yixiaotong.base.BaseActivity;
+import com.zhexinit.yixiaotong.function.home.fragment.CampusFragment;
+import com.zhexinit.yixiaotong.function.home.fragment.HomeFragment;
+import com.zhexinit.yixiaotong.function.home.fragment.PositionFragment;
+import com.zhexinit.yixiaotong.function.home.fragment.UserFragment;
+import com.zhexinit.yixiaotong.utils.FragmentTabUtil;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import butterknife.BindView;
+
+/**
+ * Author:zhousx
+ * date:2018/11/5
+ * description:首页主页面
+ */
+public class MainActivity extends BaseActivity{
+
+    @BindView(R.id.radio_group)
+    RadioGroup mRadioGroup;
+
+    List<Fragment> mFragments;
+
+    @Override
+    protected int getLayoutId() {
+        return R.layout.activity_main;
+    }
+
+    @Override
+    protected void init() {
+        initData();
+        new FragmentTabUtil(getSupportFragmentManager(),mFragments,R.id.container,mRadioGroup);
+    }
+
+
+    private void initData() {
+        mFragments = new ArrayList<>();
+        mFragments.add(HomeFragment.newInstance());
+        mFragments.add(PositionFragment.newInstance());
+        mFragments.add(CampusFragment.newInstance());
+        mFragments.add(UserFragment.newInstance());
+    }
+}

@@ -4,10 +4,13 @@
 
     <application>
         <activity
+            android:process=":login"
             android:theme="@style/login_AppTheme"
             android:label="login"
             android:name=".LoginActivity"/>
-        <activity android:name=".RegisterActivity" />
+        <activity
+            android:process=":login"
+            android:name=".RegisterActivity" />
     </application>
 
 </manifest>
